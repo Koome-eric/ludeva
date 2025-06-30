@@ -88,18 +88,11 @@ const Hero = () => {
           <div className="w-full lg:w-1/2 relative pl-12">
             <div className="relative w-full max-w-xl mx-auto">
               <Image
-                src="/images/hero-img-1-min.jpg"
+                src="/images/hero/hero-img-1-min.jpg"
                 alt="Investing in Kenya"
                 width={480}
                 height={320}
                 className="rounded-3xl shadow-lg mb-6"
-              />
-              <Image
-                src="/images/card-expenses.png"
-                alt="Ludeva Dashboard Preview"
-                width={480}
-                height={320}
-                className="rounded-3xl shadow-xl absolute top-20 left-12 w-full max-w-xs"
               />
             </div>
           </div>
