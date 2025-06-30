@@ -160,7 +160,7 @@ const Header = () => {
               </div>
               <div className="flex items-center justify-end pr-16 lg:pr-0">
                 <a
-                  href="https://ludeva-dashboard/signin"
+                  href="https://ludeva-dashboard.vercel.app/signin"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-dark hidden px-7 py-3 text-base font-medium hover:opacity-70 md:block dark:text-white"
@@ -168,7 +168,7 @@ const Header = () => {
                   Sign In
                 </a>
                 <a
-                  href="https://ludeva-dashboard/signup"
+                  href="https://ludeva-dashboard.vercel.app/signup"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="ease-in-up shadow-btn hover:shadow-btn-hover bg-primary hover:bg-primary/90 hidden rounded-xs px-8 py-3 text-base font-medium text-white transition duration-300 md:block md:px-9 lg:px-6 xl:px-9"
