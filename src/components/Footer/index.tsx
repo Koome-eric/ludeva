@@ -90,7 +90,7 @@ const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/privacy" className="mb-4 block text-base text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary">
+                  <Link href="/privacy-policy" className="mb-4 block text-base text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary">
                     Privacy Policy
                   </Link>
                 </li>
@@ -108,16 +108,7 @@ const Footer = () => {
                     Contact Us
                   </Link>
                 </li>
-                <li>
-                  <Link href="/support" className="mb-4 block text-base text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary">
-                    Support Center
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/" className="mb-4 block text-base text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary">
-                    Careers
-                  </Link>
-                </li>
+                
               </ul>
             </div>
           </div>

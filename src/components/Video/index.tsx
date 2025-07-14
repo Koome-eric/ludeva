@@ -34,7 +34,7 @@ const Choose = () => {
                 <Link
                   href="https://www.youtube.com/watch?v=DQx96G4yHd8"
                   target="_blank"
-                  className="inline-flex items-center gap-2 bg-blue-700 text-white px-5 py-3 rounded-md hover:bg-[#1d4f52] transition"
+                  className="inline-flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-md hover:bg-[#1d4f52] transition"
                 >
                   <i className="bi bi-play-fill text-lg"></i>
                   <span className="font-semibold">Watch the Video</span>

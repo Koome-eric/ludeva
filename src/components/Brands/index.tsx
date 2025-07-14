@@ -7,7 +7,7 @@ const HowItWorks = () => {
         {/* Heading */}
         <div className="text-center max-w-2xl mx-auto mb-16">
           <span
-            className="block text-sm uppercase tracking-widest text-blue-600 mb-2 dark:text-blue-400"
+            className="block text-sm uppercase tracking-widest text-primary mb-2 dark:text-primary"
             data-aos="fade-up"
             data-aos-delay="0"
           >
@@ -64,7 +64,7 @@ const HowItWorks = () => {
               data-aos="fade-up"
               data-aos-delay={step.delay}
             >
-              <div className="w-14 h-14 rounded-full bg-blue-700 text-white mx-auto flex items-center justify-center mb-5 text-lg font-bold">
+              <div className="w-14 h-14 rounded-full bg-primary text-white mx-auto flex items-center justify-center mb-5 text-lg font-bold">
                 {step.number}
               </div>
               <h3 className="text-lg font-semibold mb-3 text-dark dark:text-white">

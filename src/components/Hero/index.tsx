@@ -14,7 +14,7 @@ const Hero = () => {
           {/* Left Content */}
           <div className="w-full lg:w-1/2 mb-10 lg:mb-0">
             <div className="max-w-xl">
-              <span className="text-sm uppercase tracking-widest text-blue-700 dark:text-blue-400 mb-4 block">
+              <span className="text-sm uppercase tracking-widest text-primary dark:text-primary mb-4 block">
                 Accessible Investment for Everyone
               </span>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-black dark:text-white mb-4">
@@ -29,7 +29,7 @@ const Hero = () => {
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
                 <Link
                   href="/signup"
-                  className="rounded-xs bg-blue-700 px-8 py-4 text-base font-semibold text-white hover:bg-blue-800 transition"
+                  className="rounded-xs bg-primary px-8 py-4 text-base font-semibold text-white hover:bg-primary transition"
                 >
                   Get Started
                 </Link>
