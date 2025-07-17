@@ -88,10 +88,10 @@ const Hero = () => {
           <div className="w-full lg:w-1/2 relative pl-12">
             <div className="relative w-full max-w-xl mx-auto">
               <Image
-                src="/images/hero/hero-img-1-min.jpg"
+                src="/images/gallery/gallery1 (1).jpeg"
                 alt="Investing in Kenya"
                 width={480}
-                height={320}
+                height={400}
                 className="rounded-3xl shadow-lg mb-6"
               />
             </div>
