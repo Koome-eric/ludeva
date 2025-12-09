@@ -9,6 +9,8 @@ import Hero from "@/components/Hero";
 import Testimonials from "@/components/Testimonials";
 import Video from "@/components/Video";
 import FAQ from "@/components/faq/faq";
+import Teams from "@/components/Teams";
+import MusicFilmAggregation from "@/components/music/MusicFilmAggregation";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -29,6 +31,8 @@ export default function Home() {
       <Brands />
       <AboutSectionOne />
       <AboutSectionTwo />
+      <MusicFilmAggregation />
+      <Teams />
       <Testimonials />
       <FAQ />
       

@@ -1,8 +1,5 @@
-import AboutSectionOne from "@/components/About/AboutSectionOne";
-import AboutSectionTwo from "@/components/About/AboutSectionTwo";
-import DirectorsSection from "@/components/About/DirectorsSection";
-import StaffSection from "@/components/About/StaffSection";
 import Breadcrumb from "@/components/Common/Breadcrumb";
+import Teams from "@/components/Teams";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -18,10 +15,7 @@ const AboutPage = () => {
         pageName="About Ludeva"
         description="Ludeva Public Ltd is dedicated to unlocking inclusive, sustainable investment opportunities across Kenya. From money markets to agriculture and SME growth, we provide everyday people with access to high-potential ventures that build financial security and community wealth."
       />
-      <AboutSectionOne />
-      <AboutSectionTwo />
-      <DirectorsSection />
-      <StaffSection />
+      <Teams />
     </>
   );
 };

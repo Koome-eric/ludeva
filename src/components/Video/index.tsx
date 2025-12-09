@@ -2,6 +2,39 @@
 
 import Link from "next/link";
 
+const mmfFeatures = [
+  {
+    icon: "bi-graph-up",
+    title: "Stable 14% Gross Returns",
+    text: "Earn predictable returns through a diversified portfolio of short-term, high-yield money market instruments.",
+  },
+  {
+    icon: "bi-currency-exchange",
+    title: "Flexible Investment Options",
+    text: "Start with as little as KES 500 and choose to invest in KES or USD, with quarterly income distribution.",
+  },
+  {
+    icon: "bi-shield-lock",
+    title: "Low Risk & Secure",
+    text: "Investments are diversified across treasury bills, commercial papers, fixed deposits, and top-tier financial institutions.",
+  },
+  {
+    icon: "bi-clock-history",
+    title: "High Liquidity",
+    text: "Access your funds within 24 hours after the 6-month lock-in period for stable returns and capital preservation.",
+  },
+  {
+    icon: "bi-people",
+    title: "Professional Management",
+    text: "Fund is overseen by experienced financial managers, ensuring transparency and optimal income generation.",
+  },
+  {
+    icon: "bi-wallet2",
+    title: "Seamless Payments",
+    text: "Supports M-Pesa Paybill, PesaLink, Visa Card, and cheque for easy funding and withdrawals.",
+  },
+];
+
 const Choose = () => {
   return (
     <section id="choose" className="py-20 bg-white dark:bg-dark">
@@ -20,24 +53,20 @@ const Choose = () => {
             <div className="flex flex-col justify-between h-full">
               <div>
                 <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-dark dark:text-white">
-                  Why Choose Us
+                  Why Choose Ludeva Money Market Fund
                 </h2>
                 <p className="text-gray-700 dark:text-gray-300 mb-6">
-                  Experience the future of finance with our secure, efficient,
-                  and user-friendly financial services. Our cutting-edge
-                  platform ensures your transactions are safe, streamlined, and
-                  easy to manage, empowering you to take control of your
-                  financial journey with confidence and convenience.
+                  Ludeva Money Market Fund (MMF) offers a low-risk, income-generating investment designed to provide stable 14% gross annual returns. 
+                  Ideal for individuals, SMEs, SACCOs, and diaspora investors seeking passive income, capital preservation, and predictable cash flows.
                 </p>
               </div>
               <div>
                 <Link
-                  href="https://www.youtube.com/watch?v=DQx96G4yHd8"
-                  target="_blank"
+                  href="/mmf"
                   className="inline-flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-md hover:bg-[#1d4f52] transition"
                 >
                   <i className="bi bi-play-fill text-lg"></i>
-                  <span className="font-semibold">Watch the Video</span>
+                  <span className="font-semibold">Learn More About MMF</span>
                 </Link>
               </div>
             </div>
@@ -46,28 +75,7 @@ const Choose = () => {
           {/* Right Features Grid */}
           <div className="w-full lg:w-7/12">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              {[
-                {
-                  icon: "bi-person-check",
-                  title: "User-Friendly Interface",
-                  text: "Easy navigation with responsive design for various devices.",
-                },
-                {
-                  icon: "bi-graph-up",
-                  title: "Financial Analytics",
-                  text: "Budget tracking, expense categorization, and personalized insights.",
-                },
-                {
-                  icon: "bi-headset",
-                  title: "Customer Support",
-                  text: "24/7 service via chat, email, phone, and a detailed help center.",
-                },
-                {
-                  icon: "bi-shield-lock",
-                  title: "Security Features",
-                  text: "Data encryption, fraud detection, and prevention mechanisms.",
-                },
-              ].map((feature, idx) => (
+              {mmfFeatures.map((feature, idx) => (
                 <div
                   key={idx}
                   className="text-left"

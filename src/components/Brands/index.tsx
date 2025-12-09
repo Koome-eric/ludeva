@@ -1,77 +1,77 @@
 "use client";
 
-const HowItWorks = () => {
+const FinancialHighlight = () => {
   return (
-    <section id="how-it-works" className="py-16 bg-white dark:bg-dark">
+    <section id="financial-highlight" className="py-16 bg-white dark:bg-dark">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Heading */}
         <div className="text-center max-w-2xl mx-auto mb-16">
           <span
             className="block text-sm uppercase tracking-widest text-primary mb-2 dark:text-primary"
             data-aos="fade-up"
-            data-aos-delay="0"
           >
-            How it works
+            Q2 2025 Financial Report
           </span>
           <h2
             className="text-3xl sm:text-4xl font-bold mb-4 text-dark dark:text-white"
             data-aos="fade-up"
             data-aos-delay="100"
           >
-            How It Works
+            Money Market Fund Performance
           </h2>
           <p
             className="text-gray-600 dark:text-gray-300"
             data-aos="fade-up"
             data-aos-delay="200"
           >
-            Our platform is designed to make managing your finances simple and efficient.
-            Follow these easy steps to get started:
+            During the second quarter of 2025, the Ludeva Money Market Fund
+            maintained strong performance, delivering competitive returns while
+            preserving capital.
           </p>
         </div>
 
-        {/* Steps */}
+        {/* Metrics */}
         <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 text-center">
           {[
             {
-              number: "1",
-              title: "Sign Up",
-              desc: "Visit our website or download our app to sign up. Provide basic information to set up your secure account.",
+              value: "3.3%",
+              title: "Gross Interest Rate",
+              desc: "A stable investment climate and careful partner selection.",
               delay: 0,
             },
             {
-              number: "2",
-              title: "Set Up Your Profile",
-              desc: "Add your personal or business details to tailor the platform to your specific needs.",
+              value: "6%",
+              title: "AUM Growth",
+              desc: "Driven by increased member confidence in Ludeva MMF.",
               delay: 300,
             },
             {
-              number: "3",
-              title: "Explore Features",
-              desc: "Access your dashboard for a summary of your finances: balances, recent transactions, and insights.",
+              value: "KES 30M",
+              title: "Assets Under Management",
+              desc: "A testament to our growing community of investors.",
               delay: 600,
             },
             {
-              number: "4",
-              title: "Invest and Grow",
-              desc: "Discover a variety of investment opportunities tailored to your financial goals.",
+              value: "100%",
+              title: "Capital Preservation",
+              desc: "Your principal investment remains secure with us.",
               delay: 900,
             },
-          ].map((step, i) => (
+          ].map((metric, i) => (
             <div
               key={i}
               className="relative z-10"
               data-aos="fade-up"
-              data-aos-delay={step.delay}
+              data-aos-delay={metric.delay}
             >
-              <div className="w-14 h-14 rounded-full bg-primary text-white mx-auto flex items-center justify-center mb-5 text-lg font-bold">
-                {step.number}
+              <div className="text-4xl font-bold text-primary dark:text-primary mb-3">
+                {metric.value}
               </div>
               <h3 className="text-lg font-semibold mb-3 text-dark dark:text-white">
-                {step.title}
+                {metric.title}
               </h3>
               <p className="text-gray-600 dark:text-gray-300 text-sm">
-                {step.desc}
+                {metric.desc}
               </p>
             </div>
           ))}
@@ -81,4 +81,4 @@ const HowItWorks = () => {
   );
 };
 
-export default HowItWorks;
+export default FinancialHighlight;

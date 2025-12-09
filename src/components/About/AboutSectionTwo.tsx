@@ -1,8 +1,10 @@
+"use client";
+
 import Image from "next/image";
 
 const AboutSectionTwo = () => {
   return (
-    <section className="py-16 md:py-20 lg:py-28">
+    <section className="py-16 md:py-20 lg:py-28 bg-gray-50 dark:bg-dark">
       <div className="container">
         <div className="-mx-4 flex flex-wrap items-center">
           {/* Image */}
@@ -13,13 +15,13 @@ const AboutSectionTwo = () => {
             >
               <Image
                 src="/images/about/about-image-2.svg"
-                alt="Ludeva Impact"
+                alt="Ludeva Money Market Fund"
                 fill
                 className="drop-shadow-three dark:hidden dark:drop-shadow-none"
               />
               <Image
                 src="/images/about/about-image-2-dark.svg"
-                alt="Ludeva Impact"
+                alt="Ludeva Money Market Fund"
                 fill
                 className="hidden drop-shadow-three dark:block dark:drop-shadow-none"
               />
@@ -31,28 +33,28 @@ const AboutSectionTwo = () => {
             <div className="max-w-[470px]">
               <div className="mb-9">
                 <h3 className="mb-4 text-xl font-bold text-black dark:text-white sm:text-2xl lg:text-xl xl:text-2xl">
-                  Transparent &amp; Secure Investment Process
+                  Secure & Regulated Investment
                 </h3>
                 <p className="text-base font-medium leading-relaxed text-body-color sm:text-lg sm:leading-relaxed">
-                  Ludeva ensures full transparency in your investment journey, backed by secure infrastructure and compliance with regulatory standards in Kenya.
+                  Ludeva Money Market Fund invests in top-tier, short-term financial instruments like treasury bills, commercial papers, and fixed deposits—ensuring safety, compliance, and predictable returns.
                 </p>
               </div>
 
               <div className="mb-9">
                 <h3 className="mb-4 text-xl font-bold text-black dark:text-white sm:text-2xl lg:text-xl xl:text-2xl">
-                  Personalized Portfolio Support
+                  Flexible Access & Quarterly Payouts
                 </h3>
                 <p className="text-base font-medium leading-relaxed text-body-color sm:text-lg sm:leading-relaxed">
-                  Get expert guidance and insights to help you invest with confidence in real estate, agriculture, money markets, and SMEs.
+                  Investors enjoy 24-hour fund access after the lock-in period and quarterly income distributions, giving you liquidity and consistent passive income.
                 </p>
               </div>
 
               <div className="mb-1">
                 <h3 className="mb-4 text-xl font-bold text-black dark:text-white sm:text-2xl lg:text-xl xl:text-2xl">
-                  Inclusive Growth for Every Kenyan
+                  Accessible for Every Kenyan
                 </h3>
                 <p className="text-base font-medium leading-relaxed text-body-color sm:text-lg sm:leading-relaxed">
-                  Whether you&apos;re an individual, a small business, or part of a cooperative, Ludeva helps you unlock long-term wealth and community growth.
+                  Start investing with as little as KES 500, using M-Pesa, PesaLink, Visa, or cheque. Ludeva ensures that wealth creation through money market funds is open to individuals, SMEs, cooperatives, and diaspora investors.
                 </p>
               </div>
             </div>

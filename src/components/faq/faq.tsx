@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 const faqs = [
+
   {
     question: "What is Ludeva and what do you offer?",
     answer:
@@ -33,6 +34,7 @@ const faqs = [
     answer:
       "Returns vary by product. Money Market Funds typically yield daily interest, while SME and Real Estate Funds may offer monthly or quarterly payouts depending on the product.",
   },
+  
 ];
 
 const FAQ = () => {

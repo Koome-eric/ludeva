@@ -14,16 +14,19 @@ const Hero = () => {
           {/* Left Content */}
           <div className="w-full lg:w-1/2 mb-10 lg:mb-0">
             <div className="max-w-xl">
+
               <span className="text-sm uppercase tracking-widest text-primary dark:text-primary mb-4 block">
-                Accessible Investment for Everyone
+                Ludeva Money Market Fund (MMF)
               </span>
+
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-black dark:text-white mb-4">
-                Invest in Kenya’s Future, One Opportunity at a Time
+                Grow Your Wealth Safely with Daily Returns
               </h1>
+
               <p className="text-base sm:text-lg md:text-xl text-gray-700 dark:text-gray-300 mb-8">
-                Ludeva empowers individuals to grow their wealth through
-                regulated money market funds, real estate, agriculture, and SME
-                investments—all in one platform.
+                Earn consistent returns through the Ludeva Money Market Fund — a low-risk, 
+                professionally managed investment designed for everyday Kenyans. 
+                Start investing today from as little as <strong>KES 500</strong>.
               </p>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
@@ -31,13 +34,13 @@ const Hero = () => {
                   href="/signup"
                   className="rounded-xs bg-primary px-8 py-4 text-base font-semibold text-white hover:bg-primary transition"
                 >
-                  Get Started
+                  Invest Now
                 </Link>
                 <Link
-                  href="/about"
+                  href="/services/money-market"
                   className="inline-flex items-center rounded-xs border border-gray-800 px-8 py-4 text-base font-semibold text-gray-800 hover:bg-gray-800 hover:text-white transition dark:border-white dark:text-white dark:hover:bg-white/10"
                 >
-                  Learn More
+                  How MMF Works
                   <svg
                     className="ml-2"
                     xmlns="http://www.w3.org/2000/svg"
@@ -56,26 +59,27 @@ const Hero = () => {
                 </Link>
               </div>
 
+              {/* Trust Section */}
               <div className="mt-8">
                 <span className="block uppercase text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3">
-                  Trusted by everyday Kenyans and local businesses
+                  Trusted by investors across Kenya
                 </span>
                 <div className="flex items-center gap-6">
                   <Image
                     src="/images/brands/uideck.svg"
-                    alt="Udev Bank"
+                    alt="Finance Partner"
                     width={110}
                     height={30}
                   />
                   <Image
                     src="/images/brands/tailadmin.svg"
-                    alt="AgriVest"
+                    alt="Investment Brand"
                     width={90}
                     height={30}
                   />
                   <Image
                     src="/images/brands/graygrids.svg"
-                    alt="KIFund"
+                    alt="Trusted Network"
                     width={110}
                     height={30}
                   />
@@ -89,7 +93,7 @@ const Hero = () => {
             <div className="relative w-full max-w-xl mx-auto">
               <Image
                 src="/images/gallery/gallery1 (1).jpeg"
-                alt="Investing in Kenya"
+                alt="Ludeva Money Market Fund"
                 width={480}
                 height={400}
                 className="rounded-3xl shadow-lg mb-6"

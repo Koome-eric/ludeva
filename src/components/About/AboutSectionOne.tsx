@@ -27,22 +27,22 @@ const AboutSectionOne = () => {
             {/* Text Section */}
             <div className="w-full px-4 lg:w-1/2">
               <SectionTitle
-                title="Smart, Inclusive Investment Solutions for Everyone"
-                paragraph="Ludeva offers easy access to high-impact investments across money markets, real estate, agribusiness, and SME development—empowering individuals and communities to grow wealth securely and sustainably."
+                title="Ludeva Money Market Fund"
+                paragraph="Ludeva Money Market Fund (MMF) is a low-risk, income-generating investment designed to provide stable 14% gross annual returns. Our fund pools your capital into diversified, short-term money market instruments, ensuring liquidity, predictable growth, and capital preservation."
                 mb="44px"
               />
 
               <div className="mb-12 max-w-[570px] lg:mb-0" data-wow-delay=".15s">
                 <div className="mx-[-12px] flex flex-wrap">
                   <div className="w-full px-3 sm:w-1/2 lg:w-full xl:w-1/2">
-                    <List text="Regulated &amp; Transparent" />
-                    <List text="High-Yield Investment Options" />
-                    <List text="Real Estate &amp; Agribusiness" />
+                    <List text="Target Returns: 14% gross per annum" />
+                    <List text="Low Minimum Investment: KES 500" />
+                    <List text="High Liquidity: Access funds 24h after lock-in" />
                   </div>
                   <div className="w-full px-3 sm:w-1/2 lg:w-full xl:w-1/2">
-                    <List text="SME &amp; Community Growth Funds" />
-                    <List text="Mobile &amp; Web Accessibility" />
-                    <List text="Expert Portfolio Guidance" />
+                    <List text="Quarterly Income Distribution" />
+                    <List text="Multiple Payment Options: M-Pesa, PesaLink, Visa, Cheque" />
+                    <List text="Professionally Managed & Regulated Fund" />
                   </div>
                 </div>
               </div>
@@ -53,13 +53,13 @@ const AboutSectionOne = () => {
               <div className="relative mx-auto aspect-25/24 max-w-[500px] lg:mr-0">
                 <Image
                   src="/images/about/about-image.svg"
-                  alt="Ludeva About"
+                  alt="Ludeva Money Market Fund"
                   fill
                   className="mx-auto max-w-full drop-shadow-three dark:hidden dark:drop-shadow-none lg:mr-0"
                 />
                 <Image
                   src="/images/about/about-image-dark.svg"
-                  alt="Ludeva About"
+                  alt="Ludeva Money Market Fund"
                   fill
                   className="mx-auto hidden max-w-full drop-shadow-three dark:block dark:drop-shadow-none lg:mr-0"
                 />

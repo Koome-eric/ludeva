@@ -31,9 +31,8 @@ const Footer = () => {
                 Ludeva Public Ltd empowers Kenyans to invest confidently across money markets, real estate, agriculture, and SMEs.
               </p>
               <div className="flex items-center space-x-5">
-                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                 <a
-                  href="/"
+                  href="#"
                   aria-label="Facebook"
                   className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary"
                 >
@@ -41,9 +40,8 @@ const Footer = () => {
                     <path d="M12.1 10.5V7.43c0-1.19.99-2.15 2.2-2.15h2.2V2.05l-2.99-.21C10.97 1.67 8.8 3.64 8.8 6.13V10.5H5.5v3.22H8.8v6.45h3.3v-6.45h3.3l1.1-3.22h-4.4z" />
                   </svg>
                 </a>
-                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                 <a
-                  href="/"
+                  href="#"
                   aria-label="LinkedIn"
                   className="text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary"
                 >
@@ -98,17 +96,24 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Contact Links */}
+          {/* Contact Information */}
           <div className="w-full px-4 md:w-1/2 lg:w-4/12 xl:w-3/12">
             <div className="mb-12 lg:mb-16">
-              <h2 className="mb-6 text-xl font-bold text-black dark:text-white">Get in Touch</h2>
-              <ul>
-                <li>
-                  <Link href="/contact" className="mb-4 block text-base text-body-color hover:text-primary dark:text-body-color-dark dark:hover:text-primary">
-                    Contact Us
-                  </Link>
+              <h2 className="mb-6 text-xl font-bold text-black dark:text-white">Contact Information</h2>
+              <ul className="text-base text-body-color dark:text-body-color-dark">
+                <li className="mb-2">P.O Box 596, Homabay</li>
+                <li className="mb-2">
+                  <a href="mailto:invest@ludevaplc.co.ke" className="hover:text-primary">invest@ludevaplc.co.ke</a>
                 </li>
-                
+                <li className="mb-2">
+                  <a href="mailto:info@ludevaplc.co.ke" className="hover:text-primary">info@ludevaplc.co.ke</a>
+                </li>
+                <li className="mb-2">
+                  <a href="tel:+254732722101" className="hover:text-primary">0732722101</a> (General inquiry)
+                </li>
+                <li>
+                  <a href="tel:+254712940012" className="hover:text-primary">0712940012</a> (General inquiry)
+                </li>
               </ul>
             </div>
           </div>
