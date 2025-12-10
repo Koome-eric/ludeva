@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import SectionTitle from "../Common/SectionTitle";
 
 const faqs = [
 
@@ -50,14 +51,12 @@ const FAQ = () => {
       className="pt-16 md:pt-20 lg:pt-28 bg-white dark:bg-gray-900 mb-16"
     >
       <div className="container max-w-4xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Find quick answers to common questions about Ludeva&apos;s investment platform and services.
-          </p>
-        </div>
+
+        <SectionTitle
+                          title="Frequently Asked Questions"
+                          paragraph="Find quick answers to common questions about Ludeva&apos;s investment platform and services."
+                          center
+                        />
 
         <div className="space-y-6">
           {faqs.map((faq, index) => (

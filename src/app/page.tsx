@@ -30,9 +30,9 @@ export default function Home() {
       <Video />
       <Brands />
       <AboutSectionOne />
-      <AboutSectionTwo />
+      
       <MusicFilmAggregation />
-      <Teams />
+      
       <Testimonials />
       <FAQ />
       

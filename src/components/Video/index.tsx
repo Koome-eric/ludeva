@@ -1,80 +1,75 @@
 "use client";
 
 import Link from "next/link";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 const mmfFeatures = [
   {
     icon: "bi-graph-up",
     title: "Stable 14% Gross Returns",
-    text: "Earn predictable returns through a diversified portfolio of short-term, high-yield money market instruments.",
+    text: "Earn predictable returns through a diversified portfolio of short-term, high-yield instruments.",
   },
   {
     icon: "bi-currency-exchange",
     title: "Flexible Investment Options",
-    text: "Start with as little as KES 500 and choose to invest in KES or USD, with quarterly income distribution.",
+    text: "Start with KES 500 and invest in KES or USD, with quarterly income distribution.",
   },
   {
     icon: "bi-shield-lock",
     title: "Low Risk & Secure",
-    text: "Investments are diversified across treasury bills, commercial papers, fixed deposits, and top-tier financial institutions.",
+    text: "Investments are diversified across treasury bills, commercial papers, and top-tier institutions.",
   },
   {
     icon: "bi-clock-history",
     title: "High Liquidity",
-    text: "Access your funds within 24 hours after the 6-month lock-in period for stable returns and capital preservation.",
+    text: "Withdraw your earnings within 24 hours after the 6-month stabilization period.",
   },
   {
     icon: "bi-people",
     title: "Professional Management",
-    text: "Fund is overseen by experienced financial managers, ensuring transparency and optimal income generation.",
+    text: "Managed by experienced fund managers ensuring transparency and optimal returns.",
   },
   {
     icon: "bi-wallet2",
     title: "Seamless Payments",
-    text: "Supports M-Pesa Paybill, PesaLink, Visa Card, and cheque for easy funding and withdrawals.",
+    text: "Supports M-Pesa Paybill, PesaLink, Visa, and cheque for smooth deposits and withdrawals.",
   },
 ];
 
 const Choose = () => {
   return (
-    <section id="choose" className="py-20 bg-white dark:bg-dark">
-      <div className="max-w-7xl mx-auto px-6">
+    <section id="choose" className="py-16 bg-white dark:bg-dark">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
-          className="flex flex-col lg:flex-row gap-10 bg-[#f5faf6] dark:bg-[#1a1f1d] rounded-3xl p-12"
+          className="flex flex-col lg:flex-row gap-8 bg-[#f5faf6] dark:bg-[#1a1f1d] rounded-2xl p-8"
           data-aos="fade-in"
-          data-aos-delay="0"
         >
           {/* Left Content */}
-          <div
-            className="w-full lg:w-5/12"
-            data-aos="fade-up"
-            data-aos-delay="0"
-          >
-            <div className="flex flex-col justify-between h-full">
-              <div>
-                <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-dark dark:text-white">
-                  Why Choose Ludeva Money Market Fund
-                </h2>
-                <p className="text-gray-700 dark:text-gray-300 mb-6">
-                  Ludeva Money Market Fund (MMF) offers a low-risk, income-generating investment designed to provide stable 14% gross annual returns. 
-                  Ideal for individuals, SMEs, SACCOs, and diaspora investors seeking passive income, capital preservation, and predictable cash flows.
-                </p>
-              </div>
-              <div>
-                <Link
-                  href="/mmf"
-                  className="inline-flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-md hover:bg-[#1d4f52] transition"
-                >
-                  <i className="bi bi-play-fill text-lg"></i>
-                  <span className="font-semibold">Learn More About MMF</span>
-                </Link>
-              </div>
+          <div className="w-full lg:w-5/12" data-aos="fade-up">
+            <div className="flex flex-col gap-4">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-black dark:text-white leading-snug">
+                Why Choose Ludeva Money Market Fund
+              </h2>
+
+              <p className="text-sm sm:text-base text-body-color dark:text-gray-300 leading-relaxed">
+                Ludeva Money Market Fund (MMF) offers a low-risk, income-generating investment
+                designed to provide stable 14% gross annual returns. Ideal for individuals, SMEs,
+                SACCOs, and diaspora investors seeking passive income and capital preservation.
+              </p>
+
+              <Link
+                href="/mmf"
+                className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 text-sm rounded hover:bg-[#bf9c2f] transition"
+              >
+                <i className="bi bi-info-circle text-base"></i>
+                <span className="font-medium">Learn More About MMF</span>
+              </Link>
             </div>
           </div>
 
           {/* Right Features Grid */}
           <div className="w-full lg:w-7/12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {mmfFeatures.map((feature, idx) => (
                 <div
                   key={idx}
@@ -82,17 +77,19 @@ const Choose = () => {
                   data-aos="fade-up"
                   data-aos-delay={`${idx * 100}`}
                 >
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="bg-[#d4eddc] dark:bg-[#2d3e36] p-3 rounded-full">
+                  <div className="flex items-center mb-3">
+                    <div className="bg-[#d4eddc] dark:bg-[#2d3e36] p-2.5 rounded-full">
                       <i
-                        className={`bi ${feature.icon} text-2xl text-[#245C5F] dark:text-green-300`}
+                        className={`bi ${feature.icon} text-xl text-[#245C5F] dark:text-green-300`}
                       ></i>
                     </div>
                   </div>
-                  <h3 className="text-base font-semibold mb-2 text-dark dark:text-white">
+
+                  <h3 className="text-sm sm:text-base font-semibold mb-1 text-dark dark:text-white">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+
+                  <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm leading-relaxed">
                     {feature.text}
                   </p>
                 </div>

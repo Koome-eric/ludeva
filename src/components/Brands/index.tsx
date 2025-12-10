@@ -13,14 +13,14 @@ const FinancialHighlight = () => {
             Q2 2025 Financial Report
           </span>
           <h2
-            className="text-3xl sm:text-4xl font-bold mb-4 text-dark dark:text-white"
+            className="mb-3 text-2xl font-semibold leading-snug text-black dark:text-white sm:text-3xl md:text-[32px]"
             data-aos="fade-up"
             data-aos-delay="100"
           >
             Money Market Fund Performance
           </h2>
           <p
-            className="text-gray-600 dark:text-gray-300"
+            className="text-sm md:text-base leading-relaxed text-body-color dark:text-gray-300"
             data-aos="fade-up"
             data-aos-delay="200"
           >

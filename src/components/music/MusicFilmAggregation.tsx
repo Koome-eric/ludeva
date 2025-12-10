@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import SectionTitle from "../Common/SectionTitle";
 import Link from "next/link";
 
 export default function MusicFilmAggregation() {
@@ -19,19 +20,13 @@ export default function MusicFilmAggregation() {
     <section className="relative bg-gradient-to-b from-white via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-950 dark:to-black py-20">
       <div className="container mx-auto px-6 md:px-12 lg:px-20">
         {/* Header */}
-        <div className="text-center mb-16">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white"
-          >
-            Ludeva Music & Film Aggregation
-          </motion.h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 mt-4 max-w-3xl mx-auto">
-            Empowering creative youth across Africa through digital music and film production, distribution, and fair monetization.
-          </p>
-        </div>
+
+
+        <SectionTitle
+                  title="Ludeva Music & Film Aggregation"
+                  paragraph="Empowering creative youth across Africa through digital music and film production, distribution, and fair monetization."
+                  center
+                />
 
         {/* Content */}
         <div className="grid lg:grid-cols-2 gap-12 items-center">
