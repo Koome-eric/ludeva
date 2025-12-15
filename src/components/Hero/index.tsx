@@ -88,18 +88,15 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Right Image */}
-          <div className="w-full lg:w-1/2 relative pl-12">
-            <div className="relative w-full max-w-xl mx-auto">
+          <div className="relative w-full max-w-xl mx-auto h-125">
               <Image
-                src="/images/gallery/gallery1 (1).jpeg"
+                src="/images/hero2.jpg"
                 alt="Ludeva Money Market Fund"
-                width={480}
-                height={400}
-                className="rounded-3xl shadow-lg mb-6"
+                fill
+                className="rounded-3xl shadow-lg object-cover"
               />
             </div>
-          </div>
+
         </div>
       </div>
     </section>

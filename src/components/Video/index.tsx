@@ -38,7 +38,7 @@ const mmfFeatures = [
 
 const Choose = () => {
   return (
-    <section id="choose" className="py-16 bg-white dark:bg-dark">
+    <section id="choose" className="-mt-12 py-16 bg-white dark:bg-dark">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
           className="flex flex-col lg:flex-row gap-8 bg-[#f5faf6] dark:bg-[#1a1f1d] rounded-2xl p-8"
