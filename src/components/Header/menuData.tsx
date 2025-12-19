@@ -24,14 +24,14 @@ const menuData: Menu[] = [
         path: "/about/teams",
         newTab: false,
       },
+      {
+        id: 23,
+        title: "Blogs",
+        path: "/about/blog",
+        newTab: false,
+      },
     ],
     },
-  {
-    id: 33,
-    title: "Blog",
-    path: "/blog",
-    newTab: false,
-  },
   {
     id: 3,
     title: "Support",
@@ -57,24 +57,37 @@ const menuData: Menu[] = [
     },
     {
       id: 42,
-      title: "Real Estate Investment",
-      path: "/services/real-estate",
-      newTab: false,
-    },
-    {
-      id: 43,
-      title: "Community Agriculture",
-      path: "/services/agribusiness",
-      newTab: false,
-    },
-    {
-      id: 44,
-      title: "SME Development Funds",
-      path: "/services/sme-funding",
+      title: "Music & Film Aggregation",
+      path: "/services/money-market",
       newTab: false,
     },
     
   ],
   },
+  {
+    id: 5,
+    title: "Upcoming Projects",
+    newTab: false,
+    submenu: [
+      {
+      id: 51,
+      title: "Real Estate Investment",
+      path: "/upcoming/real-estate",
+      newTab: false,
+    },
+    {
+      id: 52,
+      title: "Community Agriculture",
+      path: "/upcoming/agribusiness",
+      newTab: false,
+    },
+    {
+      id: 53,
+      title: "SME Development Funds",
+      path: "/upcoming/sme-funding",
+      newTab: false,
+    },
+    ],
+    },
 ];
 export default menuData;

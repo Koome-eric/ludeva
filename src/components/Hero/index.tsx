@@ -1,44 +1,57 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import Image from "next/image";
 
 const Hero = () => {
   return (
     <section
       id="home"
-      className="relative z-10 overflow-hidden bg-white pb-16 pt-[120px] dark:bg-gray-900 md:pb-[120px] md:pt-[150px] xl:pb-[160px] xl:pt-[180px] 2xl:pb-[200px] 2xl:pt-[210px]"
+      className="relative z-10 overflow-hidden bg-gray-900 pt-[120px] pb-16 md:pt-[150px] md:pb-[120px] xl:pt-[180px] xl:pb-[160px] 2xl:pt-[210px] 2xl:pb-[200px]"
     >
-      <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center">
-          {/* Left Content */}
-          <div className="w-full lg:w-1/2 mb-10 lg:mb-0">
-            <div className="max-w-xl">
+      {/* Background Image */}
+      <div className="absolute inset-0 -z-10">
+        <Image
+          src="/images/hero3.jpg"
+          alt="Ludeva Money Market Fund"
+          fill
+          priority
+          className="object-cover"
+        />
+        {/* Dark Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
+      </div>
 
-              <span className="text-sm uppercase tracking-widest text-primary dark:text-primary mb-4 block">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center">
+          {/* Content */}
+          <div className="w-full lg:w-1/2">
+            <div className="max-w-xl text-white">
+              <span className="mb-4 block text-sm uppercase tracking-widest text-primary">
                 Ludeva Money Market Fund (MMF)
               </span>
 
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-black dark:text-white mb-4">
+              <h1 className="mb-4 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
                 Grow Your Wealth Safely with Daily Returns
               </h1>
 
-              <p className="text-base sm:text-lg md:text-xl text-gray-700 dark:text-gray-300 mb-8">
-                Earn consistent returns through the Ludeva Money Market Fund — a low-risk, 
-                professionally managed investment designed for everyday Kenyans. 
+              <p className="mb-8 text-base text-gray-200 sm:text-lg md:text-xl">
+                Earn consistent returns through the Ludeva Money Market Fund — a low-risk,
+                professionally managed investment designed for everyday Kenyans.
                 Start investing today from as little as <strong>KES 500</strong>.
               </p>
 
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+              <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Link
                   href="/signup"
-                  className="rounded-xs bg-primary px-8 py-4 text-base font-semibold text-white hover:bg-primary transition"
+                  className="rounded-xs bg-primary px-8 py-4 text-base font-semibold text-white transition hover:bg-primary/90"
                 >
                   Invest Now
                 </Link>
+
                 <Link
                   href="/services/money-market"
-                  className="inline-flex items-center rounded-xs border border-gray-800 px-8 py-4 text-base font-semibold text-gray-800 hover:bg-gray-800 hover:text-white transition dark:border-white dark:text-white dark:hover:bg-white/10"
+                  className="inline-flex items-center rounded-xs border border-white/70 px-8 py-4 text-base font-semibold text-white transition hover:bg-white/10"
                 >
                   How MMF Works
                   <svg
@@ -60,11 +73,11 @@ const Hero = () => {
               </div>
 
               {/* Trust Section */}
-              <div className="mt-8">
-                <span className="block uppercase text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3">
+              <div className="mt-10">
+                <span className="mb-4 block text-xs font-semibold uppercase tracking-wide text-gray-300">
                   Trusted by investors across Kenya
                 </span>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-6 opacity-90">
                   <Image
                     src="/images/brands/uideck.svg"
                     alt="Finance Partner"
@@ -87,16 +100,6 @@ const Hero = () => {
               </div>
             </div>
           </div>
-
-          <div className="relative w-full max-w-xl mx-auto h-125">
-              <Image
-                src="/images/hero2.jpg"
-                alt="Ludeva Money Market Fund"
-                fill
-                className="rounded-3xl shadow-lg object-cover"
-              />
-            </div>
-
         </div>
       </div>
     </section>
