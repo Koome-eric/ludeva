@@ -52,9 +52,11 @@ const Choose = () => {
               </h2>
 
               <p className="text-sm sm:text-base text-body-color dark:text-gray-300 leading-relaxed">
-                Ludeva Money Market Fund (MMF) offers a low-risk, income-generating investment
-                designed to provide stable 14% gross annual returns. Ideal for individuals, SMEs,
-                SACCOs, and diaspora investors seeking passive income and capital preservation.
+                Ludeva Money Market Fund (MMF) is a low-risk, income-generating investment designed to deliver stable gross returns of up to 14% per annum. It is ideal for individuals, SMEs, SACCOs, and diaspora investors seeking passive income with capital preservation.
+              </p>
+
+              <p className="text-sm sm:text-base text-body-color dark:text-gray-300 leading-relaxed">
+                While the fund targets consistent returns, actual performance may vary based on prevailing market conditions, and returns are not guaranteed. Ludeva MMF focuses on preserving capital while optimizing income. For personalized guidance, please contact our Customer Relations Manager.
               </p>
 
               <Link

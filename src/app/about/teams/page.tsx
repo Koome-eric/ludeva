@@ -3,21 +3,22 @@ import Teams from "@/components/Teams";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About Us | Ludeva Public Ltd – Invest in Kenya’s Future",
+  title: "Ludeva TEAMS | Community Savings & Investment Program",
   description:
-    "Learn more about Ludeva Public Ltd – a Kenyan investment company creating accessible opportunities in money markets, real estate, community agriculture, and SMEs.",
+    "Discover Ludeva TEAMS — a structured group savings and investment initiative that combines disciplined monthly contributions with Money Market Fund growth to create long-term passive income.",
 };
 
-const AboutPage = () => {
+const TeamsPage = () => {
   return (
     <>
       <Breadcrumb
-        pageName="About Ludeva"
-        description="Ludeva Public Ltd is dedicated to unlocking inclusive, sustainable investment opportunities across Kenya. From money markets to agriculture and SME growth, we provide everyday people with access to high-potential ventures that build financial security and community wealth."
+        pageName="Ludeva TEAMS"
+        description="Ludeva TEAMS is a structured group savings and investment initiative designed to promote financial discipline, transparency, and collective wealth creation. Members save together in small teams while growing their funds through Ludeva’s professionally managed Money Market Fund."
       />
+
       <Teams />
     </>
   );
 };
 
-export default AboutPage;
+export default TeamsPage;

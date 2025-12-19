@@ -4,22 +4,52 @@ import Image from "next/image";
 
 const staff = [
   {
-    name: "Lilian Wanjiru",
-    title: "Client Relations Manager",
-    image: "/images/testimonials/auth-03.png",
-    bio: "Focused on investor success and portfolio satisfaction.",
+    name: "Ron Okelo",
+    title: "AI & Technology Specialist",
+    image: "/images/staff/ron-okelo.jpg",
+    bio: "AI Prompt Designer and technology expert specializing in human-centered AI solutions.",
   },
   {
-    name: "Samuel Kimani",
-    title: "Investment Analyst",
-    image: "/images/testimonials/auth-01.png",
-    bio: "Specialist in market research and opportunity analysis.",
+    name: "Bernard Obudo",
+    title: "Telecommunication & Network Security",
+    image: "/images/staff/bernard-obudo.jpg",
+    bio: "Telecom and network security expert with 15+ years’ experience in multinational organizations and SME empowerment.",
   },
   {
-    name: "Grace Muthoni",
-    title: "Digital Communications Officer",
-    image: "/images/testimonials/auth-02.png",
-    bio: "Drives investor engagement and education through digital media.",
+    name: "Professor Nelson K. Olang’o Ojijo",
+    title: "Agricultural & Food Systems Expert",
+    image: "/images/staff/nelson-ojijo.jpg",
+    bio: "Associate Professor with 30+ years of experience in food processing, post-harvest technology, and agricultural development.",
+  },
+  {
+    name: "Dr. Pauline Otieno Kibisu",
+    title: "Healthcare Professional",
+    image: "/images/staff/pauline-kibisu.jpg",
+    bio: "Healthcare provider with a DNP, serving Veterans and leading health initiatives locally and internationally.",
+  },
+  {
+    name: "Mr. Seth Nyaranga",
+    title: "Accounting & Financial Management",
+    image: "/images/staff/seth-nyaranga.jpg",
+    bio: "Accounting professional with over 20 years in financial management, internal audits, and reporting.",
+  },
+  {
+    name: "Mr. Mordecai A. Ogembo",
+    title: "Education & Strategic Leadership",
+    image: "/images/staff/mordecai-ogembo.jpg",
+    bio: "Educationist and strategist with 20+ years in academia, public procurement, and performance management.",
+  },
+  {
+    name: "Mrs. Turfosa Otieno",
+    title: "Supply Chain & Marketing",
+    image: "/images/staff/turfosa-otieno.jpg",
+    bio: "Expert in supply chain operations, procurement, and business development across multiple industries.",
+  },
+  {
+    name: "Grace Odongo",
+    title: "Network Marketing & Client Relations",
+    image: "/images/staff/grace-odongo.jpg",
+    bio: "Expert in network marketing, customer engagement, and relationship management.",
   },
 ];
 

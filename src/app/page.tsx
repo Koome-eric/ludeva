@@ -9,7 +9,7 @@ import Hero from "@/components/Hero";
 import Testimonials from "@/components/Testimonials";
 import Video from "@/components/Video";
 import FAQ from "@/components/faq/faq";
-import Teams from "@/components/Teams";
+import MoneyMarketCalculator from "@/components/MoneyMarketCalculator";
 import MusicFilmAggregation from "@/components/music/MusicFilmAggregation";
 import { Metadata } from "next";
 
@@ -29,9 +29,7 @@ export default function Home() {
       
       <Video />
       <Brands />
-      <AboutSectionOne />
-      
-      <MusicFilmAggregation />
+      <MoneyMarketCalculator />
       
       <Testimonials />
       <FAQ />

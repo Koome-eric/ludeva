@@ -58,7 +58,13 @@ const menuData: Menu[] = [
     {
       id: 42,
       title: "Music & Film Aggregation",
-      path: "/services/money-market",
+      path: "/services/music",
+      newTab: false,
+    },
+    {
+      id: 43,
+      title: "Documents Hub",
+      path: "/services/documents",
       newTab: false,
     },
     
