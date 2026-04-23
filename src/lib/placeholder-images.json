@@ -1,0 +1,22 @@
+{
+  "placeholderImages": [
+    {
+      "id": "ludeva-hero",
+      "description": "Nairobi skyline representing growth and investment in Kenya",
+      "imageUrl": "https://images.unsplash.com/photo-1596423573213-439ba5980e14",
+      "imageHint": "Nairobi skyline"
+    },
+    {
+      "id": "why-ludeva-card",
+      "description": "Abstract image representing security and trust",
+      "imageUrl": "https://images.unsplash.com/photo-1579567761406-4684ee0c75b6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzZWN1cml0eSUyMGFic3RyYWN0fGVufDB8fHx8MTc2ODk1ODMyM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "security abstract"
+    },
+    {
+      "id": "about-us",
+      "description": "A diverse group of professionals in a modern office, collaborating on a project.",
+      "imageUrl": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxidXNpbmVzcyUyMHRlYW0lMjBrZW55YXxlbnwwfHx8fDE3NjkwMzgwODR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "business team"
+    }
+  ]
+}

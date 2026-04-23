@@ -1,0 +1,135 @@
+import { auth } from '@clerk/nextjs/server';
+import { prisma } from './prisma';
+import { redirect } from 'next/navigation';
+
+// ─────────────────────────────────────────────
+// Super admin Clerk IDs — single source of truth
+// (mirrors middleware.ts)
+// ─────────────────────────────────────────────
+export const SUPER_ADMIN_CLERK_IDS = [
+  'user_38qCNW1RIEGrQ6rORph6s2348NX',
+  'user_3B9OSNbtBdz7tP5pghbHX2FvQDp',
+];
+
+// ─────────────────────────────────────────────
+// requireOnboardingComplete
+// Use in: member dashboard pages
+// ─────────────────────────────────────────────
+export async function requireOnboardingComplete() {
+  const { userId: clerkId } = await auth();
+
+  if (!clerkId) redirect('/sign-in');
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId },
+  });
+
+  if (!user) redirect('/onboarding/investment');
+  if (!user.onboardingCompleted) redirect('/onboarding/investment');
+
+  return user;
+}
+
+// ─────────────────────────────────────────────
+// getCurrentUserIfOnboarded
+// Use in: optional auth (non-blocking)
+// ─────────────────────────────────────────────
+export async function getCurrentUserIfOnboarded() {
+  const { userId: clerkId } = await auth();
+
+  if (!clerkId) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId },
+  });
+
+  if (!user || !user.onboardingCompleted) return null;
+
+  return user;
+}
+
+// ─────────────────────────────────────────────
+// isUserAdmin
+// Use in: conditional rendering, checks
+// ─────────────────────────────────────────────
+export async function isUserAdmin(): Promise<boolean> {
+  const { userId: clerkId } = await auth();
+
+  if (!clerkId) return false;
+
+  if (SUPER_ADMIN_CLERK_IDS.includes(clerkId)) return true;
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId },
+    select: { role: true },
+  });
+
+  return user?.role === 'ADMIN';
+}
+
+// ─────────────────────────────────────────────
+// requireAdmin
+// Use in: /admin/* pages
+// ─────────────────────────────────────────────
+export async function requireAdmin() {
+  const { userId: clerkId } = await auth();
+
+  if (!clerkId) redirect('/sign-in');
+
+  // Auto-sync super admin into DB
+  let user = await prisma.user.findUnique({ where: { clerkId } });
+
+  if (!user && SUPER_ADMIN_CLERK_IDS.includes(clerkId)) {
+    // Super admin not yet in DB — this shouldn't happen normally
+    // but handle it gracefully
+    redirect('/sign-in');
+  }
+
+  if (!user || (user.role !== 'ADMIN' && !SUPER_ADMIN_CLERK_IDS.includes(clerkId))) {
+    redirect('/member/dashboard');
+  }
+
+  // If super admin but not flagged as ADMIN in DB, upgrade them
+  if (SUPER_ADMIN_CLERK_IDS.includes(clerkId) && user.role !== 'ADMIN') {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { role: 'ADMIN' },
+    });
+  }
+
+  return user;
+}
+
+// ─────────────────────────────────────────────
+// requireUser
+// Use in: chat pages, general authenticated pages
+// No onboarding or role restriction
+// ─────────────────────────────────────────────
+export async function requireUser() {
+  const { userId: clerkId } = await auth();
+
+  if (!clerkId) redirect('/sign-in');
+
+  const user = await prisma.user.findUnique({ where: { clerkId } });
+
+  if (!user) {
+    // User authenticated with Clerk but not yet in DB
+    redirect('/onboarding/investment');
+  }
+
+  return user;
+}
+
+// ─────────────────────────────────────────────
+// requireUserApi
+// Use in: API routes (returns null instead of redirecting)
+// ─────────────────────────────────────────────
+export async function requireUserApi() {
+  const { userId: clerkId } = await auth();
+
+  if (!clerkId) return null;
+
+  const user = await prisma.user.findUnique({ where: { clerkId } });
+
+  return user ?? null;
+}

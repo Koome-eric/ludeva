@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ===== ENUMS =====
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+enum FundType {
+  MMF
+  STOCK
+  BOND
+}
+
+enum ProductCategory {
+  MONEY_MARKET
+  EQUITY
+  FIXED_INCOME
+}
+
+enum InvestmentStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  FAILED
+}
+
+enum PaymentMethod {
+  MPESA
+  STRIPE
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  INVESTMENT
+  DIVIDEND
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum NotificationType {
+  SYSTEM
+  INVESTMENT
+  PAYMENT
+  KYC
+}
+
+enum DocumentType {
+  FILE
+  CONTENT
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AccountType {
+  INDIVIDUAL
+  TEAM
+}
+
+// ===== MODELS =====
+model User {
+  id                  String      @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId             String      @unique
+  email               String      @unique
+  fullName            String?
+  phone               String?
+  nationalId          String?
+  dateOfBirth         DateTime?
+  countyOfBirth       String?
+  countyOfResidence   String?
+  ludevaNumber        String?
+  maritalStatus       String?
+  numberOfKids        Int?
+  nextOfKinName       String?
+  nextOfKinPhone      String?
+  nextOfKinEmail      String?
+  initialInvestment   Int?
+  role                Role        @default(MEMBER)
+  onboardingCompleted Boolean     @default(false)
+  accountType         AccountType @default(INDIVIDUAL)
+
+  kycStatus      KycStatus @default(PENDING)
+  kycSubmittedAt DateTime?
+
+  investments   Investment[]
+  payments      Payment[]
+  transactions  Transaction[]
+  notifications Notification[]
+  documents     Document[]
+  analyticsUploads TeamAnalytics[] @relation("AnalyticsUploads")
+
+  // Chat relations
+  memberChats  ChatRoom[] @relation("MemberChats")
+  adminChats   ChatRoom[] @relation("AdminChats")
+  sentMessages Message[]  @relation("SentMessages")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user")
+}
+
+model ChatRoom {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  memberId String @db.ObjectId
+  adminId  String @db.ObjectId
+
+  member User @relation("MemberChats", fields: [memberId], references: [id])
+  admin  User @relation("AdminChats", fields: [adminId], references: [id])
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, adminId]) // prevent duplicate rooms
+  @@map("chatroom")
+}
+
+model Message {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  roomId   String  @db.ObjectId
+  senderId String  @db.ObjectId
+  content  String
+  read     Boolean @default(false)
+
+  room   ChatRoom @relation(fields: [roomId], references: [id])
+  sender User     @relation("SentMessages", fields: [senderId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("message")
+}
+
+model TeamAnalytics {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  label       String   // e.g. "May 2025 Analytics"
+  fileName    String   // original file name
+  fileUrl     String   // UploadThing / storage URL
+  fileType    String   // "csv" or "xlsx"
+  // Parsed table data stored as JSON so the public page renders it
+  // without re-parsing the file on every request
+  headers     String[] // column headers
+  rows        String   // JSON stringified String[][] — each row is an array of cell strings
+  uploadedById String  @db.ObjectId
+  uploadedBy   User    @relation("AnalyticsUploads", fields: [uploadedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("teamanalytics")
+}
+
+
+
+model Investment {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String           @db.ObjectId
+  productId String           @db.ObjectId
+  amount    Float
+  fundType  FundType
+  status    InvestmentStatus @default(PENDING)
+
+  productName String
+  roi         Float
+  duration    Int
+
+  user     User              @relation(fields: [userId], references: [id])
+  product  InvestmentProduct @relation(fields: [productId], references: [id])
+  payments Payment[]         @relation(name: "PaymentInvestment")
+
+  createdAt DateTime @default(now())
+
+  @@map("investment")
+}
+
+model InvestmentProduct {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  type            FundType
+  category        ProductCategory
+  description     String?
+  roi             Float
+  duration        Int
+  minAmount       Float
+  maxAmount       Float?
+  isActive        Boolean         @default(true)
+  nav             Float?
+  activeInvestors Int?            @default(0)
+  inceptionDate   DateTime?
+  investments     Investment[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("investmentproduct")
+}
+
+model Payment {
+  id                String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String        @db.ObjectId
+  investmentId      String?       @db.ObjectId
+  amount            Float
+  currency          String        @default("KES")
+  method            PaymentMethod
+  status            PaymentStatus @default(PENDING)
+  reference         String        @unique
+  providerReference String?
+  merchantRequestID String?
+  description       String?
+
+  user       User        @relation(fields: [userId], references: [id])
+  investment Investment? @relation(fields: [investmentId], references: [id], name: "PaymentInvestment")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+  id        String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String            @db.ObjectId
+  user      User              @relation(fields: [userId], references: [id])
+  type      TransactionType
+  amount    Float
+  status    TransactionStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@map("transaction")
+}
+
+model Notification {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String?          @db.ObjectId
+  title     String
+  message   String
+  type      NotificationType @default(SYSTEM)
+  isRead    Boolean          @default(false)
+  user      User?            @relation(fields: [userId], references: [id])
+  createdAt DateTime         @default(now())
+
+  @@map("notification")
+}
+
+model Document {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  type        DocumentType
+  fileUrl     String?
+  content     String?
+  mediaType   String? // "image" | "video" | "pdf"
+  isPublished Boolean      @default(true)
+  createdById String       @db.ObjectId
+  createdBy   User         @relation(fields: [createdById], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
