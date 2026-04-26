@@ -270,6 +270,7 @@ model Document {
   description String?
   type        DocumentType
   fileUrl     String?
+  fileName String?
   content     String?
   mediaType   String? // "image" | "video" | "pdf"
   isPublished Boolean      @default(true)

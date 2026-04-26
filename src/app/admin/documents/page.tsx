@@ -91,6 +91,54 @@ export default function AdminDocumentsPage() {
     setContent("");
   };
 
+  // 🔥 FILE TYPE DETECTION
+  const getFileType = (url: string) => {
+    if (!url) return "unknown";
+
+    if (url.match(/\.(jpeg|jpg|png|gif)$/i)) return "image";
+    if (url.match(/\.pdf$/i)) return "pdf";
+
+    return "other";
+  };
+
+  // 🔥 EXTRACT EXTENSION
+  const getFileExtension = (url: string) => {
+    const parts = url.split(".");
+    return parts.length > 1 ? parts.pop() : "";
+  };
+
+  // 🔥 GENERATE DOWNLOAD NAME
+  const getDownloadName = (doc: any) => {
+    const ext = getFileExtension(doc.fileUrl);
+    return `${doc.title || "document"}.${ext}`;
+  };
+
+  // ADD THIS FUNCTION
+const handleDownload = async (doc: any) => {
+  try {
+    const res = await fetch(doc.fileUrl);
+    const blob = await res.blob();
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = doc.fileName || "document";
+
+    document.body.appendChild(a);
+    a.click();
+
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error(err);
+    toast({
+      variant: "destructive",
+      title: "Download failed",
+    });
+  }
+};
+
   return (
     <div className="p-10 space-y-10">
 
@@ -100,8 +148,17 @@ export default function AdminDocumentsPage() {
           {editingId ? "Edit Document" : "Create Document"}
         </h1>
 
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
-        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" />
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Title"
+        />
+
+        <Textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Description"
+        />
 
         <select
           value={type}
@@ -113,11 +170,19 @@ export default function AdminDocumentsPage() {
         </select>
 
         {type === "FILE" && (
-          <Input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          <Input
+            type="file"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.png,.jpg,.jpeg"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+          />
         )}
 
         {type === "CONTENT" && (
-          <Textarea value={content} onChange={(e) => setContent(e.target.value)} />
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Write content..."
+          />
         )}
 
         <Button onClick={handleSubmit}>
@@ -154,7 +219,11 @@ export default function AdminDocumentsPage() {
                 Edit
               </Button>
 
-              <Button size="sm" variant="destructive" onClick={() => handleDelete(doc.id)}>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => handleDelete(doc.id)}
+              >
                 Delete
               </Button>
             </div>
@@ -168,7 +237,9 @@ export default function AdminDocumentsPage() {
           Prev
         </Button>
 
-        <span>Page {page} / {totalPages}</span>
+        <span>
+          Page {page} / {totalPages}
+        </span>
 
         <Button disabled={page === totalPages} onClick={() => setPage(page + 1)}>
           Next
@@ -181,13 +252,42 @@ export default function AdminDocumentsPage() {
           <div className="bg-white p-6 rounded max-w-2xl w-full space-y-4">
             <h2 className="text-xl font-bold">{previewDoc.title}</h2>
 
-            {previewDoc.type === "FILE" ? (
-              <iframe
-                src={previewDoc.fileUrl}
-                className="w-full h-[400px]"
-              />
-            ) : (
+            {previewDoc.type === "CONTENT" && (
               <p className="whitespace-pre-wrap">{previewDoc.content}</p>
+            )}
+
+            {previewDoc.type === "FILE" && (
+              <>
+                {getFileType(previewDoc.fileUrl) === "image" && (
+                  <img
+                    src={previewDoc.fileUrl}
+                    className="w-full max-h-[400px] object-contain"
+                  />
+                )}
+
+                {getFileType(previewDoc.fileUrl) === "pdf" && (
+                  <iframe
+                    src={previewDoc.fileUrl}
+                    className="w-full h-[400px]"
+                  />
+                )}
+
+                {getFileType(previewDoc.fileUrl) === "other" && (
+                  <div className="text-center space-y-4">
+                    <p className="text-gray-600">
+                      Preview not available for this file type
+                    </p>
+
+                    {/* ✅ FIXED DOWNLOAD */}
+                    <button
+                      onClick={() => handleDownload(previewDoc)}
+                      className="text-blue-600 underline"
+                    >
+                      Download File
+                    </button>
+                  </div>
+                )}
+              </>
             )}
 
             <Button onClick={() => setPreviewDoc(null)}>Close</Button>

@@ -15,13 +15,14 @@ export async function GET() {
     const formattedDocuments = documents.map((doc) => ({
       id: doc.id.toString(),
       title: doc.title,
-      description: doc.description ?? null,
+      description: doc.description ?? "",
       fileUrl: doc.fileUrl ?? null,
+      fileName: doc.fileName ?? null,
       content: doc.content ?? null,
+      type: doc.type ?? "FILE",
     }));
 
     return NextResponse.json(formattedDocuments);
-
   } catch (error: any) {
     console.error("DOCUMENT API ERROR:", error);
 

@@ -5,17 +5,25 @@ import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import Container from "@/components/ui/Container";
 import PageHero from "@/components/PageHero";
-import { FileText, Download, Eye, ArrowUpRight } from "lucide-react";
+import { FileText, Download, Eye } from "lucide-react";
 
-const PdfDocument = dynamic(() => import("react-pdf").then((m) => m.Document), { ssr: false });
-const PdfPage = dynamic(() => import("react-pdf").then((m) => m.Page), { ssr: false });
+const PdfDocument = dynamic(
+  () => import("react-pdf").then((m) => m.Document),
+  { ssr: false }
+);
+const PdfPage = dynamic(
+  () => import("react-pdf").then((m) => m.Page),
+  { ssr: false }
+);
 
 interface DocumentType {
   id: string;
   title: string;
   description?: string;
-  fileUrl?: string;
+  fileUrl?: string | null;
+  fileName?: string | null;
   content?: string;
+  type?: "FILE" | "CONTENT";
 }
 
 export default function DocumentsSection() {
@@ -37,19 +45,40 @@ export default function DocumentsSection() {
     show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
+  // ✅ RELIABLE DOWNLOAD (BLOB METHOD)
+  const handleDownload = async (doc: DocumentType) => {
+    try {
+      if (!doc.fileUrl) return;
+
+      const res = await fetch(doc.fileUrl);
+      const blob = await res.blob();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = doc.fileName || "document";
+
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+  };
+
   useEffect(() => {
     const fetchDocs = async () => {
       try {
         const res = await fetch("/api/documents", { cache: "no-store" });
-        const text = await res.text();
-        const data = JSON.parse(text);
+        const data = await res.json();
 
-        if (!res.ok) throw new Error(data.message || "Failed to fetch documents");
-        if (!Array.isArray(data)) throw new Error("Invalid response format");
+        if (!res.ok) throw new Error(data.message || "Failed to fetch");
 
         setDocuments(data);
       } catch (err: any) {
-        console.error(err);
         setError(err.message || "Something went wrong");
       } finally {
         setLoading(false);
@@ -59,12 +88,15 @@ export default function DocumentsSection() {
     fetchDocs();
   }, []);
 
-  const getFileType = (url?: string) => {
-    if (!url) return "unknown";
-    if (url.includes(".pdf")) return "pdf";
-    if (url.match(/\.(jpg|jpeg|png|webp|gif)/)) return "image";
-    if (url.match(/\.(mp4|webm|mov)/)) return "video";
-    return "unknown";
+  // FILE TYPE DETECTION
+  const getFileType = (doc: DocumentType) => {
+    const source = doc.fileName || doc.fileUrl || "";
+
+    if (source.match(/\.pdf$/i)) return "pdf";
+    if (source.match(/\.(jpg|jpeg|png|webp|gif)$/i)) return "image";
+    if (source.match(/\.(mp4|webm|mov)$/i)) return "video";
+
+    return "other";
   };
 
   return (
@@ -77,34 +109,27 @@ export default function DocumentsSection() {
 
       <section className="py-20 md:py-28">
         <Container>
-          {/* LOADING STATE */}
+          {/* LOADING */}
           {loading && (
-            <div className="flex flex-col items-center py-20 animate-pulse">
-              <div className="w-16 h-16 bg-primary/20 rounded-xl mb-4" />
-              <p className="text-muted-foreground">Fetching documents...</p>
-            </div>
+            <div className="text-center py-20">Loading documents...</div>
           )}
 
-          {/* ERROR STATE */}
+          {/* ERROR */}
           {error && (
-            <div className="text-center py-16 text-red-500">{error}</div>
+            <div className="text-center text-red-500 py-20">{error}</div>
           )}
 
-          {/* EMPTY STATE */}
+          {/* EMPTY */}
           {!loading && !error && documents.length === 0 && (
             <div className="text-center py-20">
-              <div className="text-6xl mb-4">📂</div>
-              <p className="text-lg font-medium">No documents yet</p>
-              <p className="text-muted-foreground text-sm">
-                Documents will appear here once uploaded
-              </p>
+              <p>No documents available</p>
             </div>
           )}
 
-          {/* DOCUMENT GRID */}
+          {/* GRID */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
             {documents.map((doc, i) => {
-              const fileType = getFileType(doc.fileUrl);
+              const fileType = getFileType(doc);
               const color = folderColors[i % folderColors.length];
 
               return (
@@ -113,60 +138,45 @@ export default function DocumentsSection() {
                   variants={fadeUp}
                   initial="hidden"
                   whileInView="show"
-                  viewport={{ once: true }}
-                  whileHover={{ y: -8, scale: 1.03 }}
-                  className="group relative cursor-pointer"
+                  whileHover={{ y: -6 }}
+                  className="group relative"
                 >
-                  {/* FOLDER SHAPE */}
-                  <div className="relative">
-                    {/* Folder tab */}
-                    <div
-                      className={`absolute -top-3 left-6 w-24 h-6 rounded-t-lg bg-gradient-to-r ${color} opacity-90`}
-                    />
-
-                    {/* Main folder body */}
-                    <div
-                      className={`rounded-2xl p-6 pt-10 bg-gradient-to-br ${color} text-white shadow-lg group-hover:shadow-2xl transition-all duration-300`}
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <FileText className="h-10 w-10 opacity-90" />
-                        <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
-                          {fileType.toUpperCase()}
-                        </span>
-                      </div>
-
-                      <h3 className="text-lg font-semibold line-clamp-2 mb-2">
-                        {doc.title}
-                      </h3>
-
-                      {doc.description && (
-                        <p className="text-sm text-white/80 line-clamp-2">
-                          {doc.description}
-                        </p>
-                      )}
+                  {/* CARD */}
+                  <div
+                    className={`rounded-2xl p-6 bg-gradient-to-br ${color} text-white`}
+                  >
+                    <div className="flex justify-between mb-4">
+                      <FileText />
+                      <span className="text-xs bg-white/20 px-2 py-1 rounded">
+                        {fileType.toUpperCase()}
+                      </span>
                     </div>
+
+                    <h3 className="font-semibold">{doc.title}</h3>
+                    <p className="text-sm opacity-80">{doc.description}</p>
                   </div>
 
-                  {/* HOVER ACTIONS */}
-                  <div className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-3 bg-black/70 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    {fileType === "pdf" && (
+                  {/* ACTIONS */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70 opacity-0 group-hover:opacity-100 transition">
+                    
+                    {/* PREVIEW */}
+                    {(fileType === "pdf" || fileType === "image") && (
                       <button
                         onClick={() => setPreviewDoc(doc)}
-                        className="flex items-center gap-2 text-white font-medium hover:scale-105 transition"
+                        className="text-white flex items-center gap-2"
                       >
-                        <Eye className="h-4 w-4" /> Preview
+                        <Eye size={16} /> Preview
                       </button>
                     )}
 
+                    {/* DOWNLOAD */}
                     {doc.fileUrl && (
-                      <a
-                        href={doc.fileUrl}
-                        target="_blank"
-                        className="flex items-center gap-2 text-white font-medium hover:scale-105 transition"
+                      <button
+                        onClick={() => handleDownload(doc)}
+                        className="text-white flex items-center gap-2"
                       >
-                        <Download className="h-4 w-4" /> Open File
-                        <ArrowUpRight className="h-4 w-4" />
-                      </a>
+                        <Download size={16} /> Download
+                      </button>
                     )}
                   </div>
                 </motion.div>
@@ -176,21 +186,46 @@ export default function DocumentsSection() {
         </Container>
       </section>
 
-      {/* PDF MODAL */}
+      {/* MODAL */}
       {previewDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-          <div className="bg-background rounded-xl w-full max-w-4xl p-4 relative shadow-2xl">
+        <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50 p-4">
+          <div className="bg-white p-4 rounded max-w-3xl w-full relative">
+
             <button
               onClick={() => setPreviewDoc(null)}
-              className="absolute top-4 right-4 text-sm"
+              className="absolute top-2 right-2"
             >
               ✕
             </button>
-            <div className="overflow-auto max-h-[80vh]">
+
+            {/* PDF */}
+            {getFileType(previewDoc) === "pdf" && (
               <PdfDocument file={previewDoc.fileUrl}>
                 <PdfPage pageNumber={1} />
               </PdfDocument>
-            </div>
+            )}
+
+            {/* IMAGE */}
+            {getFileType(previewDoc) === "image" && (
+              <img
+                src={previewDoc.fileUrl || ""}
+                className="w-full max-h-[70vh] object-contain"
+              />
+            )}
+
+            {/* OTHER */}
+            {getFileType(previewDoc) === "other" && (
+              <div className="text-center space-y-4">
+                <p>No preview available</p>
+
+                <button
+                  onClick={() => handleDownload(previewDoc)}
+                  className="text-blue-600 underline"
+                >
+                  Download File
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

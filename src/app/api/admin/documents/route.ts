@@ -29,10 +29,7 @@ async function getAdminUser() {
     });
   }
 
-  if (
-    SUPER_ADMIN_CLERK_IDS.includes(userId) &&
-    dbUser.role !== "ADMIN"
-  ) {
+  if (SUPER_ADMIN_CLERK_IDS.includes(userId) && dbUser.role !== "ADMIN") {
     dbUser = await prisma.user.update({
       where: { id: dbUser.id },
       data: { role: "ADMIN" },
@@ -89,54 +86,81 @@ export async function GET(req: Request) {
 }
 
 //
-// ======================= POST =======================
+// ======================= POST (FIXED CORE)
 //
 export async function POST(req: Request) {
-  const admin = await getAdminUser();
-  if (!admin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const admin = await getAdminUser();
+    if (!admin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const formData = await req.formData();
+    const formData = await req.formData();
 
-  const title = formData.get("title") as string;
-  const description = formData.get("description") as string;
-  const type = formData.get("type") as "FILE" | "CONTENT";
-  const content = formData.get("content") as string;
+    const title = formData.get("title") as string;
+    const description = formData.get("description") as string;
+    const type = formData.get("type") as "FILE" | "CONTENT";
+    const content = formData.get("content") as string;
 
-  let fileUrl: string | null = null;
+    let fileUrl: string | null = null;
+    let fileName: string | null = null;
 
-  if (type === "FILE") {
-    const file = formData.get("file") as File;
+    if (type === "FILE") {
+      const file = formData.get("file") as File;
 
-    if (file) {
+      if (!file) {
+        return NextResponse.json({ error: "File required" }, { status: 400 });
+      }
+
+      fileName = file.name;
+
       const buffer = Buffer.from(await file.arrayBuffer());
 
       const uploadResult = await new Promise<any>((resolve, reject) => {
         cloudinary.uploader
-          .upload_stream({ folder: "documents" }, (err, result) => {
-            if (err) reject(err);
-            else resolve(result);
-          })
+          .upload_stream(
+            {
+              folder: "documents",
+              resource_type: "raw",
+              use_filename: true,
+              unique_filename: false,
+            },
+            (err, result) => {
+              if (err) reject(err);
+              else resolve(result);
+            }
+          )
           .end(buffer);
       });
 
-      fileUrl = uploadResult.secure_url;
+      // ✅ CRITICAL FIX
+      fileUrl = uploadResult.secure_url.replace(
+        "/upload/",
+        `/upload/fl_attachment:${encodeURIComponent(fileName)}/`
+      );
     }
+
+    const document = await prisma.document.create({
+      data: {
+        title,
+        description,
+        type,
+        content: type === "CONTENT" ? content : null,
+        fileUrl,
+        fileName,
+        createdById: admin.id,
+      },
+    });
+
+    return NextResponse.json(document);
+  } catch (error: any) {
+    console.error(error);
+
+    return NextResponse.json(
+      { error: error.message || "Upload failed" },
+      { status: 500 }
+    );
   }
-
-  const document = await prisma.document.create({
-    data: {
-      title,
-      description,
-      type,
-      content: type === "CONTENT" ? content : null,
-      fileUrl,
-      createdById: admin.id,
-    },
-  });
-
-  return NextResponse.json(document);
 }
 
 //
