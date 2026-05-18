@@ -15,22 +15,64 @@ interface User {
   email: string;
   phone?: string;
   nationalId?: string;
-  dateOfBirth?: string;
+  kraPin?: string;
+  sourceOfFunds?: string;
+  dateOfBirth?: string | Date;
+  placeOfBirthCounty?: string;
+  placeOfBirthSubCounty?: string;
+  placeOfBirthWard?: string;
   countyOfBirth?: string;
   countyOfResidence?: string;
+  residentialAddress?: string;
+  employmentStatus?: string;
+  professionalBackground?: string;
+  currentOccupation?: string;
   ludevaNumber?: string;
   maritalStatus?: string;
   numberOfKids?: number;
+  teamName?: string;
+  selfieUrl?: string;
+  idCopyUrl?: string;
+  primaryBeneficiaryName?: string;
+  primaryBeneficiaryPercentage?: number;
+  primaryBeneficiaryIdNumber?: string;
+  primaryBeneficiaryEmail?: string;
+  primaryBeneficiaryPhone?: string;
+  primaryBeneficiaryIdUrl?: string;
+  secondaryBeneficiaryName?: string;
+  secondaryBeneficiaryPercentage?: number;
+  secondaryBeneficiaryIdNumber?: string;
+  secondaryBeneficiaryPhone?: string;
+  secondaryBeneficiaryIdUrl?: string;
   nextOfKinName?: string;
   nextOfKinPhone?: string;
   nextOfKinEmail?: string;
   kycStatus: string;
   kycSubmittedAt?: string | Date;
-  accountType: 'INDIVIDUAL' | 'TEAM'; // ✅ added
+  accountType: 'INDIVIDUAL' | 'TEAM';
+  initialInvestment?: number;
 }
 
 interface KycTableProps {
   initialUsers: User[];
+}
+
+function Field({ label, value }: { label: string; value?: string | number | null }) {
+  return (
+    <div className="grid grid-cols-2 gap-2 py-1.5 border-b last:border-b-0 text-sm">
+      <span className="font-medium text-muted-foreground">{label}</span>
+      <span>{value ?? '—'}</span>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-4">
+      <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-2">{title}</h3>
+      <div className="border rounded-lg p-3 space-y-0">{children}</div>
+    </div>
+  );
 }
 
 export function KycTable({ initialUsers }: KycTableProps) {
@@ -46,7 +88,6 @@ export function KycTable({ initialUsers }: KycTableProps) {
       setLoadingUserId(userId);
       const res = await approveKyc(userId);
       toast({ title: 'KYC Approved', description: 'User KYC has been approved.' });
-
       setUsers(users.map(u => u.id === userId ? { ...u, kycStatus: 'APPROVED', kycSubmittedAt: res.user.kycSubmittedAt } : u));
       if (selectedUser?.id === userId) setSelectedUser({ ...selectedUser, kycStatus: 'APPROVED', kycSubmittedAt: res.user.kycSubmittedAt });
     } catch {
@@ -61,7 +102,6 @@ export function KycTable({ initialUsers }: KycTableProps) {
       setLoadingUserId(userId);
       const res = await rejectKyc(userId);
       toast({ title: 'KYC Rejected', description: 'User KYC has been rejected.' });
-
       setUsers(users.map(u => u.id === userId ? { ...u, kycStatus: 'REJECTED', kycSubmittedAt: res.user.kycSubmittedAt } : u));
       if (selectedUser?.id === userId) setSelectedUser({ ...selectedUser, kycStatus: 'REJECTED', kycSubmittedAt: res.user.kycSubmittedAt });
     } catch {
@@ -90,9 +130,10 @@ export function KycTable({ initialUsers }: KycTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Account Type</TableHead> {/* ✅ added */}
+              <TableHead>Account Type</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
+              <TableHead>KRA PIN</TableHead>
               <TableHead>Submitted At</TableHead>
               <TableHead className="text-center">Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -101,21 +142,24 @@ export function KycTable({ initialUsers }: KycTableProps) {
           <TableBody>
             {users.map(user => (
               <TableRow key={user.id}>
-                <TableCell>{user.fullName}</TableCell>
-                <TableCell>{user.accountType}</TableCell> {/* ✅ added */}
+                <TableCell className="font-medium">{user.fullName}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">{user.accountType}{user.teamName ? ` — ${user.teamName}` : ''}</Badge>
+                </TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.phone || 'N/A'}</TableCell>
+                <TableCell>{user.phone || '—'}</TableCell>
+                <TableCell>{user.kraPin || '—'}</TableCell>
                 <TableCell>
                   {user.kycSubmittedAt ? format(new Date(user.kycSubmittedAt), 'dd MMM, yyyy') : 'Not submitted'}
                 </TableCell>
                 <TableCell className="text-center">
-                  <Badge variant={getKycBadgeVariant(user.kycStatus)}>{user.kycStatus}</Badge>
+                  <Badge variant={getKycBadgeVariant(user.kycStatus) as any}>{user.kycStatus}</Badge>
                 </TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button size="sm" variant="outline" onClick={() => openModal(user)}>View</Button>
                   {user.kycStatus === 'PENDING' && (
                     <>
-                      <Button size="sm" variant="success" onClick={() => handleApprove(user.id)} disabled={loadingUserId === user.id}>Approve</Button>
+                      <Button size="sm" variant={"success" as any} onClick={() => handleApprove(user.id)} disabled={loadingUserId === user.id}>Approve</Button>
                       <Button size="sm" variant="destructive" onClick={() => handleReject(user.id)} disabled={loadingUserId === user.id}>Reject</Button>
                     </>
                   )}
@@ -126,37 +170,107 @@ export function KycTable({ initialUsers }: KycTableProps) {
         </Table>
       </CardContent>
 
-      {/* Modal */}
+      {/* KYC Detail Modal */}
       {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50">
-          <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg shadow-lg max-w-lg w-full p-6 relative overflow-y-auto max-h-[90vh] transition-colors duration-300">
-            <h2 className="text-xl font-bold mb-2">{selectedUser.fullName} - KYC Details</h2>
-            <p className="text-sm text-muted-foreground dark:text-gray-400 mb-4">
-              Review full KYC information for this member
-            </p>
-            <div className="grid gap-2">
-              <p><strong>Full Name:</strong> {selectedUser.fullName}</p>
-              <p><strong>Account Type:</strong> {selectedUser.accountType}</p> {/* ✅ added */}
-              <p><strong>Email:</strong> {selectedUser.email}</p>
-              <p><strong>Phone:</strong> {selectedUser.phone || 'N/A'}</p>
-              <p><strong>National ID:</strong> {selectedUser.nationalId || 'N/A'}</p>
-              <p><strong>Date of Birth:</strong> {selectedUser.dateOfBirth ? format(new Date(selectedUser.dateOfBirth), 'dd MMM, yyyy') : 'N/A'}</p>
-              <p><strong>County of Birth:</strong> {selectedUser.countyOfBirth || 'N/A'}</p>
-              <p><strong>County of Residence:</strong> {selectedUser.countyOfResidence || 'N/A'}</p>
-              <p><strong>Ludeva Number:</strong> {selectedUser.ludevaNumber || 'N/A'}</p>
-              <p><strong>Marital Status:</strong> {selectedUser.maritalStatus || 'N/A'}</p>
-              <p><strong>Number of Kids:</strong> {selectedUser.numberOfKids ?? 'N/A'}</p>
-              <p><strong>Next of Kin:</strong> {selectedUser.nextOfKinName || 'N/A'}</p>
-              <p><strong>Next of Kin Phone:</strong> {selectedUser.nextOfKinPhone || 'N/A'}</p>
-              <p><strong>Next of Kin Email:</strong> {selectedUser.nextOfKinEmail || 'N/A'}</p>
-              <p><strong>Submitted At:</strong> {selectedUser.kycSubmittedAt ? format(new Date(selectedUser.kycSubmittedAt), 'dd MMM, yyyy') : 'Not submitted'}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-xl shadow-xl max-w-2xl w-full p-6 overflow-y-auto max-h-[90vh]">
+            
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-bold">{selectedUser.fullName}</h2>
+                <p className="text-sm text-muted-foreground">KYC Review — {selectedUser.accountType}{selectedUser.teamName ? ` / ${selectedUser.teamName}` : ''}</p>
+              </div>
+              <Badge variant={getKycBadgeVariant(selectedUser.kycStatus) as any} className="text-sm px-3 py-1">
+                {selectedUser.kycStatus}
+              </Badge>
             </div>
-            <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
+
+            {/* Document Previews */}
+            {(selectedUser.selfieUrl || selectedUser.idCopyUrl) && (
+              <div className="flex gap-4 mb-4">
+                {selectedUser.selfieUrl && (
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Selfie</p>
+                    <a href={selectedUser.selfieUrl} target="_blank" rel="noopener noreferrer">
+                      <img src={selectedUser.selfieUrl} alt="Selfie" className="h-24 w-24 object-cover rounded-lg border" />
+                    </a>
+                  </div>
+                )}
+                {selectedUser.idCopyUrl && (
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground mb-1">ID Copy</p>
+                    <a href={selectedUser.idCopyUrl} target="_blank" rel="noopener noreferrer">
+                      <img src={selectedUser.idCopyUrl} alt="ID Copy" className="h-24 w-24 object-cover rounded-lg border" />
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <Section title="Personal Information">
+              <Field label="Full Name" value={selectedUser.fullName} />
+              <Field label="Date of Birth" value={selectedUser.dateOfBirth ? format(new Date(selectedUser.dateOfBirth), 'dd MMM yyyy') : undefined} />
+              <Field label="Email" value={selectedUser.email} />
+              <Field label="Phone" value={selectedUser.phone} />
+              <Field label="National ID" value={selectedUser.nationalId} />
+              <Field label="KRA PIN" value={selectedUser.kraPin} />
+              <Field label="Residential Address" value={selectedUser.residentialAddress} />
+              <Field label="Marital Status" value={selectedUser.maritalStatus} />
+              <Field label="Number of Dependants" value={selectedUser.numberOfKids} />
+            </Section>
+
+            <Section title="Place of Birth">
+              <Field label="County" value={selectedUser.placeOfBirthCounty || selectedUser.countyOfBirth} />
+              <Field label="Sub-County" value={selectedUser.placeOfBirthSubCounty} />
+              <Field label="Ward" value={selectedUser.placeOfBirthWard} />
+            </Section>
+
+            <Section title="Employment & Source of Funds">
+              <Field label="Employment Status" value={selectedUser.employmentStatus} />
+              <Field label="Professional Background" value={selectedUser.professionalBackground} />
+              <Field label="Current Occupation" value={selectedUser.currentOccupation} />
+              <Field label="Source of Funds" value={selectedUser.sourceOfFunds} />
+            </Section>
+
+            <Section title="Primary Beneficiary">
+              <Field label="Name & % Allocation" value={selectedUser.primaryBeneficiaryName ? `${selectedUser.primaryBeneficiaryName} — ${selectedUser.primaryBeneficiaryPercentage}%` : undefined} />
+              <Field label="ID Number" value={selectedUser.primaryBeneficiaryIdNumber} />
+              <Field label="Email" value={selectedUser.primaryBeneficiaryEmail} />
+              <Field label="Phone" value={selectedUser.primaryBeneficiaryPhone} />
+              {selectedUser.primaryBeneficiaryIdUrl && (
+                <div className="py-1.5 text-sm">
+                  <span className="font-medium text-muted-foreground">ID Copy: </span>
+                  <a href={selectedUser.primaryBeneficiaryIdUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">View Document</a>
+                </div>
+              )}
+            </Section>
+
+            {selectedUser.secondaryBeneficiaryName && (
+              <Section title="Secondary Beneficiary">
+                <Field label="Name & % Allocation" value={`${selectedUser.secondaryBeneficiaryName} — ${selectedUser.secondaryBeneficiaryPercentage}%`} />
+                <Field label="ID Number" value={selectedUser.secondaryBeneficiaryIdNumber} />
+                <Field label="Phone" value={selectedUser.secondaryBeneficiaryPhone} />
+                {selectedUser.secondaryBeneficiaryIdUrl && (
+                  <div className="py-1.5 text-sm">
+                    <span className="font-medium text-muted-foreground">ID Copy: </span>
+                    <a href={selectedUser.secondaryBeneficiaryIdUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">View Document</a>
+                  </div>
+                )}
+              </Section>
+            )}
+
+            <Section title="Investment Details">
+              <Field label="Initial Investment" value={selectedUser.initialInvestment ? `KES ${selectedUser.initialInvestment.toLocaleString()}` : undefined} />
+              <Field label="Ludeva Number" value={selectedUser.ludevaNumber} />
+              <Field label="Submitted At" value={selectedUser.kycSubmittedAt ? format(new Date(selectedUser.kycSubmittedAt), 'dd MMM yyyy HH:mm') : undefined} />
+            </Section>
+
+            <div className="flex flex-col sm:flex-row justify-end gap-2 mt-4 pt-4 border-t">
               <Button variant="outline" onClick={closeModal}>Close</Button>
               {selectedUser.kycStatus === 'PENDING' && (
                 <>
-                  <Button variant="success" onClick={() => handleApprove(selectedUser.id)}>Approve</Button>
-                  <Button variant="destructive" onClick={() => handleReject(selectedUser.id)}>Reject</Button>
+                  <Button variant={"success" as any} onClick={() => handleApprove(selectedUser.id)} disabled={!!loadingUserId}>Approve KYC</Button>
+                  <Button variant="destructive" onClick={() => handleReject(selectedUser.id)} disabled={!!loadingUserId}>Reject KYC</Button>
                 </>
               )}
             </div>

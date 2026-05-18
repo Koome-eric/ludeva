@@ -17,12 +17,14 @@ enum FundType {
   MMF
   STOCK
   BOND
+  FIXED_DEPOSIT
 }
 
 enum ProductCategory {
   MONEY_MARKET
   EQUITY
   FIXED_INCOME
+  FIXED_DEPOSIT
 }
 
 enum InvestmentStatus {
@@ -80,6 +82,14 @@ enum AccountType {
   TEAM
 }
 
+enum EmploymentStatus {
+  EMPLOYED
+  SELF_EMPLOYED
+  UNEMPLOYED
+  RETIRED
+  STUDENT
+}
+
 // ===== MODELS =====
 model User {
   id                  String      @id @default(auto()) @map("_id") @db.ObjectId
@@ -89,11 +99,54 @@ model User {
   phone               String?
   nationalId          String?
   dateOfBirth         DateTime?
+
+  // ✅ Enhanced place of birth
+  placeOfBirthCounty     String?
+  placeOfBirthSubCounty  String?
+  placeOfBirthWard       String?
+
+  // Legacy field kept for backward compat
   countyOfBirth       String?
   countyOfResidence   String?
+
+  // ✅ Residential address
+  residentialAddress  String?
+
   ludevaNumber        String?
   maritalStatus       String?
   numberOfKids        Int?
+
+  // ✅ KRA PIN & Source of Funds
+  kraPin              String?
+  sourceOfFunds       String?
+
+  // ✅ Employment
+  employmentStatus    EmploymentStatus?
+  professionalBackground String?
+  currentOccupation   String?
+
+  // ✅ Team name (for TEAM account type)
+  teamName            String?
+
+  // ✅ Document uploads (selfie & ID)
+  selfieUrl           String?
+  idCopyUrl           String?
+
+  // ✅ Primary Beneficiary
+  primaryBeneficiaryName      String?
+  primaryBeneficiaryPercentage Float?
+  primaryBeneficiaryIdNumber  String?
+  primaryBeneficiaryEmail     String?
+  primaryBeneficiaryPhone     String?
+  primaryBeneficiaryIdUrl     String?
+
+  // ✅ Secondary Beneficiary
+  secondaryBeneficiaryName      String?
+  secondaryBeneficiaryPercentage Float?
+  secondaryBeneficiaryIdNumber  String?
+  secondaryBeneficiaryPhone     String?
+  secondaryBeneficiaryIdUrl     String?
+
   nextOfKinName       String?
   nextOfKinPhone      String?
   nextOfKinEmail      String?
@@ -136,7 +189,7 @@ model ChatRoom {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([memberId, adminId]) // prevent duplicate rooms
+  @@unique([memberId, adminId])
   @@map("chatroom")
 }
 
@@ -158,14 +211,12 @@ model Message {
 
 model TeamAnalytics {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  label       String   // e.g. "May 2025 Analytics"
-  fileName    String   // original file name
-  fileUrl     String   // UploadThing / storage URL
-  fileType    String   // "csv" or "xlsx"
-  // Parsed table data stored as JSON so the public page renders it
-  // without re-parsing the file on every request
-  headers     String[] // column headers
-  rows        String   // JSON stringified String[][] — each row is an array of cell strings
+  label       String
+  fileName    String
+  fileUrl     String
+  fileType    String
+  headers     String[]
+  rows        String
   uploadedById String  @db.ObjectId
   uploadedBy   User    @relation("AnalyticsUploads", fields: [uploadedById], references: [id])
   createdAt   DateTime @default(now())
@@ -173,8 +224,6 @@ model TeamAnalytics {
 
   @@map("teamanalytics")
 }
-
-
 
 model Investment {
   id        String           @id @default(auto()) @map("_id") @db.ObjectId
@@ -270,9 +319,9 @@ model Document {
   description String?
   type        DocumentType
   fileUrl     String?
-  fileName String?
+  fileName    String?
   content     String?
-  mediaType   String? // "image" | "video" | "pdf"
+  mediaType   String?
   isPublished Boolean      @default(true)
   createdById String       @db.ObjectId
   createdBy   User         @relation(fields: [createdById], references: [id])

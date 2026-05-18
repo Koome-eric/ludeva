@@ -13,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
   "/gallery",
   "/services/documents",
   "/services/music",
+  "/services/fixed-deposit",
   "/stocks-bonds",
   "/upcoming/agribusiness",
   "/upcoming/real-estate",
@@ -23,6 +24,7 @@ const isPublicRoute = createRouteMatcher([
   // ✅ ADD THIS
   "/api/documents(.*)",
   "/api/creator", // ✅ allow your API
+  "/api/upload-kyc-doc", // ✅ KYC document upload (auth checked inside)
 
 ]);
 

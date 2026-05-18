@@ -5,20 +5,30 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 
-// ✅ UPDATED SCHEMA
 const OnboardingDataSchema = z.object({
   accountType: z.enum(["INDIVIDUAL", "TEAM"]),
+  teamName: z.string().optional(),
 
   fullName: z.string().min(2),
   email: z.string().email(),
   phone: z.string().min(10),
   nationalId: z.string().min(5),
+  kraPin: z.string().optional(),
+  sourceOfFunds: z.string().optional(),
 
   initialInvestment: z.number().min(1000),
 
   dateOfBirth: z.string().optional(),
+  placeOfBirthCounty: z.string().optional(),
+  placeOfBirthSubCounty: z.string().optional(),
+  placeOfBirthWard: z.string().optional(),
   countyOfBirth: z.string().optional(),
   countyOfResidence: z.string().optional(),
+  residentialAddress: z.string().optional(),
+
+  employmentStatus: z.enum(["EMPLOYED", "SELF_EMPLOYED", "UNEMPLOYED", "RETIRED", "STUDENT"]).optional(),
+  professionalBackground: z.string().optional(),
+  currentOccupation: z.string().optional(),
 
   ludevaNumber: z.string().optional(),
   maritalStatus: z.string().optional(),
@@ -27,6 +37,25 @@ const OnboardingDataSchema = z.object({
   nextOfKinName: z.string().optional(),
   nextOfKinPhone: z.string().optional(),
   nextOfKinEmail: z.string().optional(),
+
+  // Document URLs (uploaded via Cloudinary)
+  selfieUrl: z.string().optional(),
+  idCopyUrl: z.string().optional(),
+
+  // Primary beneficiary
+  primaryBeneficiaryName: z.string().optional(),
+  primaryBeneficiaryPercentage: z.number().optional(),
+  primaryBeneficiaryIdNumber: z.string().optional(),
+  primaryBeneficiaryEmail: z.string().optional(),
+  primaryBeneficiaryPhone: z.string().optional(),
+  primaryBeneficiaryIdUrl: z.string().optional(),
+
+  // Secondary beneficiary
+  secondaryBeneficiaryName: z.string().optional(),
+  secondaryBeneficiaryPercentage: z.number().optional(),
+  secondaryBeneficiaryIdNumber: z.string().optional(),
+  secondaryBeneficiaryPhone: z.string().optional(),
+  secondaryBeneficiaryIdUrl: z.string().optional(),
 });
 
 export async function completeOnboarding(
@@ -36,53 +65,63 @@ export async function completeOnboarding(
   if (!clerkUser) throw new Error('You must be signed in.');
 
   const parsedData = OnboardingDataSchema.safeParse(data);
-  if (!parsedData.success) throw new Error('Invalid data provided.');
+  if (!parsedData.success) throw new Error('Invalid data provided: ' + JSON.stringify(parsedData.error.flatten()));
 
-  const {
-    accountType,
-    fullName,
-    email,
-    phone,
-    nationalId,
-    initialInvestment,
-    dateOfBirth,
-    countyOfBirth,
-    countyOfResidence,
-    ludevaNumber,
-    maritalStatus,
-    numberOfKids,
-    nextOfKinName,
-    nextOfKinPhone,
-    nextOfKinEmail,
-  } = parsedData.data;
+  const d = parsedData.data;
 
   let user = await prisma.user.findUnique({
     where: { clerkId: clerkUser.id },
   });
 
-  const userData = {
+  const userData: any = {
     clerkId: clerkUser.id,
-    email,
-    fullName,
-    phone,
-    nationalId,
-
-    accountType, // ✅ SAVE
-
-    initialInvestment: Math.round(initialInvestment),
+    email: d.email,
+    fullName: d.fullName,
+    phone: d.phone,
+    nationalId: d.nationalId,
+    kraPin: d.kraPin,
+    sourceOfFunds: d.sourceOfFunds,
+    accountType: d.accountType,
+    teamName: d.teamName,
+    initialInvestment: Math.round(d.initialInvestment),
     onboardingCompleted: true,
+    kycSubmittedAt: new Date(),
 
-    dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
-    countyOfBirth,
-    countyOfResidence,
+    dateOfBirth: d.dateOfBirth ? new Date(d.dateOfBirth) : undefined,
+    placeOfBirthCounty: d.placeOfBirthCounty,
+    placeOfBirthSubCounty: d.placeOfBirthSubCounty,
+    placeOfBirthWard: d.placeOfBirthWard,
+    countyOfBirth: d.placeOfBirthCounty || d.countyOfBirth,
+    countyOfResidence: d.countyOfResidence,
+    residentialAddress: d.residentialAddress,
 
-    ludevaNumber,
-    maritalStatus,
-    numberOfKids,
+    employmentStatus: d.employmentStatus,
+    professionalBackground: d.professionalBackground,
+    currentOccupation: d.currentOccupation,
 
-    nextOfKinName,
-    nextOfKinPhone,
-    nextOfKinEmail,
+    ludevaNumber: d.ludevaNumber,
+    maritalStatus: d.maritalStatus,
+    numberOfKids: d.numberOfKids,
+
+    nextOfKinName: d.nextOfKinName,
+    nextOfKinPhone: d.nextOfKinPhone,
+    nextOfKinEmail: d.nextOfKinEmail,
+
+    selfieUrl: d.selfieUrl,
+    idCopyUrl: d.idCopyUrl,
+
+    primaryBeneficiaryName: d.primaryBeneficiaryName,
+    primaryBeneficiaryPercentage: d.primaryBeneficiaryPercentage,
+    primaryBeneficiaryIdNumber: d.primaryBeneficiaryIdNumber,
+    primaryBeneficiaryEmail: d.primaryBeneficiaryEmail,
+    primaryBeneficiaryPhone: d.primaryBeneficiaryPhone,
+    primaryBeneficiaryIdUrl: d.primaryBeneficiaryIdUrl,
+
+    secondaryBeneficiaryName: d.secondaryBeneficiaryName,
+    secondaryBeneficiaryPercentage: d.secondaryBeneficiaryPercentage,
+    secondaryBeneficiaryIdNumber: d.secondaryBeneficiaryIdNumber,
+    secondaryBeneficiaryPhone: d.secondaryBeneficiaryPhone,
+    secondaryBeneficiaryIdUrl: d.secondaryBeneficiaryIdUrl,
 
     role: 'MEMBER' as const,
   };
@@ -93,15 +132,13 @@ export async function completeOnboarding(
       data: userData,
     });
   } else {
-    user = await prisma.user.create({
-      data: userData,
-    });
+    user = await prisma.user.create({ data: userData });
   }
 
   const client = await clerkClient();
   const existingMetadata = clerkUser.publicMetadata || {};
 
-  const nameParts = fullName.trim().split(' ');
+  const nameParts = d.fullName.trim().split(' ');
   const firstName = nameParts[0];
   const lastName = nameParts.slice(1).join(' ') || '';
 
@@ -113,18 +150,16 @@ export async function completeOnboarding(
       onboardingCompleted: true,
       dbId: user.id,
       role: existingMetadata.role ?? user.role,
-
-      accountType, // ✅ SAVE IN CLERK
-
-      dateOfBirth,
-      countyOfBirth,
-      countyOfResidence,
-      ludevaNumber,
-      maritalStatus,
-      numberOfKids,
-      nextOfKinName,
-      nextOfKinPhone,
-      nextOfKinEmail,
+      accountType: d.accountType,
+      teamName: d.teamName,
+      dateOfBirth: d.dateOfBirth,
+      placeOfBirthCounty: d.placeOfBirthCounty,
+      placeOfBirthSubCounty: d.placeOfBirthSubCounty,
+      placeOfBirthWard: d.placeOfBirthWard,
+      kraPin: d.kraPin,
+      sourceOfFunds: d.sourceOfFunds,
+      employmentStatus: d.employmentStatus,
+      currentOccupation: d.currentOccupation,
     },
   });
 
