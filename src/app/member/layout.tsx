@@ -6,10 +6,11 @@ import {
   FileText,
   GanttChartSquare,
   LayoutDashboard,
+  MessageCircle,
   Repeat,
+  TrendingUp,
   User,
 } from "lucide-react";
-import { MessageCircle } from 'lucide-react';
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
@@ -39,6 +40,7 @@ const menuItems = [
   { href: "/member/transactions", label: "Transactions", icon: Repeat },
   { href: "/member/chat", label: "Messages", icon: MessageCircle },
   { href: "/member/notifications", label: "Notifications", icon: FileText },
+  { href: "/member/reports", label: "My Reports", icon: TrendingUp },
   { href: "/member/profile", label: "Profile & KYC", icon: User },
 ];
 

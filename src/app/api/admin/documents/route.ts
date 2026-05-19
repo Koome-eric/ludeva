@@ -101,6 +101,8 @@ export async function POST(req: Request) {
     const description = formData.get("description") as string;
     const type = formData.get("type") as "FILE" | "CONTENT";
     const content = formData.get("content") as string;
+    const isPublishedRaw = formData.get("isPublished");
+    const isPublished = isPublishedRaw === null ? true : isPublishedRaw === "true";
 
     let fileUrl: string | null = null;
     let fileName: string | null = null;
@@ -148,6 +150,7 @@ export async function POST(req: Request) {
         content: type === "CONTENT" ? content : null,
         fileUrl,
         fileName,
+        isPublished,
         createdById: admin.id,
       },
     });
@@ -172,11 +175,16 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id, title, description, content } = await req.json();
+  const { id, title, description, content, isPublished } = await req.json();
 
   const updated = await prisma.document.update({
     where: { id },
-    data: { title, description, content },
+    data: {
+      title,
+      description,
+      content,
+      ...(isPublished !== undefined ? { isPublished } : {}),
+    },
   });
 
   return NextResponse.json(updated);

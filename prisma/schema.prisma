@@ -328,3 +328,32 @@ model Document {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
+
+// ✅ Per-member MMF performance records pushed from Google Sheets
+model MemberReport {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Identifies which member this row belongs to
+  memberEmail String
+  accountNo   String?  // e.g. LA0061
+  memberName  String?
+  
+  // Performance data columns (matching CSV structure)
+  date        String?   // DATE column
+  principal   String?   // PRIN
+  rate        String?   // RATE
+  roi         String?   // ROI
+  withdrawal  String?   // WITH
+  closingBal  String?   // CLOSING BAL
+  quarter     String?   // e.g. Q1, Q2 label rows
+  notes       String?   // any extra notes
+  
+  // Period label (e.g. "2025, 11.5% Net")
+  periodLabel String?
+  
+  // Meta
+  uploadedAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("memberreport")
+}

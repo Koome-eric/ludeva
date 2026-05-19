@@ -4,11 +4,13 @@ import {
   Briefcase,
   PieChart,
   ArrowRightLeft,
-  Wallet,
   FileText,
   FileStack,
   UserCog,
   Settings,
+  TrendingUp,
+  MessageCircle,
+  Bell,
 } from "lucide-react";
 import React from "react";
 
@@ -32,7 +34,6 @@ export const adminSidebarItems: SidebarItem[] = [
     subItems: [
       { name: "All Investors", path: "/admin/investors" },
       { name: "KYC Management", path: "/admin/investors/kyc" },
-      
     ],
   },
   {
@@ -45,41 +46,40 @@ export const adminSidebarItems: SidebarItem[] = [
     ],
   },
   {
-  name: "Investments",
-  path: "/admin/investments",
-  icon: <PieChart className="h-4 w-4" />,
+    name: "Investments",
+    path: "/admin/investments",
+    icon: <PieChart className="h-4 w-4" />,
   },
   {
     name: "Transactions",
     path: "/admin/transactions",
     icon: <ArrowRightLeft className="h-4 w-4" />,
   },
-
   {
     name: "Documents Management",
     path: "/admin/documents",
     icon: <FileStack className="h-4 w-4" />,
-    
   },
-
+  {
+    // ✅ NEW — Member performance reports pushed from Google Sheets
+    name: "Member Reports",
+    path: "/admin/member-reports",
+    icon: <TrendingUp className="h-4 w-4" />,
+  },
   {
     name: "Messages",
     path: "/admin/chat",
-    icon: <FileStack className="h-4 w-4" />,
-    
+    icon: <MessageCircle className="h-4 w-4" />,
   },
-  
   {
     name: "Reports & Analytics",
     path: "/admin/reports",
     icon: <FileText className="h-4 w-4" />,
-    
   },
   {
     name: "Content Management",
     path: "/admin/content",
     icon: <FileStack className="h-4 w-4" />,
-    
   },
   {
     name: "Admin Users",
@@ -88,13 +88,12 @@ export const adminSidebarItems: SidebarItem[] = [
     subItems: [
       { name: "All Admins", path: "/admin/users" },
       { name: "Activity", path: "/admin/users/activity" },
-      { name: "Notifications", path: "/admin/notifications"},
+      { name: "Notifications", path: "/admin/notifications" },
     ],
   },
   {
     name: "Settings",
     path: "/admin/settings",
     icon: <Settings className="h-4 w-4" />,
-    
   },
 ];
