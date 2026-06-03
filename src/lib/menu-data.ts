@@ -33,7 +33,6 @@ const menuData: Menu[] = [
     ],
   },
 
-  // ✅ Teams & Blogs moved to top-level for easier navigation
   {
     id: 7,
     title: "Teams",
@@ -97,18 +96,6 @@ const menuData: Menu[] = [
     title: "Upcoming Projects",
     newTab: false,
     submenu: [
-      {
-        id: 51,
-        title: "Real Estate Investment",
-        path: "/upcoming/real-estate",
-        newTab: false,
-      },
-      {
-        id: 52,
-        title: "Community Agriculture",
-        path: "/upcoming/agribusiness",
-        newTab: false,
-      },
       {
         id: 53,
         title: "SME Development Funds",

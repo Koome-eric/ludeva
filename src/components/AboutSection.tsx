@@ -82,7 +82,7 @@ export default function AboutSection() {
                 </span>
                 , offering stable annual returns of{" "}
                 <span className="font-semibold text-[#D4AF37]">
-                  14% gross p.a.
+                  9%–13% p.a.
                 </span>
                 .
               </p>

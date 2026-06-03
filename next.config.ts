@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com', // ✅ Unsplash added
+        hostname: 'images.unsplash.com',
         pathname: '/**',
       },
       {
@@ -29,7 +29,18 @@ const nextConfig: NextConfig = {
         hostname: 'img.clerk.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
     ],
+  },
+  // Allow large file uploads (videos up to ~55 MB)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '60mb',
+    },
   },
 };
 

@@ -11,9 +11,6 @@ const OnboardingDataSchema = z.object({
 
   fullName: z.string().min(2),
   email: z.string().email(),
-  phone: z.string().min(10),
-  nationalId: z.string().min(5),
-  kraPin: z.string().optional(),
   sourceOfFunds: z.string().optional(),
 
   initialInvestment: z.number().min(1000),
@@ -34,28 +31,9 @@ const OnboardingDataSchema = z.object({
   maritalStatus: z.string().optional(),
   numberOfKids: z.coerce.number().optional(),
 
-  nextOfKinName: z.string().optional(),
-  nextOfKinPhone: z.string().optional(),
-  nextOfKinEmail: z.string().optional(),
-
   // Document URLs (uploaded via Cloudinary)
   selfieUrl: z.string().optional(),
   idCopyUrl: z.string().optional(),
-
-  // Primary beneficiary
-  primaryBeneficiaryName: z.string().optional(),
-  primaryBeneficiaryPercentage: z.number().optional(),
-  primaryBeneficiaryIdNumber: z.string().optional(),
-  primaryBeneficiaryEmail: z.string().optional(),
-  primaryBeneficiaryPhone: z.string().optional(),
-  primaryBeneficiaryIdUrl: z.string().optional(),
-
-  // Secondary beneficiary
-  secondaryBeneficiaryName: z.string().optional(),
-  secondaryBeneficiaryPercentage: z.number().optional(),
-  secondaryBeneficiaryIdNumber: z.string().optional(),
-  secondaryBeneficiaryPhone: z.string().optional(),
-  secondaryBeneficiaryIdUrl: z.string().optional(),
 });
 
 export async function completeOnboarding(
@@ -77,9 +55,6 @@ export async function completeOnboarding(
     clerkId: clerkUser.id,
     email: d.email,
     fullName: d.fullName,
-    phone: d.phone,
-    nationalId: d.nationalId,
-    kraPin: d.kraPin,
     sourceOfFunds: d.sourceOfFunds,
     accountType: d.accountType,
     teamName: d.teamName,
@@ -103,25 +78,8 @@ export async function completeOnboarding(
     maritalStatus: d.maritalStatus,
     numberOfKids: d.numberOfKids,
 
-    nextOfKinName: d.nextOfKinName,
-    nextOfKinPhone: d.nextOfKinPhone,
-    nextOfKinEmail: d.nextOfKinEmail,
-
     selfieUrl: d.selfieUrl,
     idCopyUrl: d.idCopyUrl,
-
-    primaryBeneficiaryName: d.primaryBeneficiaryName,
-    primaryBeneficiaryPercentage: d.primaryBeneficiaryPercentage,
-    primaryBeneficiaryIdNumber: d.primaryBeneficiaryIdNumber,
-    primaryBeneficiaryEmail: d.primaryBeneficiaryEmail,
-    primaryBeneficiaryPhone: d.primaryBeneficiaryPhone,
-    primaryBeneficiaryIdUrl: d.primaryBeneficiaryIdUrl,
-
-    secondaryBeneficiaryName: d.secondaryBeneficiaryName,
-    secondaryBeneficiaryPercentage: d.secondaryBeneficiaryPercentage,
-    secondaryBeneficiaryIdNumber: d.secondaryBeneficiaryIdNumber,
-    secondaryBeneficiaryPhone: d.secondaryBeneficiaryPhone,
-    secondaryBeneficiaryIdUrl: d.secondaryBeneficiaryIdUrl,
 
     role: 'MEMBER' as const,
   };
@@ -156,7 +114,6 @@ export async function completeOnboarding(
       placeOfBirthCounty: d.placeOfBirthCounty,
       placeOfBirthSubCounty: d.placeOfBirthSubCounty,
       placeOfBirthWard: d.placeOfBirthWard,
-      kraPin: d.kraPin,
       sourceOfFunds: d.sourceOfFunds,
       employmentStatus: d.employmentStatus,
       currentOccupation: d.currentOccupation,

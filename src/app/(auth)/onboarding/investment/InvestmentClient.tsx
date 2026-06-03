@@ -41,10 +41,7 @@ const formSchema = z.object({
   placeOfBirthSubCounty: z.string().min(2, "Sub-county of birth is required."),
   placeOfBirthWard: z.string().min(2, "Ward of birth is required."),
   email: z.string().email("Valid email is required."),
-  phone: z.string().min(10, "A valid phone number is required."),
   residentialAddress: z.string().min(5, "Residential address is required."),
-  nationalId: z.string().min(5, "A valid National ID is required."),
-  kraPin: z.string().min(8, "KRA PIN is required (e.g. A000000000Z)."),
   sourceOfFunds: z.string().min(3, "Source of funds is required."),
 
   // Employment
@@ -58,18 +55,6 @@ const formSchema = z.object({
   maritalStatus: z.string().optional(),
   numberOfKids: z.coerce.number().optional(),
 
-  // Beneficiaries
-  primaryBeneficiaryName: z.string().min(2, "Primary beneficiary name is required."),
-  primaryBeneficiaryPercentage: z.coerce.number().min(1).max(100),
-  primaryBeneficiaryIdNumber: z.string().min(5, "Primary beneficiary ID is required."),
-  primaryBeneficiaryEmail: z.string().email("Valid email for primary beneficiary."),
-  primaryBeneficiaryPhone: z.string().min(10, "Primary beneficiary phone is required."),
-
-  secondaryBeneficiaryName: z.string().optional(),
-  secondaryBeneficiaryPercentage: z.coerce.number().optional(),
-  secondaryBeneficiaryIdNumber: z.string().optional(),
-  secondaryBeneficiaryPhone: z.string().optional(),
-
   initialInvestment: z.coerce
     .number()
     .min(MINIMUM_INVESTMENT, `Minimum investment is KES ${MINIMUM_INVESTMENT}`),
@@ -77,13 +62,16 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-// Upload helper using Cloudinary (or your upload endpoint)
+// Upload helper using Cloudinary
 async function uploadFile(file: File, label: string): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("label", label);
   const res = await fetch("/api/upload-kyc-doc", { method: "POST", body: formData });
-  if (!res.ok) throw new Error(`Failed to upload ${label}`);
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || `Failed to upload ${label}`);
+  }
   const json = await res.json();
   return json.url as string;
 }
@@ -93,13 +81,11 @@ export default function InvestmentClient() {
   const router = useRouter();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const TOTAL_STEPS = 5;
+  const TOTAL_STEPS = 4;
 
   // File state
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [idFile, setIdFile] = useState<File | null>(null);
-  const [primaryIdFile, setPrimaryIdFile] = useState<File | null>(null);
-  const [secondaryIdFile, setSecondaryIdFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const form = useForm<FormValues>({
@@ -113,10 +99,7 @@ export default function InvestmentClient() {
       placeOfBirthSubCounty: "",
       placeOfBirthWard: "",
       email: "",
-      phone: "",
       residentialAddress: "",
-      nationalId: "",
-      kraPin: "",
       sourceOfFunds: "",
       employmentStatus: "EMPLOYED",
       professionalBackground: "",
@@ -125,15 +108,6 @@ export default function InvestmentClient() {
       ludevaNumber: "",
       maritalStatus: "",
       numberOfKids: 0,
-      primaryBeneficiaryName: "",
-      primaryBeneficiaryPercentage: 100,
-      primaryBeneficiaryIdNumber: "",
-      primaryBeneficiaryEmail: "",
-      primaryBeneficiaryPhone: "",
-      secondaryBeneficiaryName: "",
-      secondaryBeneficiaryPercentage: 0,
-      secondaryBeneficiaryIdNumber: "",
-      secondaryBeneficiaryPhone: "",
       initialInvestment: MINIMUM_INVESTMENT,
     },
   });
@@ -142,7 +116,6 @@ export default function InvestmentClient() {
     if (isLoaded && user) {
       form.setValue("fullName", user.fullName || "");
       form.setValue("email", user.primaryEmailAddress?.emailAddress || "");
-      form.setValue("phone", user.phoneNumbers?.[0]?.phoneNumber || "");
     }
   }, [isLoaded, user, form]);
 
@@ -152,16 +125,11 @@ export default function InvestmentClient() {
     try {
       setUploading(true);
 
-      // Upload KYC documents to Cloudinary via API
       let selfieUrl = "";
       let idCopyUrl = "";
-      let primaryBeneficiaryIdUrl = "";
-      let secondaryBeneficiaryIdUrl = "";
 
       if (selfieFile) selfieUrl = await uploadFile(selfieFile, "selfie");
       if (idFile) idCopyUrl = await uploadFile(idFile, "id_copy");
-      if (primaryIdFile) primaryBeneficiaryIdUrl = await uploadFile(primaryIdFile, "primary_beneficiary_id");
-      if (secondaryIdFile) secondaryBeneficiaryIdUrl = await uploadFile(secondaryIdFile, "secondary_beneficiary_id");
 
       setUploading(false);
 
@@ -169,8 +137,6 @@ export default function InvestmentClient() {
         ...values,
         selfieUrl,
         idCopyUrl,
-        primaryBeneficiaryIdUrl,
-        secondaryBeneficiaryIdUrl,
       } as any);
 
       toast({
@@ -195,8 +161,7 @@ export default function InvestmentClient() {
     "Account Type",
     "Personal Details",
     "Employment & KYC",
-    "Document Uploads",
-    "Beneficiaries & Investment",
+    "Document Uploads & Investment",
   ];
 
   return (
@@ -303,27 +268,13 @@ export default function InvestmentClient() {
                     </div>
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="email" render={({ field }) => (
-                      <FormItem><FormLabel>Email Address *</FormLabel><FormControl><Input type="email" readOnly {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={form.control} name="phone" render={({ field }) => (
-                      <FormItem><FormLabel>Phone Number *</FormLabel><FormControl><Input placeholder="07XXXXXXXX" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                  </div>
+                  <FormField control={form.control} name="email" render={({ field }) => (
+                    <FormItem><FormLabel>Email Address *</FormLabel><FormControl><Input type="email" readOnly {...field} /></FormControl><FormMessage /></FormItem>
+                  )} />
 
                   <FormField control={form.control} name="residentialAddress" render={({ field }) => (
                     <FormItem><FormLabel>Residential Address *</FormLabel><FormControl><Input placeholder="Street, Estate, Town" {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="nationalId" render={({ field }) => (
-                      <FormItem><FormLabel>National ID Number *</FormLabel><FormControl><Input placeholder="ID Number" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={form.control} name="kraPin" render={({ field }) => (
-                      <FormItem><FormLabel>KRA PIN *</FormLabel><FormControl><Input placeholder="A000000000Z" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                  </div>
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <FormField control={form.control} name="maritalStatus" render={({ field }) => (
@@ -411,7 +362,7 @@ export default function InvestmentClient() {
                 </div>
               )}
 
-              {/* ── STEP 4: DOCUMENT UPLOADS ── */}
+              {/* ── STEP 4: DOCUMENT UPLOADS & INVESTMENT ── */}
               {step === 4 && (
                 <div className="space-y-5">
                   <p className="text-sm text-muted-foreground">Please upload clear, legible copies of the required documents.</p>
@@ -424,10 +375,14 @@ export default function InvestmentClient() {
                         <input
                           type="file"
                           accept="image/*"
+                          capture="user"
                           className="w-full text-sm border rounded-md p-2"
                           onChange={e => setSelfieFile(e.target.files?.[0] || null)}
                         />
                         <p className="text-xs text-muted-foreground mt-1">Clear face photo, no sunglasses</p>
+                        {selfieFile && (
+                          <p className="text-xs text-green-600 mt-1">✓ {selfieFile.name}</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-1">National ID Copy *</label>
@@ -438,77 +393,10 @@ export default function InvestmentClient() {
                           onChange={e => setIdFile(e.target.files?.[0] || null)}
                         />
                         <p className="text-xs text-muted-foreground mt-1">Both sides of National ID</p>
+                        {idFile && (
+                          <p className="text-xs text-green-600 mt-1">✓ {idFile.name}</p>
+                        )}
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <p className="font-semibold text-sm">Primary Beneficiary ID</p>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">ID Copy (Primary Beneficiary)</label>
-                      <input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        className="w-full text-sm border rounded-md p-2"
-                        onChange={e => setPrimaryIdFile(e.target.files?.[0] || null)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <p className="font-semibold text-sm">Secondary Beneficiary ID (Optional)</p>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">ID Copy (Secondary Beneficiary)</label>
-                      <input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        className="w-full text-sm border rounded-md p-2"
-                        onChange={e => setSecondaryIdFile(e.target.files?.[0] || null)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── STEP 5: BENEFICIARIES & INVESTMENT ── */}
-              {step === 5 && (
-                <div className="space-y-5">
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <p className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Primary Beneficiary *</p>
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      <FormField control={form.control} name="primaryBeneficiaryName" render={({ field }) => (
-                        <FormItem><FormLabel>Full Name *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                      )} />
-                      <FormField control={form.control} name="primaryBeneficiaryPercentage" render={({ field }) => (
-                        <FormItem><FormLabel>% Allocation *</FormLabel><FormControl><Input type="number" min={1} max={100} {...field} /></FormControl><FormMessage /></FormItem>
-                      )} />
-                      <FormField control={form.control} name="primaryBeneficiaryIdNumber" render={({ field }) => (
-                        <FormItem><FormLabel>ID Number *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                      )} />
-                      <FormField control={form.control} name="primaryBeneficiaryEmail" render={({ field }) => (
-                        <FormItem><FormLabel>Email Address *</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
-                      )} />
-                      <FormField control={form.control} name="primaryBeneficiaryPhone" render={({ field }) => (
-                        <FormItem className="sm:col-span-2"><FormLabel>Phone Number *</FormLabel><FormControl><Input placeholder="07XXXXXXXX" {...field} /></FormControl><FormMessage /></FormItem>
-                      )} />
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <p className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Secondary Beneficiary (Optional)</p>
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      <FormField control={form.control} name="secondaryBeneficiaryName" render={({ field }) => (
-                        <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                      )} />
-                      <FormField control={form.control} name="secondaryBeneficiaryPercentage" render={({ field }) => (
-                        <FormItem><FormLabel>% Allocation</FormLabel><FormControl><Input type="number" min={0} max={99} {...field} /></FormControl><FormMessage /></FormItem>
-                      )} />
-                      <FormField control={form.control} name="secondaryBeneficiaryIdNumber" render={({ field }) => (
-                        <FormItem><FormLabel>ID Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                      )} />
-                      <FormField control={form.control} name="secondaryBeneficiaryPhone" render={({ field }) => (
-                        <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input placeholder="07XXXXXXXX" {...field} /></FormControl><FormMessage /></FormItem>
-                      )} />
                     </div>
                   </div>
 
@@ -535,10 +423,9 @@ export default function InvestmentClient() {
                     type="button"
                     className="flex-1"
                     onClick={async () => {
-                      // Validate current step fields before advancing
                       const stepFields: Record<number, (keyof FormValues)[]> = {
                         1: ["accountType"],
-                        2: ["fullName", "dateOfBirth", "placeOfBirthCounty", "placeOfBirthSubCounty", "placeOfBirthWard", "email", "phone", "residentialAddress", "nationalId", "kraPin"],
+                        2: ["fullName", "dateOfBirth", "placeOfBirthCounty", "placeOfBirthSubCounty", "placeOfBirthWard", "email", "residentialAddress"],
                         3: ["sourceOfFunds", "employmentStatus"],
                         4: [],
                       };

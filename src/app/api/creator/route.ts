@@ -3,8 +3,13 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB (Resend attachment limit)
+const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 const MAX_VIDEO_DURATION_SECONDS = 60;
+
+export const dynamic = "force-dynamic";
+
+// App Router body size limit (replaces the old Pages Router config export)
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   console.log("API hit: /api/creator");
@@ -17,13 +22,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // ── Parse multipart form data ────────────────────────────
+    // Parse multipart form data
     let formData: FormData;
     try {
       formData = await req.formData();
-    } catch {
+    } catch (e) {
+      console.error("formData parse error:", e);
       return NextResponse.json(
-        { error: "Invalid form data" },
+        { error: "Invalid form data — could not parse request body" },
         { status: 400 }
       );
     }
@@ -41,16 +47,14 @@ export async function POST(req: Request) {
 
     console.log("Form fields received:", { name, stageName, email, category });
 
-    // ── Validation ───────────────────────────────────────────
     if (!name || !stageName || !idNumber || !phone || !email || !category || !description) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ── Video validation (server-side) ───────────────────────
+    // Video validation (server-side)
     let videoAttachment: { filename: string; content: Buffer } | null = null;
 
     if (videoFile && videoFile.size > 0) {
-      // Size guard
       if (videoFile.size > MAX_VIDEO_SIZE_BYTES) {
         return NextResponse.json(
           { error: `Video must be under ${MAX_VIDEO_SIZE_BYTES / 1024 / 1024} MB` },
@@ -58,7 +62,6 @@ export async function POST(req: Request) {
         );
       }
 
-      // Duration guard — client sends the duration it measured
       const duration = parseFloat(videoDuration ?? "0");
       if (duration > MAX_VIDEO_DURATION_SECONDS) {
         return NextResponse.json(
@@ -74,9 +77,8 @@ export async function POST(req: Request) {
       };
     }
 
-    console.log("📩 Sending creator email…", videoAttachment ? "with video attachment" : "no video");
+    console.log("Sending creator email…", videoAttachment ? "with video attachment" : "no video");
 
-    // ── Build email ──────────────────────────────────────────
     const emailPayload: Parameters<typeof resend.emails.send>[0] = {
       from: "Ludeva Creators <creator@ludevaplc.co.ke>",
       to: ["creator@ludevaplc.co.ke"],
@@ -133,7 +135,7 @@ export async function POST(req: Request) {
     };
 
     const response = await resend.emails.send(emailPayload);
-    console.log("✅ Resend response:", response);
+    console.log("Resend response:", response);
 
     if ((response as any)?.error) {
       throw new Error((response as any).error.message);
@@ -141,17 +143,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error("❌ Error sending email:", err);
+    console.error("Error sending email:", err);
     return NextResponse.json(
       { error: err.message || "Server error" },
       { status: 500 }
     );
   }
 }
-
-// Next.js 14 App Router: disable body size limit for file uploads
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
