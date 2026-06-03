@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   title: "Ludeva MMF | Accessible, Secure & Smart Investments in Kenya",
   description:
     "Ludeva offers accessible, secure, and professionally managed Money Market Fund (MMF) investments in Kenya.",
+  icons: {
+    icon: "/images/logo-light.svg",
+    shortcut: "/images/logo-light.svg",
+    apple: "/images/logo-light.svg",
+  },
 };
 
 const inter = Inter({

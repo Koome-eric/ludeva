@@ -91,19 +91,6 @@ const menuData: Menu[] = [
     newTab: false,
   },
 
-  {
-    id: 5,
-    title: "Upcoming Projects",
-    newTab: false,
-    submenu: [
-      {
-        id: 53,
-        title: "SME Development Funds",
-        path: "/upcoming/sme-funding",
-        newTab: false,
-      },
-    ],
-  },
 
   {
     id: 6,
