@@ -1,5 +1,3 @@
-"use client";
-
 import Container from "@/components/ui/Container";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Shield, Globe, TrendingUp, CalendarCheck } from "lucide-react";

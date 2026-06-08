@@ -12,28 +12,39 @@ export default function PostAuthPage() {
     if (!isLoaded || !user) return;
 
     const routeUser = async () => {
-      const res = await fetch('/api/auth/check-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clerkId: user.id }),
-      });
+      try {
+        const res = await fetch('/api/auth/check-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clerkId: user.id }),
+        });
 
-      const data = await res.json();
+        if (!res.ok) {
+          console.error(`API error: ${res.status} ${res.statusText}`);
+          router.replace('/sign-in');
+          return;
+        }
 
-      // ❌ Not onboarded → onboarding
-      if (!data.exists || !data.onboardingCompleted) {
-        router.replace('/onboarding/investment');
-        return;
+        const data = await res.json();
+
+        // ❌ Not onboarded → onboarding
+        if (!data.exists || !data.onboardingCompleted) {
+          router.replace('/onboarding/investment');
+          return;
+        }
+
+        // ✅ ADMIN → admin dashboard
+        if (data.role === 'ADMIN') {
+          router.replace('/admin/dashboard');
+          return;
+        }
+
+        // ✅ MEMBER → member dashboard
+        router.replace('/member/dashboard');
+      } catch (error) {
+        console.error('Error checking user:', error);
+        router.replace('/sign-in');
       }
-
-      // ✅ ADMIN → admin dashboard
-      if (data.role === 'ADMIN') {
-        router.replace('/admin/dashboard');
-        return;
-      }
-
-      // ✅ MEMBER → member dashboard
-      router.replace('/member/dashboard');
     };
 
     routeUser();
