@@ -3,10 +3,42 @@ import prisma from "@/lib/prisma";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import cloudinary from "@/lib/cloudinary";
 
+declare global {
+  var io: any;
+}
+
 const SUPER_ADMIN_CLERK_IDS = [
   "user_38qCNW1RIEGrQ6rORph6s2348NX",
   "user_3B9OSNbtBdz7tP5pghbHX2FvQDp",
 ];
+
+// ✅ Notify all members of admin activity
+async function broadcastAdminNotification(
+  title: string,
+  message: string,
+  type: 'SYSTEM' | 'INVESTMENT' | 'PAYMENT' | 'KYC' = 'SYSTEM'
+) {
+  try {
+    // Create system notification (userId: null means it's for everyone)
+    const notification = await prisma.notification.create({
+      data: {
+        userId: null,
+        title,
+        message,
+        type,
+      },
+    });
+
+    // Emit real-time notification to all connected clients
+    if (globalThis.io) {
+      globalThis.io.emit('notification:broadcast', notification);
+    }
+
+    return notification;
+  } catch (error) {
+    console.error('[BROADCAST NOTIFICATION ERROR]', error);
+  }
+}
 
 async function getAdminUser() {
   const { userId } = await auth();
@@ -155,6 +187,15 @@ export async function POST(req: Request) {
       },
     });
 
+    // ✅ Broadcast notification if document is published
+    if (isPublished) {
+      await broadcastAdminNotification(
+        '📄 New Document Published',
+        `Admin ${admin.fullName || admin.email} has published a new document: "${title}". Check the Documents Hub to view it.`,
+        'SYSTEM'
+      );
+    }
+
     return NextResponse.json(document);
   } catch (error: any) {
     console.error(error);
@@ -177,6 +218,9 @@ export async function PUT(req: Request) {
 
   const { id, title, description, content, isPublished } = await req.json();
 
+  // Get previous state to detect publish action
+  const previousDoc = await prisma.document.findUnique({ where: { id } });
+
   const updated = await prisma.document.update({
     where: { id },
     data: {
@@ -186,6 +230,15 @@ export async function PUT(req: Request) {
       ...(isPublished !== undefined ? { isPublished } : {}),
     },
   });
+
+  // ✅ Broadcast notification if document is being published
+  if (isPublished && !previousDoc?.isPublished) {
+    await broadcastAdminNotification(
+      '📄 New Document Published',
+      `Admin ${admin.fullName || admin.email} has published: "${title}". Check the Documents Hub to view it.`,
+      'SYSTEM'
+    );
+  }
 
   return NextResponse.json(updated);
 }
@@ -206,7 +259,18 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Missing ID" }, { status: 400 });
   }
 
+  const deletedDoc = await prisma.document.findUnique({ where: { id } });
+
   await prisma.document.delete({ where: { id } });
+
+  // ✅ Notify of deletion if document was published
+  if (deletedDoc?.isPublished) {
+    await broadcastAdminNotification(
+      '🗑️ Document Removed',
+      `Admin ${admin.fullName || admin.email} has removed the document: "${deletedDoc.title}".`,
+      'SYSTEM'
+    );
+  }
 
   return NextResponse.json({ success: true });
 }

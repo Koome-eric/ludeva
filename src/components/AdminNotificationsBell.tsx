@@ -72,10 +72,6 @@ export function AdminNotificationsBell({
     if (typeof window !== "undefined" && (window as any).socket) {
       const socket = (window as any).socket;
 
-      // ✅ Join the admin room (hard-coded super admin)
-      const SUPER_ADMIN_CLERK_ID = "user_38qCNW1RIEGrQ6rORph6s2348NX";
-      socket.emit("joinRoom", `admin:${SUPER_ADMIN_CLERK_ID}`);
-
       const handler = (notification: AdminNotification) => {
         if (!notification?.id) return;
         if (seenIds.current.has(notification.id)) return;
@@ -88,13 +84,21 @@ export function AdminNotificationsBell({
         });
 
         toast({
-          title: "New Member Activity",
+          title: "New Activity",
           description: notification.title,
         });
       };
 
+      // ✅ Listen for member activities
       socket.on("admin:notification:new", handler);
-      return () => socket.off("admin:notification:new", handler);
+
+      // ✅ Listen for broadcast notifications (admin activities)
+      socket.on("notification:broadcast", handler);
+
+      return () => {
+        socket.off("admin:notification:new", handler);
+        socket.off("notification:broadcast", handler);
+      };
     }
 
     const interval = setInterval(fetchNotifications, 30000);

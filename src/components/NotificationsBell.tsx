@@ -102,9 +102,16 @@ export function NotificationsBell({
         });
       };
 
+      // ✅ Listen for individual notifications
       socket.on("notification:new", handler);
 
-      return () => socket.off("notification:new", handler);
+      // ✅ Listen for broadcast notifications (admin activities)
+      socket.on("notification:broadcast", handler);
+
+      return () => {
+        socket.off("notification:new", handler);
+        socket.off("notification:broadcast", handler);
+      };
     }
   }, []);
 

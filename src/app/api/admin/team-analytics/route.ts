@@ -4,6 +4,38 @@ import { NextResponse } from 'next/server';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
+declare global {
+  var io: any;
+}
+
+// ✅ Notify all members of admin activity
+async function broadcastAdminNotification(
+  title: string,
+  message: string,
+  type: 'SYSTEM' | 'INVESTMENT' | 'PAYMENT' | 'KYC' = 'SYSTEM'
+) {
+  try {
+    // Create system notification (userId: null means it's for everyone)
+    const notification = await prisma.notification.create({
+      data: {
+        userId: null,
+        title,
+        message,
+        type,
+      },
+    });
+
+    // Emit real-time notification to all connected clients
+    if (globalThis.io) {
+      globalThis.io.emit('notification:broadcast', notification);
+    }
+
+    return notification;
+  } catch (error) {
+    console.error('[BROADCAST NOTIFICATION ERROR]', error);
+  }
+}
+
 // POST /api/admin/team-analytics
 // Body: multipart/form-data  { file: File, label: string }
 export async function POST(req: Request) {
@@ -68,6 +100,13 @@ export async function POST(req: Request) {
         uploadedById: admin.id,
       },
     });
+
+    // ✅ Broadcast notification to all members
+    await broadcastAdminNotification(
+      '📊 Team Analytics Updated',
+      `Admin ${admin.fullName || admin.email} has uploaded new team analytics: "${label}". Check the Teams page for the latest data.`,
+      'SYSTEM'
+    );
 
     return NextResponse.json(record);
   } catch (error) {
