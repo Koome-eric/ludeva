@@ -1,4 +1,7 @@
 import { prisma } from '@/lib/prisma';
+
+// Force dynamic rendering so the server always fetches latest analytics
+export const dynamic = 'force-dynamic';
 import { BarChart3, Calendar, RefreshCw } from 'lucide-react';
 
 type Props = {
@@ -8,7 +11,7 @@ type Props = {
     fileName: string;
     headers: string[];
     rows: string[][];
-    createdAt: string;
+    createdAt: string | Date;
   } | null;
 };
 
@@ -42,7 +45,7 @@ export default async function TeamAnalyticsSection({ data: propData }: Props) {
 
   if (!data) return null; // Show nothing if no analytics have been uploaded yet
 
-  const formatDate = (iso: string) =>
+  const formatDate = (iso: string | Date) =>
     new Date(iso).toLocaleDateString('en-KE', {
       day: 'numeric', month: 'long', year: 'numeric',
     });

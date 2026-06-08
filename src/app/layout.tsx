@@ -34,31 +34,31 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/member/dashboard"
-      signUpFallbackRedirectUrl="/onboarding/investment"
-      appearance={{
-        elements: {
-          formButtonPrimary:
-            "bg-primary hover:bg-primary/90 text-primary-foreground",
-          card: "shadow-xl",
-        },
-      }}
-    >
-      <html lang="en" suppressHydrationWarning>
-        <body
-          className={`
-            ${inter.variable}
-            ${robotoSlab.variable}
-            font-body
-            antialiased
-            min-h-screen
-            w-full
-            bg-background
-            text-foreground
-          `}
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`
+          ${inter.variable}
+          ${robotoSlab.variable}
+          font-body
+          antialiased
+          min-h-screen
+          w-full
+          bg-background
+          text-foreground
+        `}
+      >
+        <ClerkProvider
+          signInUrl="/sign-in"
+          signUpUrl="/sign-up"
+          signInFallbackRedirectUrl="/member/dashboard"
+          signUpFallbackRedirectUrl="/onboarding/investment"
+          appearance={{
+            elements: {
+              formButtonPrimary:
+                "bg-primary hover:bg-primary/90 text-primary-foreground",
+              card: "shadow-xl",
+            },
+          }}
         >
           <ThemeProvider
             attribute="class"
@@ -73,8 +73,8 @@ export default function RootLayout({
 
             <Toaster />
           </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }
