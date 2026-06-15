@@ -166,12 +166,13 @@ export async function POST(req: Request) {
           )
           .end(buffer);
       });
+      if (!uploadResult || !uploadResult.secure_url) {
+        console.error('[CLOUDINARY UPLOAD] invalid response', uploadResult);
+        return NextResponse.json({ error: 'Cloudinary upload failed' }, { status: 502 });
+      }
 
-      // ✅ CRITICAL FIX
-      fileUrl = uploadResult.secure_url.replace(
-        "/upload/",
-        `/upload/fl_attachment:${encodeURIComponent(fileName)}/`
-      );
+      // Store the plain secure_url — Content-Disposition is set by the download proxy route
+      fileUrl = uploadResult.secure_url;
     }
 
     const document = await prisma.document.create({

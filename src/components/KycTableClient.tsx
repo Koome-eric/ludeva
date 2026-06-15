@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { approveKyc, rejectKyc } from '@/app/api/admin/kyc-action/route';
+import { approveKyc, rejectKyc, deleteMember } from '@/app/api/admin/kyc-action/route';
 
 interface User {
   id: string;
@@ -79,6 +79,12 @@ export function KycTable({ initialUsers }: KycTableProps) {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const filteredUsers = users.filter(u =>
+    u.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const openModal = (user: User) => setSelectedUser(user);
   const closeModal = () => setSelectedUser(null);
@@ -87,9 +93,10 @@ export function KycTable({ initialUsers }: KycTableProps) {
     try {
       setLoadingUserId(userId);
       const res = await approveKyc(userId);
+      const updatedSubmittedAt = res.user.kycSubmittedAt ?? undefined;
       toast({ title: 'KYC Approved', description: 'User KYC has been approved.' });
-      setUsers(users.map(u => u.id === userId ? { ...u, kycStatus: 'APPROVED', kycSubmittedAt: res.user.kycSubmittedAt } : u));
-      if (selectedUser?.id === userId) setSelectedUser({ ...selectedUser, kycStatus: 'APPROVED', kycSubmittedAt: res.user.kycSubmittedAt });
+      setUsers(users.map(u => u.id === userId ? { ...u, kycStatus: 'APPROVED', kycSubmittedAt: updatedSubmittedAt } : u));
+      if (selectedUser?.id === userId) setSelectedUser({ ...selectedUser, kycStatus: 'APPROVED', kycSubmittedAt: updatedSubmittedAt });
     } catch {
       toast({ title: 'Error', description: 'Failed to approve KYC.', variant: 'destructive' });
     } finally {
@@ -101,13 +108,29 @@ export function KycTable({ initialUsers }: KycTableProps) {
     try {
       setLoadingUserId(userId);
       const res = await rejectKyc(userId);
+      const updatedSubmittedAt = res.user.kycSubmittedAt ?? undefined;
       toast({ title: 'KYC Rejected', description: 'User KYC has been rejected.' });
-      setUsers(users.map(u => u.id === userId ? { ...u, kycStatus: 'REJECTED', kycSubmittedAt: res.user.kycSubmittedAt } : u));
-      if (selectedUser?.id === userId) setSelectedUser({ ...selectedUser, kycStatus: 'REJECTED', kycSubmittedAt: res.user.kycSubmittedAt });
+      setUsers(users.map(u => u.id === userId ? { ...u, kycStatus: 'REJECTED', kycSubmittedAt: updatedSubmittedAt } : u));
+      if (selectedUser?.id === userId) setSelectedUser({ ...selectedUser, kycStatus: 'REJECTED', kycSubmittedAt: updatedSubmittedAt });
     } catch {
       toast({ title: 'Error', description: 'Failed to reject KYC.', variant: 'destructive' });
     } finally {
       setLoadingUserId(null);
+    }
+  };
+
+  const handleDelete = async (userId: string) => {
+    try {
+      setLoadingUserId(userId);
+      await deleteMember(userId);
+      toast({ title: 'Member Deleted', description: 'The member has been permanently removed.' });
+      setUsers(users.filter(u => u.id !== userId));
+      if (selectedUser?.id === userId) closeModal();
+    } catch {
+      toast({ title: 'Error', description: 'Failed to delete member.', variant: 'destructive' });
+    } finally {
+      setLoadingUserId(null);
+      setConfirmDeleteId(null);
     }
   };
 
@@ -122,8 +145,19 @@ export function KycTable({ initialUsers }: KycTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>KYC Management</CardTitle>
-        <CardDescription>Review, approve or reject investor KYC submissions</CardDescription>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <CardTitle>KYC Management</CardTitle>
+            <CardDescription>Review, approve or reject investor KYC submissions</CardDescription>
+          </div>
+          <input
+            type="text"
+            placeholder="Search by name…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full sm:w-64 px-3 py-2 text-sm border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
       </CardHeader>
       <CardContent className="overflow-x-auto">
         <Table>
@@ -132,40 +166,52 @@ export function KycTable({ initialUsers }: KycTableProps) {
               <TableHead>Name</TableHead>
               <TableHead>Account Type</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>KRA PIN</TableHead>
               <TableHead>Submitted At</TableHead>
               <TableHead className="text-center">Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map(user => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.fullName}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{user.accountType}{user.teamName ? ` — ${user.teamName}` : ''}</Badge>
-                </TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.phone || '—'}</TableCell>
-                <TableCell>{user.kraPin || '—'}</TableCell>
-                <TableCell>
-                  {user.kycSubmittedAt ? format(new Date(user.kycSubmittedAt), 'dd MMM, yyyy') : 'Not submitted'}
-                </TableCell>
-                <TableCell className="text-center">
-                  <Badge variant={getKycBadgeVariant(user.kycStatus) as any}>{user.kycStatus}</Badge>
-                </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button size="sm" variant="outline" onClick={() => openModal(user)}>View</Button>
-                  {user.kycStatus === 'PENDING' && (
-                    <>
-                      <Button size="sm" variant={"success" as any} onClick={() => handleApprove(user.id)} disabled={loadingUserId === user.id}>Approve</Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleReject(user.id)} disabled={loadingUserId === user.id}>Reject</Button>
-                    </>
-                  )}
+            {filteredUsers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  No members found{searchQuery ? ` matching "${searchQuery}"` : ''}.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredUsers.map(user => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.fullName}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{user.accountType}{user.teamName ? ` — ${user.teamName}` : ''}</Badge>
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    {user.kycSubmittedAt ? format(new Date(user.kycSubmittedAt), 'dd MMM, yyyy') : 'Not submitted'}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant={getKycBadgeVariant(user.kycStatus) as any}>{user.kycStatus}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button size="sm" variant="outline" onClick={() => openModal(user)}>View</Button>
+                    {user.kycStatus === 'PENDING' && (
+                      <>
+                        <Button size="sm" variant={"success" as any} onClick={() => handleApprove(user.id)} disabled={loadingUserId === user.id}>Approve</Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleReject(user.id)} disabled={loadingUserId === user.id}>Reject</Button>
+                      </>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setConfirmDeleteId(user.id)}
+                      disabled={loadingUserId === user.id}
+                    >
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </CardContent>
@@ -277,6 +323,26 @@ export function KycTable({ initialUsers }: KycTableProps) {
           </div>
         </div>
       )}
+      {/* Delete Confirmation Modal */}
+      {confirmDeleteId && (() => {
+        const target = users.find(u => u.id === confirmDeleteId);
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-xl shadow-xl max-w-sm w-full p-6">
+              <h2 className="text-lg font-bold mb-2">Delete Member</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Are you sure you want to permanently delete <span className="font-semibold text-foreground">{target?.fullName}</span>? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setConfirmDeleteId(null)} disabled={!!loadingUserId}>Cancel</Button>
+                <Button variant="destructive" onClick={() => handleDelete(confirmDeleteId)} disabled={!!loadingUserId}>
+                  {loadingUserId === confirmDeleteId ? 'Deleting…' : 'Delete'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </Card>
   );
 }

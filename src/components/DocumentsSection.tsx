@@ -1,20 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import Container from "@/components/ui/Container";
 import PageHero from "@/components/PageHero";
 import { FileText, Download, Eye } from "lucide-react";
 
-const PdfDocument = dynamic(
-  () => import("react-pdf").then((m) => m.Document),
-  { ssr: false }
-);
-const PdfPage = dynamic(
-  () => import("react-pdf").then((m) => m.Page),
-  { ssr: false }
-);
 
 interface DocumentType {
   id: string;
@@ -45,28 +36,11 @@ export default function DocumentsSection() {
     show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
-  // ✅ RELIABLE DOWNLOAD (BLOB METHOD)
-  const handleDownload = async (doc: DocumentType) => {
-    try {
-      if (!doc.fileUrl) return;
-
-      const res = await fetch(doc.fileUrl);
-      const blob = await res.blob();
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-
-      a.href = url;
-      a.download = doc.fileName || "document";
-
-      document.body.appendChild(a);
-      a.click();
-
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Download failed:", err);
-    }
+  // Use server proxy to trigger reliable downloads (handles CORS/headers)
+  const handleDownload = (doc: DocumentType) => {
+    if (!doc.id) return;
+    // navigate to server download endpoint which redirects to Cloudinary with attachment
+    window.location.href = `/api/documents/download?id=${encodeURIComponent(doc.id)}`;
   };
 
   useEffect(() => {
@@ -200,15 +174,21 @@ export default function DocumentsSection() {
 
             {/* PDF */}
             {getFileType(previewDoc) === "pdf" && (
-              <PdfDocument file={previewDoc.fileUrl}>
-                <PdfPage pageNumber={1} />
-              </PdfDocument>
+              <div className="w-full">
+                <iframe
+                  src={`/api/documents/preview?id=${encodeURIComponent(
+                    previewDoc.id
+                  )}`}
+                  className="w-full h-[70vh]"
+                  title={previewDoc.title}
+                />
+              </div>
             )}
 
             {/* IMAGE */}
             {getFileType(previewDoc) === "image" && (
               <img
-                src={previewDoc.fileUrl || ""}
+                src={`/api/documents/preview?id=${encodeURIComponent(previewDoc.id)}`}
                 className="w-full max-h-[70vh] object-contain"
               />
             )}
