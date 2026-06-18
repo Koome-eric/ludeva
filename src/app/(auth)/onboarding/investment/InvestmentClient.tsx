@@ -29,7 +29,7 @@ import { completeOnboarding } from "./actions";
 
 const MINIMUM_INVESTMENT = 1000;
 
-const formSchema = z.object({
+const baseFormSchema = z.object({
   // Account type
   accountType: z.enum(["INDIVIDUAL", "TEAM"]),
   teamName: z.string().optional(),
@@ -42,7 +42,10 @@ const formSchema = z.object({
   placeOfBirthWard: z.string().min(2, "Ward of birth is required."),
   email: z.string().email("Valid email is required."),
   residentialAddress: z.string().min(5, "Residential address is required."),
-  sourceOfFunds: z.string().min(3, "Source of funds is required."),
+  sourceOfFunds: z.string().min(3, "Source of funds is required.").refine(
+    (v) => v !== "",
+    "Please select a source of funds."
+  ),
 
   // Employment
   employmentStatus: z.enum(["EMPLOYED", "SELF_EMPLOYED", "UNEMPLOYED", "RETIRED", "STUDENT"]),
@@ -60,7 +63,18 @@ const formSchema = z.object({
     .min(MINIMUM_INVESTMENT, `Minimum investment is KES ${MINIMUM_INVESTMENT}`),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+// Cross-field rule: a TEAM account must provide a team name.
+const formSchema = baseFormSchema.superRefine((data, ctx) => {
+  if (data.accountType === "TEAM" && (!data.teamName || data.teamName.trim().length < 2)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Team name is required for a team account.",
+      path: ["teamName"],
+    });
+  }
+});
+
+type FormValues = z.infer<typeof baseFormSchema>;
 
 // Upload helper using Cloudinary
 async function uploadFile(file: File, label: string): Promise<string> {
@@ -87,9 +101,11 @@ export default function InvestmentClient() {
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [idFile, setIdFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [fileErrors, setFileErrors] = useState<{ selfie?: string; id?: string }>({});
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onChange",
     defaultValues: {
       accountType: "INDIVIDUAL",
       teamName: "",
@@ -121,15 +137,35 @@ export default function InvestmentClient() {
 
   const accountType = form.watch("accountType");
 
+  // Validates that both required documents have been attached.
+  // Returns true if valid; otherwise sets inline errors and returns false.
+  function validateFiles(): boolean {
+    const errors: { selfie?: string; id?: string } = {};
+    if (!selfieFile) errors.selfie = "Selfie photo is required.";
+    if (!idFile) errors.id = "National ID copy is required.";
+    setFileErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
   async function onSubmit(values: FormValues) {
+    // Guard: even if a user somehow triggers submit before reaching step 4,
+    // or skips picking files, block here as a final safety net.
+    const filesOk = validateFiles();
+    if (!filesOk) {
+      setStep(TOTAL_STEPS);
+      toast({
+        variant: "destructive",
+        title: "Missing required documents",
+        description: "Please upload both your selfie and National ID copy before submitting.",
+      });
+      return;
+    }
+
     try {
       setUploading(true);
 
-      let selfieUrl = "";
-      let idCopyUrl = "";
-
-      if (selfieFile) selfieUrl = await uploadFile(selfieFile, "selfie");
-      if (idFile) idCopyUrl = await uploadFile(idFile, "id_copy");
+      const selfieUrl = await uploadFile(selfieFile as File, "selfie");
+      const idCopyUrl = await uploadFile(idFile as File, "id_copy");
 
       setUploading(false);
 
@@ -365,7 +401,7 @@ export default function InvestmentClient() {
               {/* ── STEP 4: DOCUMENT UPLOADS & INVESTMENT ── */}
               {step === 4 && (
                 <div className="space-y-5">
-                  <p className="text-sm text-muted-foreground">Please upload clear, legible copies of the required documents.</p>
+                  <p className="text-sm text-muted-foreground">Please upload clear, legible copies of the required documents. Both documents are required to submit your KYC.</p>
 
                   <div className="rounded-lg border p-4 space-y-3">
                     <p className="font-semibold text-sm">Your Documents</p>
@@ -376,12 +412,19 @@ export default function InvestmentClient() {
                           type="file"
                           accept="image/*"
                           capture="user"
-                          className="w-full text-sm border rounded-md p-2"
-                          onChange={e => setSelfieFile(e.target.files?.[0] || null)}
+                          className={`w-full text-sm border rounded-md p-2 ${fileErrors.selfie ? "border-destructive" : ""}`}
+                          onChange={e => {
+                            const f = e.target.files?.[0] || null;
+                            setSelfieFile(f);
+                            if (f) setFileErrors(prev => ({ ...prev, selfie: undefined }));
+                          }}
                         />
                         <p className="text-xs text-muted-foreground mt-1">Clear face photo, no sunglasses</p>
                         {selfieFile && (
                           <p className="text-xs text-green-600 mt-1">✓ {selfieFile.name}</p>
+                        )}
+                        {fileErrors.selfie && (
+                          <p className="text-xs text-destructive mt-1">{fileErrors.selfie}</p>
                         )}
                       </div>
                       <div>
@@ -389,12 +432,19 @@ export default function InvestmentClient() {
                         <input
                           type="file"
                           accept="image/*,application/pdf"
-                          className="w-full text-sm border rounded-md p-2"
-                          onChange={e => setIdFile(e.target.files?.[0] || null)}
+                          className={`w-full text-sm border rounded-md p-2 ${fileErrors.id ? "border-destructive" : ""}`}
+                          onChange={e => {
+                            const f = e.target.files?.[0] || null;
+                            setIdFile(f);
+                            if (f) setFileErrors(prev => ({ ...prev, id: undefined }));
+                          }}
                         />
                         <p className="text-xs text-muted-foreground mt-1">Both sides of National ID</p>
                         {idFile && (
                           <p className="text-xs text-green-600 mt-1">✓ {idFile.name}</p>
+                        )}
+                        {fileErrors.id && (
+                          <p className="text-xs text-destructive mt-1">{fileErrors.id}</p>
                         )}
                       </div>
                     </div>
@@ -408,6 +458,12 @@ export default function InvestmentClient() {
                       <FormMessage />
                     </FormItem>
                   )} />
+
+                  {(!selfieFile || !idFile) && (
+                    <p className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-md p-2">
+                      Upload both documents above to enable submission.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -424,7 +480,7 @@ export default function InvestmentClient() {
                     className="flex-1"
                     onClick={async () => {
                       const stepFields: Record<number, (keyof FormValues)[]> = {
-                        1: ["accountType"],
+                        1: accountType === "TEAM" ? ["accountType", "teamName"] : ["accountType"],
                         2: ["fullName", "dateOfBirth", "placeOfBirthCounty", "placeOfBirthSubCounty", "placeOfBirthWard", "email", "residentialAddress"],
                         3: ["sourceOfFunds", "employmentStatus"],
                         4: [],
@@ -439,7 +495,7 @@ export default function InvestmentClient() {
                   <Button
                     type="submit"
                     className="flex-1"
-                    disabled={form.formState.isSubmitting || uploading}
+                    disabled={form.formState.isSubmitting || uploading || !selfieFile || !idFile}
                   >
                     {form.formState.isSubmitting || uploading
                       ? "Submitting KYC..."

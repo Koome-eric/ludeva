@@ -3,43 +3,82 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { prisma } from "@/lib/prisma";
 import { getCurrentUserFromDB } from "@/lib/user";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getMemberReportSummary, parseReportAmount } from "@/lib/member-reports";
 import { InvestmentActions } from "./InvestmentActions";
 
 interface PageProps {
   searchParams: Promise<{
-    status?: string;
     from?: string;
     to?: string;
   }>;
 }
 
+// Display shape consumed by this page and InvestmentActions — derived
+// directly from a member's MemberReport rows so it always matches what's
+// shown on the Reports page.
+export interface InvestmentRowView {
+  id: string;
+  date: Date;
+  accountNo: string;
+  periodLabel: string;
+  principal: number | null;
+  roi: string;
+  withdrawal: number | null;
+  amount: number; // closing balance (falls back to principal) for this row
+  notes: string;
+}
+
 export default async function InvestmentsPage({ searchParams }: PageProps) {
-  const { status, from, to } = await searchParams;
+  const { from, to } = await searchParams;
   const user = await getCurrentUserFromDB();
   if (!user) redirect("/sign-in");
 
-  // Build query filters
-  const where: any = { userId: user.id };
+  const { rows } = await getMemberReportSummary(user.email);
 
-  if (status && status !== "all") {
-    where.status = status;
+  // Build display rows: only rows that carry an actual amount (closing
+  // balance or principal) count as "an investment entry" — quarter/label
+  // rows with no figures are excluded here, matching the Reports page.
+  let investments: InvestmentRowView[] = rows
+    .map((r): InvestmentRowView | null => {
+      const closing = parseReportAmount(r.closingBal);
+      const principal = parseReportAmount(r.principal);
+      const amount = closing ?? principal;
+      if (amount === null) return null;
+
+      const parsedDate = r.date ? new Date(r.date) : null;
+      const date = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : r.uploadedAt;
+
+      return {
+        id: r.id,
+        date,
+        accountNo: r.accountNo || "—",
+        periodLabel: r.periodLabel || "—",
+        principal,
+        roi: r.roi || "—",
+        withdrawal: parseReportAmount(r.withdrawal),
+        amount,
+        notes: r.notes || r.quarter || "",
+      };
+    })
+    .filter((r): r is InvestmentRowView => r !== null);
+
+  // Date range filter
+  if (from) {
+    const fromDate = new Date(from);
+    investments = investments.filter((inv) => inv.date >= fromDate);
+  }
+  if (to) {
+    const toDate = new Date(to);
+    investments = investments.filter((inv) => inv.date <= toDate);
   }
 
-  if (from || to) {
-    where.createdAt = {};
-    if (from) where.createdAt.gte = new Date(from);
-    if (to) where.createdAt.lte = new Date(to);
-  }
+  // Newest first
+  investments.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-  // Fetch investments
-  const investments = await prisma.investment.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-  });
+  const hasAnyReports = rows.length > 0;
 
   return (
     <div className="space-y-6">
@@ -47,7 +86,9 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">My Investments</h1>
-          <p className="text-muted-foreground">Track and manage your investment history.</p>
+          <p className="text-muted-foreground">
+            Investment entries recorded against your account, per your performance reports.
+          </p>
         </div>
 
         <Button asChild>
@@ -59,17 +100,6 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
       <Card>
         <CardContent className="pt-6 flex flex-col sm:flex-row gap-4">
           <form className="flex flex-wrap gap-3">
-            <select
-              name="status"
-              defaultValue={status ?? "all"}
-              className="border rounded-md px-3 py-2 text-sm"
-            >
-              <option value="all">All Statuses</option>
-              <option value="ACTIVE">Active</option>
-              <option value="PENDING">Pending</option>
-              <option value="FAILED">Failed</option>
-            </select>
-
             <input
               type="date"
               name="from"
@@ -95,7 +125,11 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
       <Card>
         <CardHeader>
           <CardTitle>Investment Records</CardTitle>
-          <CardDescription>Filter by status or investment date.</CardDescription>
+          <CardDescription>
+            {hasAnyReports
+              ? "Filter by investment date."
+              : "No investments have been posted to your account yet — your investment total is zero."}
+          </CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -104,13 +138,13 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Product Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>ROI (%)</TableHead>
-                  <TableHead>Duration (days)</TableHead>
-                  <TableHead className="text-right">Amount (KES)</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Account</TableHead>
+                  <TableHead>Period</TableHead>
+                  <TableHead className="text-right">Principal (KES)</TableHead>
+                  <TableHead>ROI</TableHead>
+                  <TableHead className="text-right">Withdrawal (KES)</TableHead>
+                  <TableHead className="text-right">Closing Balance (KES)</TableHead>
+                  <TableHead>Notes</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -119,20 +153,26 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
                 {investments.length ? (
                   investments.map((inv) => (
                     <TableRow key={inv.id}>
-                      <TableCell>{format(new Date(inv.createdAt), "dd MMM yyyy")}</TableCell>
-                      <TableCell>{inv.productName}</TableCell>
-                      <TableCell>{inv.fundType}</TableCell>
-                      <TableCell>{inv.category}</TableCell>
-                      <TableCell>{inv.roi}</TableCell>
-                      <TableCell>{inv.duration}</TableCell>
+                      <TableCell>{format(inv.date, "dd MMM yyyy")}</TableCell>
+                      <TableCell>{inv.accountNo}</TableCell>
+                      <TableCell>{inv.periodLabel}</TableCell>
                       <TableCell className="text-right font-mono">
-                        {inv.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        {inv.principal !== null
+                          ? inv.principal.toLocaleString("en-US", { minimumFractionDigits: 2 })
+                          : "—"}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={inv.status === "ACTIVE" ? "success" : "warning"}>
-                          {inv.status}
-                        </Badge>
+                        <Badge variant="success">{inv.roi}</Badge>
                       </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {inv.withdrawal !== null
+                          ? inv.withdrawal.toLocaleString("en-US", { minimumFractionDigits: 2 })
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="text-right font-mono font-semibold">
+                        {inv.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{inv.notes || "—"}</TableCell>
                       <TableCell className="text-right">
                         <InvestmentActions investment={inv} />
                       </TableCell>
@@ -140,8 +180,10 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={9} className="h-32 text-center">
-                      No investments match your filters.
+                    <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
+                      {hasAnyReports
+                        ? "No investments match your filters."
+                        : "You haven't invested yet. Your investment amount is KES 0."}
                     </TableCell>
                   </TableRow>
                 )}

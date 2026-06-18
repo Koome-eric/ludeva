@@ -5,43 +5,39 @@ import { Button } from "@/components/ui/button"
 import { ArrowUpRight, TrendingUp, Wallet, PiggyBank } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
-import { prisma } from "@/lib/prisma"
 import { requireOnboardingComplete } from "@/lib/auth-guard"
+import { getMemberReportSummary, parseReportAmount } from "@/lib/member-reports"
 
 export default async function MemberDashboardPage() {
   const user = await requireOnboardingComplete()
 
-  const initialInvestment = user.initialInvestment || 0
+  // MemberReport is the source of truth for investment totals. If a member
+  // has no report rows uploaded yet, their investment is zero — regardless
+  // of any initialInvestment/payment records on file.
+  const { rows: reportRows, summary } = await getMemberReportSummary(user.email)
 
-  const paymentsResult = await prisma.payment.aggregate({
-    _sum: { amount: true },
-    where: { userId: user.id, status: "SUCCESS" },
-  })
-
-  const depositsTotal = paymentsResult._sum.amount || 0
-  const totalInvested = initialInvestment + depositsTotal
-  const currentBalance = totalInvested
+  const totalInvested = summary.totalInvested
+  const currentBalance = summary.totalInvested
   const estimatedYield = 9.5
 
-  const lastInvestment = await prisma.payment.findFirst({
-    where: { userId: user.id, status: "SUCCESS" },
-    orderBy: { createdAt: "desc" },
-  })
+  // Most recent investment date: the most recent report row that carries a
+  // usable amount (closing balance or principal), falling back to that
+  // row's upload date if it has no parseable date string.
+  const latestAmountRow = reportRows.find(
+    (r) => parseReportAmount(r.closingBal) !== null || parseReportAmount(r.principal) !== null
+  )
+  const parsedDate = latestAmountRow?.date ? new Date(latestAmountRow.date) : null
+  const mostRecentInvestment =
+    parsedDate && !Number.isNaN(parsedDate.getTime())
+      ? parsedDate
+      : latestAmountRow?.uploadedAt || null
 
-  let mostRecentInvestment = lastInvestment?.createdAt || null
-  if (
-    initialInvestment > 0 &&
-    (!mostRecentInvestment || user.createdAt > mostRecentInvestment)
-  ) {
-    mostRecentInvestment = user.createdAt
-  }
-
-  // ✅ FIX: Compute Display Name Based on Account Type
+  // ✅ Compute Display Name Based on Account Type
   const firstName = user.fullName?.split(" ")[0] || "Investor"
 
   const displayName =
     user.accountType === "TEAM"
-      ? `Team ${firstName}`
+      ? (user.teamName?.trim() ? `Team ${user.teamName.trim()}` : "Team")
       : firstName
 
   return (
@@ -84,7 +80,7 @@ export default async function MemberDashboardPage() {
           title="Total Invested"
           value={`KES ${totalInvested.toLocaleString()}`}
           icon={<Wallet />}
-          subtitle="Total deposits made"
+          subtitle="Per latest performance report"
         />
 
         <StatCard

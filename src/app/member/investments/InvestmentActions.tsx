@@ -12,8 +12,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
+import type { InvestmentRowView } from "./page";
 
-export function InvestmentActions({ investment }: { investment: any }) {
+export function InvestmentActions({ investment }: { investment: InvestmentRowView }) {
   const { toast } = useToast();
 
   const handleDownload = () => {
@@ -44,41 +45,49 @@ export function InvestmentActions({ investment }: { investment: any }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Investment Details</DialogTitle>
-            <DialogDescription>ID: {investment.id}</DialogDescription>
+            <DialogDescription>Account: {investment.accountNo}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3 text-sm mt-2">
             <div className="flex justify-between border-b pb-2">
-              <span className="font-medium text-muted-foreground">Product</span>
-              <span>{investment.productName}</span>
+              <span className="font-medium text-muted-foreground">Period</span>
+              <span>{investment.periodLabel}</span>
             </div>
             <div className="flex justify-between border-b pb-2">
-              <span className="font-medium text-muted-foreground">Amount</span>
-              <span className="font-bold">KES {investment.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="font-medium text-muted-foreground">Type</span>
-              <span>{investment.fundType}</span>
-            </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="font-medium text-muted-foreground">Category</span>
-              <span>{investment.category}</span>
+              <span className="font-medium text-muted-foreground">Principal</span>
+              <span>
+                {investment.principal !== null
+                  ? `KES ${investment.principal.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                  : "—"}
+              </span>
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="font-medium text-muted-foreground">ROI</span>
-              <span>{investment.roi}%</span>
+              <span>{investment.roi}</span>
             </div>
             <div className="flex justify-between border-b pb-2">
-              <span className="font-medium text-muted-foreground">Duration</span>
-              <span>{investment.duration} days</span>
+              <span className="font-medium text-muted-foreground">Withdrawal</span>
+              <span>
+                {investment.withdrawal !== null
+                  ? `KES ${investment.withdrawal.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                  : "—"}
+              </span>
             </div>
             <div className="flex justify-between border-b pb-2">
-              <span className="font-medium text-muted-foreground">Status</span>
-              <span>{investment.status}</span>
+              <span className="font-medium text-muted-foreground">Closing Balance</span>
+              <span className="font-bold">
+                KES {investment.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              </span>
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="font-medium text-muted-foreground">Date</span>
-              <span>{format(new Date(investment.createdAt), "dd MMM yyyy")}</span>
+              <span>{format(new Date(investment.date), "dd MMM yyyy")}</span>
             </div>
+            {investment.notes && (
+              <div className="flex justify-between border-b pb-2">
+                <span className="font-medium text-muted-foreground">Notes</span>
+                <span>{investment.notes}</span>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

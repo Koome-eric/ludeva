@@ -1,16 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   TrendingUp,
   FileSpreadsheet,
   Download,
   RefreshCw,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 
 interface ReportRow {
@@ -38,21 +35,25 @@ interface Props {
   };
 }
 
-// Group rows by accountNo + periodLabel
-function groupReports(rows: ReportRow[]) {
-  const groups: Record<string, ReportRow[]> = {};
-  for (const row of rows) {
-    const key = `${row.accountNo || "General"} — ${row.periodLabel || "Performance"}`;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(row);
-  }
-  return groups;
+// Sort rows by account, then period — keeps related rows
+// adjacent in the single table without needing separate sections.
+function sortReports(rows: ReportRow[]) {
+  return [...rows].sort((a, b) => {
+    const acctA = a.accountNo || "";
+    const acctB = b.accountNo || "";
+    if (acctA !== acctB) return acctA.localeCompare(acctB);
+
+    const periodA = a.periodLabel || "";
+    const periodB = b.periodLabel || "";
+    if (periodA !== periodB) return periodA.localeCompare(periodB);
+
+    return 0;
+  });
 }
 
 export default function MemberReportsClient({ reports, member }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [rows, setRows] = useState<ReportRow[]>(reports);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const refresh = async () => {
     setRefreshing(true);
@@ -65,13 +66,13 @@ export default function MemberReportsClient({ reports, member }: Props) {
     }
   };
 
-  const toggleGroup = (key: string) =>
-    setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
+  const sortedRows = sortReports(rows);
+  const hasData = sortedRows.length > 0;
 
   // Export to CSV
   const exportCSV = () => {
     const headers = ["Account No", "Period", "Date", "Principal", "Rate", "ROI", "Withdrawal", "Closing Balance", "Quarter/Notes"];
-    const csvRows = rows.map((r) => [
+    const csvRows = sortedRows.map((r) => [
       r.accountNo || "",
       r.periodLabel || "",
       r.date || "",
@@ -92,13 +93,10 @@ export default function MemberReportsClient({ reports, member }: Props) {
     URL.revokeObjectURL(url);
   };
 
-  const groups = groupReports(rows);
-  const hasData = rows.length > 0;
-
   // Calculate summary stats
-  const latestBalance = rows.find((r) => r.closingBal)?.closingBal;
-  const latestROI = rows.find((r) => r.roi && r.roi !== "0.00")?.roi;
-  const accountNos = [...new Set(rows.map((r) => r.accountNo).filter(Boolean))];
+  const latestBalance = sortedRows.find((r) => r.closingBal)?.closingBal;
+  const latestROI = sortedRows.find((r) => r.roi && r.roi !== "0.00")?.roi;
+  const accountNos = [...new Set(sortedRows.map((r) => r.accountNo).filter(Boolean))];
 
   return (
     <div className="space-y-6">
@@ -157,7 +155,7 @@ export default function MemberReportsClient({ reports, member }: Props) {
           <Card className="rounded-xl">
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground">Total Rows</p>
-              <p className="text-lg font-bold mt-1">{rows.length}</p>
+              <p className="text-lg font-bold mt-1">{sortedRows.length}</p>
             </CardContent>
           </Card>
         </div>
@@ -170,7 +168,7 @@ export default function MemberReportsClient({ reports, member }: Props) {
             <FileSpreadsheet className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="font-semibold text-lg">No Performance Data Yet</h3>
             <p className="text-muted-foreground text-sm mt-2 max-w-sm">
-              Your account performance data will appear here once it has been uploaded by Ludeva. 
+              Your account performance data will appear here once it has been uploaded by Ludeva.
               Please contact us at{" "}
               <a href="mailto:invest@ludevaplc.co.ke" className="text-primary underline">
                 invest@ludevaplc.co.ke
@@ -181,73 +179,59 @@ export default function MemberReportsClient({ reports, member }: Props) {
         </Card>
       )}
 
-      {/* Grouped Report Tables */}
-      {Object.entries(groups).map(([groupKey, groupRows]) => {
-        const isOpen = openGroups[groupKey] !== false; // default open
-        return (
-          <Card key={groupKey} className="rounded-xl overflow-hidden">
-            <CardHeader
-              className="cursor-pointer select-none bg-muted/30 py-3 px-4"
-              onClick={() => toggleGroup(groupKey)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <FileSpreadsheet className="h-4 w-4 text-primary" />
-                  <CardTitle className="text-sm font-semibold">{groupKey}</CardTitle>
-                  <Badge variant="secondary" className="text-xs">{groupRows.length} rows</Badge>
-                </div>
-                {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </div>
-            </CardHeader>
+      {/* Single unified report table */}
+      {hasData && (
+        <Card className="rounded-xl overflow-hidden">
+          <CardContent className="p-0 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/30">
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Account</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Period</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Date</th>
+                  <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Principal (KES)</th>
+                  <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Rate</th>
+                  <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">ROI</th>
+                  <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Withdrawal</th>
+                  <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Closing Balance (KES)</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedRows.map((row, idx) => {
+                  const isQuarterRow = !row.date && (row.quarter || row.notes);
 
-            {isOpen && (
-              <CardContent className="p-0 overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/20">
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Date</th>
-                      <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Principal (KES)</th>
-                      <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Rate</th>
-                      <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">ROI</th>
-                      <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Withdrawal</th>
-                      <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Closing Balance (KES)</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Notes</th>
+                  if (isQuarterRow) {
+                    return (
+                      <tr key={row.id} className="bg-primary/5 border-b">
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{row.accountNo || "—"}</td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{row.periodLabel || "—"}</td>
+                        <td colSpan={7} className="px-4 py-2 text-xs font-semibold text-primary italic">
+                          {row.quarter || row.notes}
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  return (
+                    <tr key={row.id} className={`border-b last:border-none ${idx % 2 === 0 ? "" : "bg-muted/10"}`}>
+                      <td className="px-4 py-2.5 text-xs text-muted-foreground">{row.accountNo || "—"}</td>
+                      <td className="px-4 py-2.5 text-xs text-muted-foreground">{row.periodLabel || "—"}</td>
+                      <td className="px-4 py-2.5 font-medium">{row.date || "—"}</td>
+                      <td className="px-4 py-2.5 text-right">{row.principal || "—"}</td>
+                      <td className="px-4 py-2.5 text-right">{row.rate || "—"}</td>
+                      <td className="px-4 py-2.5 text-right text-green-600 font-medium">{row.roi || "—"}</td>
+                      <td className="px-4 py-2.5 text-right">{row.withdrawal || "—"}</td>
+                      <td className="px-4 py-2.5 text-right font-semibold">{row.closingBal || "—"}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground text-xs">{row.notes || "—"}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {groupRows.map((row, idx) => {
-                      const isQuarterRow = !row.date && (row.quarter || row.notes);
-                      const isPeriodLabel = !row.date && !row.quarter && row.periodLabel;
-
-                      if (isQuarterRow) {
-                        return (
-                          <tr key={row.id} className="bg-primary/5 border-b">
-                            <td colSpan={7} className="px-4 py-2 text-xs font-semibold text-primary italic">
-                              {row.quarter || row.notes}
-                            </td>
-                          </tr>
-                        );
-                      }
-
-                      return (
-                        <tr key={row.id} className={`border-b last:border-none ${idx % 2 === 0 ? "" : "bg-muted/10"}`}>
-                          <td className="px-4 py-2.5 font-medium">{row.date || "—"}</td>
-                          <td className="px-4 py-2.5 text-right">{row.principal || "—"}</td>
-                          <td className="px-4 py-2.5 text-right">{row.rate || "—"}</td>
-                          <td className="px-4 py-2.5 text-right text-green-600 font-medium">{row.roi || "—"}</td>
-                          <td className="px-4 py-2.5 text-right">{row.withdrawal || "—"}</td>
-                          <td className="px-4 py-2.5 text-right font-semibold">{row.closingBal || "—"}</td>
-                          <td className="px-4 py-2.5 text-muted-foreground text-xs">{row.notes || "—"}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </CardContent>
-            )}
-          </Card>
-        );
-      })}
+                  );
+                })}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Footer note */}
       {hasData && (

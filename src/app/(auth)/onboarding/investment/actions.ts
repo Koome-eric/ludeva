@@ -31,9 +31,17 @@ const OnboardingDataSchema = z.object({
   maritalStatus: z.string().optional(),
   numberOfKids: z.coerce.number().optional(),
 
-  // Document URLs (uploaded via Cloudinary)
-  selfieUrl: z.string().optional(),
-  idCopyUrl: z.string().optional(),
+  // Document URLs (uploaded via Cloudinary) — required for KYC completion.
+  selfieUrl: z.string().min(1, "Selfie photo is required."),
+  idCopyUrl: z.string().min(1, "National ID copy is required."),
+}).superRefine((data, ctx) => {
+  if (data.accountType === "TEAM" && (!data.teamName || data.teamName.trim().length < 2)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Team name is required for a team account.",
+      path: ["teamName"],
+    });
+  }
 });
 
 export async function completeOnboarding(

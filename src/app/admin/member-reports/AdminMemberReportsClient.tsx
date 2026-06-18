@@ -4,8 +4,18 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Trash2, Users, FileSpreadsheet, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Search, Trash2, Users, FileSpreadsheet, RefreshCw, ChevronDown, ChevronUp, Plus } from "lucide-react";
 
 interface ReportRow {
   id: string;
@@ -44,6 +54,20 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
   const [search, setSearch] = useState("");
   const [expandedEmail, setExpandedEmail] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({
+    memberEmail: "",
+    accountNo: "",
+    periodLabel: "",
+    date: "",
+    principal: "",
+    rate: "",
+    roi: "",
+    withdrawal: "",
+    closingBal: "",
+    notes: "",
+  });
 
   const refresh = async () => {
     const res = await fetch("/api/member-reports/admin-all");
@@ -51,6 +75,56 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
       const data = await res.json();
       setReports(data.reports);
       setMemberSummary(data.memberSummary);
+    }
+  };
+
+  const updateField = (field: keyof typeof form, value: string) =>
+    setForm(prev => ({ ...prev, [field]: value }));
+
+  const resetForm = () =>
+    setForm({
+      memberEmail: "",
+      accountNo: "",
+      periodLabel: "",
+      date: "",
+      principal: "",
+      rate: "",
+      roi: "",
+      withdrawal: "",
+      closingBal: "",
+      notes: "",
+    });
+
+  const submitAddRow = async () => {
+    if (!form.memberEmail.trim()) {
+      toast({ variant: "destructive", title: "Member email is required" });
+      return;
+    }
+    if (!form.principal.trim() && !form.closingBal.trim()) {
+      toast({ variant: "destructive", title: "Enter a principal or closing balance amount" });
+      return;
+    }
+
+    setAdding(true);
+    try {
+      const res = await fetch("/api/admin/member-reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to add investment entry");
+      }
+
+      toast({ title: "Investment entry added", description: `Recorded for ${form.memberEmail}` });
+      setAddOpen(false);
+      resetForm();
+      await refresh();
+    } catch (e: any) {
+      toast({ variant: "destructive", title: e.message });
+    } finally {
+      setAdding(false);
     }
   };
 
@@ -99,9 +173,146 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
             All report rows pushed from Google Sheets. Each member only sees their own data.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={refresh}>
-          <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Dialog open={addOpen} onOpenChange={(open) => { setAddOpen(open); if (!open) resetForm(); }}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-2" /> Add Investment Entry
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Add Investment Entry</DialogTitle>
+                <DialogDescription>
+                  Records a new report row for a member. This immediately updates their investment
+                  total on the dashboard, their Reports page, and their Investments page.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="memberEmail">Member Email *</Label>
+                  <Input
+                    id="memberEmail"
+                    type="email"
+                    placeholder="member@example.com"
+                    value={form.memberEmail}
+                    onChange={(e) => updateField("memberEmail", e.target.value)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="accountNo">Account No</Label>
+                    <Input
+                      id="accountNo"
+                      placeholder="e.g. LA0061"
+                      value={form.accountNo}
+                      onChange={(e) => updateField("accountNo", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="periodLabel">Period Label</Label>
+                    <Input
+                      id="periodLabel"
+                      placeholder="e.g. 2026, 11.5% Net"
+                      value={form.periodLabel}
+                      onChange={(e) => updateField("periodLabel", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="date">Date</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={form.date}
+                    onChange={(e) => updateField("date", e.target.value)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="principal">Principal (KES)</Label>
+                    <Input
+                      id="principal"
+                      type="number"
+                      placeholder="e.g. 50000"
+                      value={form.principal}
+                      onChange={(e) => updateField("principal", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="closingBal">Closing Balance (KES)</Label>
+                    <Input
+                      id="closingBal"
+                      type="number"
+                      placeholder="e.g. 52500"
+                      value={form.closingBal}
+                      onChange={(e) => updateField("closingBal", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="rate">Rate</Label>
+                    <Input
+                      id="rate"
+                      placeholder="e.g. 11.5%"
+                      value={form.rate}
+                      onChange={(e) => updateField("rate", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="roi">ROI</Label>
+                    <Input
+                      id="roi"
+                      placeholder="e.g. 2,500"
+                      value={form.roi}
+                      onChange={(e) => updateField("roi", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="withdrawal">Withdrawal (KES)</Label>
+                  <Input
+                    id="withdrawal"
+                    type="number"
+                    placeholder="Leave blank if none"
+                    value={form.withdrawal}
+                    onChange={(e) => updateField("withdrawal", e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Input
+                    id="notes"
+                    placeholder="Optional note"
+                    value={form.notes}
+                    onChange={(e) => updateField("notes", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setAddOpen(false)} disabled={adding}>
+                  Cancel
+                </Button>
+                <Button onClick={submitAddRow} disabled={adding}>
+                  {adding ? "Saving..." : "Save Entry"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Button variant="outline" size="sm" onClick={refresh}>
+            <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+          </Button>
+        </div>
       </div>
 
       {/* KPI strip */}
