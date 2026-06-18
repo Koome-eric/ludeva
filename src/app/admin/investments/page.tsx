@@ -2,39 +2,50 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, PieChart } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Search, PieChart, RefreshCw } from "lucide-react";
 
-type Investment = {
+const SHEETS_SECRET = process.env.NEXT_PUBLIC_SHEETS_API_SECRET || "ludeva-sheets-secret-2025";
+
+type MemberInvestment = {
   id: string;
-  amount: number;
-  status: string;
-  productName: string;
-  createdAt: string;
-
-  user: {
-    fullName?: string;
-    email: string;
-  };
+  memberEmail: string;
+  memberName?: string | null;
+  accounts: string[];
+  periodLabel?: string | null;
+  totalInvested: number;
+  latestClosingBalance: number | null;
+  totalRoi: number;
+  rowCount: number;
+  lastUpdated: string;
 };
 
+function fmt(n: number | null | undefined) {
+  if (n == null) return "—";
+  return `KES ${n.toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export default function InvestmentsPage() {
-  const [tab, setTab] = useState("All");
   const [search, setSearch] = useState("");
-  const [investments, setInvestments] = useState<Investment[]>([]);
+  const [investments, setInvestments] = useState<MemberInvestment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchInvestments = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await fetch("/api/admin/investments");
+      const res = await fetch("/api/admin/investments", {
+        headers: { "x-sheets-secret": SHEETS_SECRET },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-
       setInvestments(Array.isArray(data) ? data : []);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Investments fetch error:", err);
+      setError("Failed to load investments. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -45,102 +56,113 @@ export default function InvestmentsPage() {
   }, []);
 
   const filtered = investments.filter((inv) => {
-    const matchesTab =
-      tab === "All" || inv.status.toLowerCase() === tab.toLowerCase();
-
-    const matchesSearch =
-      inv.user.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-      inv.user.email.toLowerCase().includes(search.toLowerCase()) ||
-      inv.productName.toLowerCase().includes(search.toLowerCase());
-
-    return matchesTab && matchesSearch;
+    const q = search.toLowerCase();
+    return (
+      inv.memberEmail.toLowerCase().includes(q) ||
+      (inv.memberName?.toLowerCase().includes(q) ?? false) ||
+      inv.accounts.some((a) => a.toLowerCase().includes(q)) ||
+      (inv.periodLabel?.toLowerCase().includes(q) ?? false)
+    );
   });
+
+  const totalAUM = investments.reduce((acc, inv) => acc + (inv.latestClosingBalance ?? 0), 0);
+  const totalRoi = investments.reduce((acc, inv) => acc + inv.totalRoi, 0);
 
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Investments</h1>
-          <p className="text-muted-foreground">
-            Monitor all investor activity across Ludeva products
+          <h1 className="text-2xl font-bold">Member Investments</h1>
+          <p className="text-muted-foreground text-sm">
+            Closing balances from member performance reports (Google Sheets sync)
           </p>
         </div>
-
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search investor or product"
-            className="pl-9"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search member, account, or period…"
+              className="pl-9"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Button size="sm" variant="outline" onClick={fetchInvestments} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </Button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="All" onValueChange={setTab}>
-        <TabsList className="rounded-xl">
-          <TabsTrigger value="All">All Investments</TabsTrigger>
-          <TabsTrigger value="Active">Active</TabsTrigger>
-          <TabsTrigger value="Completed">Completed</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {/* KPI strip */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { label: "Total Members", value: investments.length.toString(), sub: "with report data" },
+          { label: "Total AUM", value: fmt(totalAUM), sub: "sum of latest closing balances" },
+          { label: "Total ROI Earned", value: fmt(totalRoi), sub: "across all periods" },
+        ].map((k) => (
+          <Card key={k.label} className="rounded-2xl shadow-sm">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">{k.label}</p>
+              <p className="text-xl font-bold mt-1">{k.value}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{k.sub}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       {/* Table */}
       <Card className="rounded-2xl shadow-sm">
         <CardContent className="p-0 overflow-x-auto">
           {loading ? (
-            <div className="p-10 text-center text-muted-foreground">
-              Loading investments...
-            </div>
+            <div className="p-10 text-center text-muted-foreground">Loading investments…</div>
+          ) : error ? (
+            <div className="p-10 text-center text-destructive">{error}</div>
           ) : (
             <>
               <table className="w-full text-sm">
                 <thead className="bg-muted">
                   <tr>
-                    <th className="text-left p-4">Investor</th>
-                    <th className="text-left p-4">Product</th>
-                    <th className="text-left p-4">Amount</th>
-                    <th className="text-left p-4">Start Date</th>
-                    <th className="text-left p-4">Status</th>
-                    <th className="text-right p-4">Actions</th>
+                    <th className="text-left p-4">Member</th>
+                    <th className="text-left p-4">Account(s)</th>
+                    <th className="text-left p-4">Period</th>
+                    <th className="text-right p-4">Latest Closing Bal</th>
+                    <th className="text-right p-4">Total ROI</th>
+                    <th className="text-right p-4">Rows</th>
+                    <th className="text-right p-4">Last Updated</th>
                   </tr>
                 </thead>
-
                 <tbody>
                   {filtered.map((inv) => (
-                    <tr key={inv.id} className="border-b last:border-none">
-                      <td className="p-4 font-medium">
-                        {inv.user.fullName || inv.user.email}
-                      </td>
-
-                      <td className="p-4">{inv.productName}</td>
-
+                    <tr
+                      key={inv.id}
+                      className="border-b last:border-none hover:bg-muted/20 transition-colors"
+                    >
                       <td className="p-4">
-                        KES {inv.amount.toLocaleString()}
+                        <p className="font-medium">{inv.memberName || inv.memberEmail}</p>
+                        {inv.memberName && (
+                          <p className="text-xs text-muted-foreground">{inv.memberEmail}</p>
+                        )}
                       </td>
-
                       <td className="p-4">
-                        {new Date(inv.createdAt).toLocaleDateString()}
+                        <div className="flex flex-wrap gap-1">
+                          {inv.accounts.length > 0 ? (
+                            inv.accounts.map((a) => (
+                              <Badge key={a} variant="outline" className="text-xs">{a}</Badge>
+                            ))
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </div>
                       </td>
-
-                      <td className="p-4">
-                        <Badge
-                          className={
-                            inv.status === "ACTIVE"
-                              ? "bg-green-600"
-                              : "bg-blue-600"
-                          }
-                        >
-                          {inv.status}
-                        </Badge>
+                      <td className="p-4 text-muted-foreground">{inv.periodLabel || "—"}</td>
+                      <td className="p-4 text-right font-semibold">{fmt(inv.latestClosingBalance)}</td>
+                      <td className="p-4 text-right text-green-600 font-medium">
+                        {inv.totalRoi > 0 ? fmt(inv.totalRoi) : "—"}
                       </td>
-
-                      <td className="p-4 text-right">
-                        <Button size="sm" variant="outline">
-                          View
-                        </Button>
+                      <td className="p-4 text-right text-muted-foreground">{inv.rowCount}</td>
+                      <td className="p-4 text-right text-xs text-muted-foreground">
+                        {new Date(inv.lastUpdated).toLocaleDateString("en-KE")}
                       </td>
                     </tr>
                   ))}
@@ -150,7 +172,9 @@ export default function InvestmentsPage() {
               {filtered.length === 0 && (
                 <div className="p-10 text-center text-muted-foreground">
                   <PieChart className="mx-auto h-8 w-8 mb-3" />
-                  No investments found
+                  {investments.length === 0
+                    ? "No member report data found in database."
+                    : "No results match your search."}
                 </div>
               )}
             </>

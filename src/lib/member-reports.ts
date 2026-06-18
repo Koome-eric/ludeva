@@ -58,23 +58,33 @@ export function summarizeMemberReports(rows: MemberReportRow[]): MemberInvestmen
     return { totalInvested: 0, latestClosingBalance: null, latestRow: null, hasReports: false };
   }
 
-  // Find the most recently uploaded row that carries a usable amount
-  // (prefer closingBal; fall back to principal for rows that only record a deposit).
+  let totalInvested = 0;
+  let latestClosingBalance: number | null = null;
+  let latestRow: MemberReportRow | null = null;
+
   for (const row of rows) {
     const closing = parseReportAmount(row.closingBal);
-    if (closing !== null) {
-      return { totalInvested: closing, latestClosingBalance: closing, latestRow: row, hasReports: true };
-    }
-  }
-  for (const row of rows) {
     const principal = parseReportAmount(row.principal);
-    if (principal !== null) {
-      return { totalInvested: principal, latestClosingBalance: null, latestRow: row, hasReports: true };
+
+    if (closing !== null) {
+      totalInvested += closing;
+      if (latestClosingBalance === null) {
+        latestClosingBalance = closing;
+      }
+    } else if (principal !== null) {
+      totalInvested += principal;
+    }
+
+    if (!latestRow && (closing !== null || principal !== null)) {
+      latestRow = row;
     }
   }
 
-  // Member has report rows, but none carry a parseable amount yet (e.g. only label rows).
-  return { totalInvested: 0, latestClosingBalance: null, latestRow: rows[0], hasReports: true };
+  if (!latestRow) {
+    return { totalInvested: 0, latestClosingBalance: null, latestRow: rows[0], hasReports: true };
+  }
+
+  return { totalInvested, latestClosingBalance, latestRow, hasReports: true };
 }
 
 /**

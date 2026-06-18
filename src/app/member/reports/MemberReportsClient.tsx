@@ -9,6 +9,8 @@ import {
   Download,
   RefreshCw,
 } from "lucide-react";
+import { format } from "date-fns";
+import { parseReportAmount } from "@/lib/member-reports";
 
 interface ReportRow {
   id: string;
@@ -51,6 +53,40 @@ function sortReports(rows: ReportRow[]) {
   });
 }
 
+function parseReportRowDate(value?: string | null) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatReportDate(value?: string | null) {
+  const date = parseReportRowDate(value);
+  if (date) return format(date, "MM/dd/yyyy");
+  return value || "—";
+}
+
+function formatNumeric(value?: string | null) {
+  const amount = parseReportAmount(value);
+  if (amount === null) return "—";
+  return amount.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+}
+
+function parseROI(value?: string | null) {
+  if (!value) return null;
+  const cleaned = value.replace(/[^0-9.\-]/g, "");
+  const num = Number(cleaned);
+  return Number.isFinite(num) ? num : null;
+}
+
+function formatROI(value?: string | null) {
+  const num = parseROI(value);
+  if (num === null) return value || "—";
+  return num % 1 === 0 ? `${num}` : num.toFixed(2);
+}
+
 export default function MemberReportsClient({ reports, member }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [rows, setRows] = useState<ReportRow[]>(reports);
@@ -75,12 +111,12 @@ export default function MemberReportsClient({ reports, member }: Props) {
     const csvRows = sortedRows.map((r) => [
       r.accountNo || "",
       r.periodLabel || "",
-      r.date || "",
-      r.principal || "",
+      formatReportDate(r.date),
+      formatNumeric(r.principal),
       r.rate || "",
-      r.roi || "",
-      r.withdrawal || "",
-      r.closingBal || "",
+      formatROI(r.roi),
+      formatNumeric(r.withdrawal),
+      formatNumeric(r.closingBal),
       r.quarter || r.notes || "",
     ]);
     const csv = [headers, ...csvRows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
@@ -94,7 +130,10 @@ export default function MemberReportsClient({ reports, member }: Props) {
   };
 
   // Calculate summary stats
-  const latestBalance = sortedRows.find((r) => r.closingBal)?.closingBal;
+  const totalClosingBalance = sortedRows.reduce((sum, row) => {
+    const value = parseReportAmount(row.closingBal);
+    return sum + (value ?? 0);
+  }, 0);
   const latestROI = sortedRows.find((r) => r.roi && r.roi !== "0.00")?.roi;
   const accountNos = [...new Set(sortedRows.map((r) => r.accountNo).filter(Boolean))];
 
@@ -138,9 +177,9 @@ export default function MemberReportsClient({ reports, member }: Props) {
           </Card>
           <Card className="rounded-xl">
             <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Latest Balance</p>
+              <p className="text-xs text-muted-foreground">Total Closing Balance</p>
               <p className="text-lg font-bold text-green-600 mt-1">
-                {latestBalance ? `KES ${Number(latestBalance.replace(/,/g, "")).toLocaleString()}` : "—"}
+                {`KES ${totalClosingBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
               </p>
             </CardContent>
           </Card>
@@ -148,7 +187,7 @@ export default function MemberReportsClient({ reports, member }: Props) {
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground">Latest ROI</p>
               <p className="text-lg font-bold text-blue-600 mt-1">
-                {latestROI || "—"}
+                {formatROI(latestROI)}
               </p>
             </CardContent>
           </Card>
@@ -217,12 +256,12 @@ export default function MemberReportsClient({ reports, member }: Props) {
                     <tr key={row.id} className={`border-b last:border-none ${idx % 2 === 0 ? "" : "bg-muted/10"}`}>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground">{row.accountNo || "—"}</td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground">{row.periodLabel || "—"}</td>
-                      <td className="px-4 py-2.5 font-medium">{row.date || "—"}</td>
-                      <td className="px-4 py-2.5 text-right">{row.principal || "—"}</td>
+                      <td className="px-4 py-2.5 font-medium">{formatReportDate(row.date)}</td>
+                      <td className="px-4 py-2.5 text-right">{formatNumeric(row.principal)}</td>
                       <td className="px-4 py-2.5 text-right">{row.rate || "—"}</td>
-                      <td className="px-4 py-2.5 text-right text-green-600 font-medium">{row.roi || "—"}</td>
-                      <td className="px-4 py-2.5 text-right">{row.withdrawal || "—"}</td>
-                      <td className="px-4 py-2.5 text-right font-semibold">{row.closingBal || "—"}</td>
+                      <td className="px-4 py-2.5 text-right text-green-600 font-medium">{formatROI(row.roi)}</td>
+                      <td className="px-4 py-2.5 text-right">{formatNumeric(row.withdrawal)}</td>
+                      <td className="px-4 py-2.5 text-right font-semibold">{formatNumeric(row.closingBal)}</td>
                       <td className="px-4 py-2.5 text-muted-foreground text-xs">{row.notes || "—"}</td>
                     </tr>
                   );

@@ -9,6 +9,19 @@ import Link from "next/link";
 import { getMemberReportSummary, parseReportAmount } from "@/lib/member-reports";
 import { InvestmentActions } from "./InvestmentActions";
 
+function parseROI(value?: string | null) {
+  if (!value) return null;
+  const cleaned = value.replace(/[^0-9.\-]/g, "");
+  const num = Number(cleaned);
+  return Number.isFinite(num) ? num : null;
+}
+
+function formatROI(value?: string | null) {
+  const num = parseROI(value);
+  if (num === null) return value || "—";
+  return num % 1 === 0 ? `${num}` : num.toFixed(2);
+}
+
 interface PageProps {
   searchParams: Promise<{
     from?: string;
@@ -153,7 +166,7 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
                 {investments.length ? (
                   investments.map((inv) => (
                     <TableRow key={inv.id}>
-                      <TableCell>{format(inv.date, "dd MMM yyyy")}</TableCell>
+                      <TableCell>{format(inv.date, "MM/dd/yyyy")}</TableCell>
                       <TableCell>{inv.accountNo}</TableCell>
                       <TableCell>{inv.periodLabel}</TableCell>
                       <TableCell className="text-right font-mono">
@@ -162,7 +175,7 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
                           : "—"}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="success">{inv.roi}</Badge>
+                        <Badge variant="success">{formatROI(inv.roi)}</Badge>
                       </TableCell>
                       <TableCell className="text-right font-mono">
                         {inv.withdrawal !== null

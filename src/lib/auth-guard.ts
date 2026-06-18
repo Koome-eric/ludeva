@@ -133,3 +133,44 @@ export async function requireUserApi() {
 
   return user ?? null;
 }
+// ─────────────────────────────────────────────
+// requireAdminApi
+// Use in: /api/admin/* routes (returns 401/403 instead of redirecting)
+// redirect() in API routes throws NEXT_REDIRECT which bypasses try/catch
+// and returns a 307 that the client fetch follows to HTML — breaking JSON.
+// Always use this in API routes, not requireAdmin().
+// ─────────────────────────────────────────────
+export async function requireAdminApi(): Promise<
+  { user: Awaited<ReturnType<typeof prisma.user.findUnique>>; error: null } |
+  { user: null; error: NextResponse }
+> {
+  const { NextResponse } = await import("next/server");
+  const { userId: clerkId } = await auth();
+
+  if (!clerkId) {
+    return { user: null, error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  }
+
+  const user = await prisma.user.findUnique({ where: { clerkId } });
+
+  if (!user) {
+    return { user: null, error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  }
+
+  const isSuperAdmin = SUPER_ADMIN_CLERK_IDS.includes(clerkId);
+
+  if (user.role !== "ADMIN" && !isSuperAdmin) {
+    return { user: null, error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  }
+
+  // Auto-upgrade super admin role in DB if needed
+  if (isSuperAdmin && user.role !== "ADMIN") {
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: { role: "ADMIN" },
+    });
+    return { user: updated, error: null };
+  }
+
+  return { user, error: null };
+}

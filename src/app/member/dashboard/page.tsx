@@ -59,7 +59,7 @@ export default async function MemberDashboardPage() {
             <div className="mt-6">
               <p className="text-sm text-muted-foreground">Portfolio Value</p>
               <p className="text-4xl font-bold tracking-tight">
-                KES {currentBalance.toLocaleString()}
+                KES {currentBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
               </p>
             </div>
           </div>
@@ -78,7 +78,7 @@ export default async function MemberDashboardPage() {
 
         <StatCard
           title="Total Invested"
-          value={`KES ${totalInvested.toLocaleString()}`}
+          value={`KES ${totalInvested.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
           icon={<Wallet />}
           subtitle="Per latest performance report"
         />
@@ -94,7 +94,7 @@ export default async function MemberDashboardPage() {
           title="Last Investment"
           value={
             mostRecentInvestment
-              ? format(mostRecentInvestment, "dd MMM yyyy")
+              ? format(mostRecentInvestment, "MM/dd/yyyy")
               : "No investments yet"
           }
           icon={<PiggyBank />}

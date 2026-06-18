@@ -14,6 +14,14 @@ import {
 import { format } from "date-fns";
 import type { InvestmentRowView } from "./page";
 
+function formatROI(value?: string | null) {
+  if (!value) return "—";
+  const cleaned = value.replace(/[^0-9.\-]/g, "");
+  const num = Number(cleaned);
+  if (!Number.isFinite(num)) return value;
+  return num % 1 === 0 ? `${num}` : num.toFixed(2);
+}
+
 export function InvestmentActions({ investment }: { investment: InvestmentRowView }) {
   const { toast } = useToast();
 
@@ -62,7 +70,7 @@ export function InvestmentActions({ investment }: { investment: InvestmentRowVie
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="font-medium text-muted-foreground">ROI</span>
-              <span>{investment.roi}</span>
+              <span>{formatROI(investment.roi)}</span>
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="font-medium text-muted-foreground">Withdrawal</span>
