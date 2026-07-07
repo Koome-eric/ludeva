@@ -5,14 +5,16 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   try {
     // --- Transactions & Investments ---
+    // Note: `include: { user: true }` was removed — it wasn't used anywhere
+    // below (only `.userId` is referenced), and on MongoDB it throws if any
+    // row's userId points at a user that no longer exists (e.g. a deleted
+    // member), which was silently crashing this whole endpoint.
     const transactions = await prisma.transaction.findMany({
       orderBy: { createdAt: "desc" },
-      include: { user: true },
     });
 
     const investments = await prisma.investment.findMany({
       orderBy: { createdAt: "desc" },
-      include: { user: true },
     });
 
     // --- KPIs ---
@@ -82,7 +84,10 @@ export async function GET() {
       },
     });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Failed to fetch analytics" }, { status: 500 });
+    console.error("Analytics route error:", err);
+    return NextResponse.json(
+      { error: "Failed to fetch analytics", detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
   }
 }

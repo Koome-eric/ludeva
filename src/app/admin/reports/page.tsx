@@ -24,17 +24,39 @@ export default function ReportsPage() {
   const [tab, setTab] = useState("Performance");
   const [search, setSearch] = useState("");
   const [data, setData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch("/api/reports/analytics");
-      const json = await res.json();
-      setData(json);
+      try {
+        const res = await fetch("/api/reports/analytics");
+        const json = await res.json();
+        if (!res.ok || json.error || !json.reports) {
+          setError(json.error || "Failed to load analytics data.");
+          return;
+        }
+        setError(null);
+        setData(json);
+      } catch (err) {
+        console.error("Analytics fetch failed:", err);
+        setError("Failed to load analytics data.");
+      }
     };
     fetchData();
     const interval = setInterval(fetchData, 15000); // Refresh every 15s
     return () => clearInterval(interval);
   }, []);
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <p className="text-destructive">{error}</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          Check the server logs for /api/reports/analytics for the underlying error.
+        </p>
+      </div>
+    );
+  }
 
   if (!data) return <p className="p-6">Loading analytics...</p>;
 

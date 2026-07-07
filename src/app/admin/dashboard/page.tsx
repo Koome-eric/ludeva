@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowDown, ArrowUp, CircleDollarSign, Users } from 'lucide-react';
-import { prisma } from "@/lib/prisma";
+import { getPlatformAumSummary } from '@/lib/member-reports';
 
 export default async function AdminDashboardPage() {
 
@@ -10,63 +10,27 @@ export default async function AdminDashboardPage() {
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
-  /* -------------------- TOTAL INVESTORS -------------------- */
+  /* -------------------- AUM, INVESTORS, ROI, WITHDRAWALS -------------------- */
+  // MemberReport is the single source of truth for member deposits (synced in
+  // from the Google Sheets performance tracker). AUM = cumulative principal
+  // deposited by all members — matches "all the deposits from all members,
+  // cumulative investment capital".
+  const platform = await getPlatformAumSummary(startOfMonth);
 
-  const totalInvestors = await prisma.user.count({
-    where: { role: 'MEMBER' },
-  });
-
-  /* -------------------- TOTAL AUM -------------------- */
-  // Sum of ACTIVE investments
-  const activeInvestments = 
-    (await prisma.investment.aggregate({
-      _sum: { amount: true },
-      where: { status: 'ACTIVE' },
-    }))._sum.amount || 0;
-
-  // Sum of all initial investments from members
-  const initialInvestments = 
-    (await prisma.user.aggregate({
-      _sum: { initialInvestment: true },
-      where: { role: 'MEMBER', initialInvestment: { gt: 0 } },
-    }))._sum.initialInvestment || 0;
-
-  const totalAUM = activeInvestments + initialInvestments;
+  const totalInvestors = platform.totalMembers;
+  const totalAUM = platform.totalAUM;
 
   /* -------------------- MONTHLY DEPOSITS -------------------- */
-  // Include active investments created this month + initial investments made this month
-  const monthlyActiveInvestments =
-    (await prisma.investment.aggregate({
-      _sum: { amount: true },
-      where: {
-        status: 'ACTIVE',
-        createdAt: { gte: startOfMonth },
-      },
-    }))._sum.amount || 0;
-
-  const monthlyInitialInvestments =
-    (await prisma.user.aggregate({
-      _sum: { initialInvestment: true },
-      where: {
-        role: 'MEMBER',
-        initialInvestment: { gt: 0 },
-        createdAt: { gte: startOfMonth },
-      },
-    }))._sum.initialInvestment || 0;
-
-  const monthlyDeposits = monthlyActiveInvestments + monthlyInitialInvestments;
+  // Principal recorded on rows uploaded/synced since the start of this month.
+  // Note: this uses `uploadedAt` (when the row was pushed in), not the report's
+  // free-text `date` column, since that column isn't reliably parseable.
+  const monthlyDeposits = platform.aumSince;
 
   /* -------------------- MONTHLY WITHDRAWALS -------------------- */
-
-  const monthlyWithdrawals =
-    (await prisma.transaction.aggregate({
-      _sum: { amount: true },
-      where: {
-        type: 'WITHDRAWAL',
-        status: 'SUCCESS',
-        createdAt: { gte: startOfMonth },
-      },
-    }))._sum.amount || 0;
+  // Currently reflects withdrawals across ALL time recorded in MemberReport,
+  // since withdrawal rows aren't reliably dated. If per-month withdrawal
+  // tracking is needed, the sheet should record a proper date per withdrawal.
+  const monthlyWithdrawals = platform.totalWithdrawals;
 
   /* -------------------- RENDER DASHBOARD -------------------- */
 
@@ -150,7 +114,7 @@ export default async function AdminDashboardPage() {
               KES {monthlyWithdrawals.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground pt-1">
-              Successful withdrawals this month
+              Total recorded withdrawals (all time)
             </p>
           </CardContent>
         </Card>

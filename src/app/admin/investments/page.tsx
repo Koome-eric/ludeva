@@ -15,6 +15,7 @@ type MemberInvestment = {
   memberName?: string | null;
   accounts: string[];
   periodLabel?: string | null;
+  totalPrincipal: number;
   totalInvested: number;
   latestClosingBalance: number | null;
   totalRoi: number;
@@ -65,8 +66,14 @@ export default function InvestmentsPage() {
     );
   });
 
-  const totalAUM = investments.reduce((acc, inv) => acc + (inv.latestClosingBalance ?? 0), 0);
+  // AUM = cumulative deposits (principal) from every member, not a snapshot
+  // of current/closing balances. Matches the client's requested definition:
+  // "all the deposits from all members, cumulative investment capital".
+  const totalAUM = investments.reduce((acc, inv) => acc + (inv.totalPrincipal ?? 0), 0);
   const totalRoi = investments.reduce((acc, inv) => acc + inv.totalRoi, 0);
+  // Current portfolio value (what "AUM" used to show here) — kept as its own
+  // metric since it's still useful, just not what "AUM" should mean.
+  const totalCurrentValue = investments.reduce((acc, inv) => acc + (inv.latestClosingBalance ?? 0), 0);
 
   return (
     <div className="p-6 space-y-6">
@@ -95,10 +102,11 @@ export default function InvestmentsPage() {
       </div>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: "Total Members", value: investments.length.toString(), sub: "with report data" },
-          { label: "Total AUM", value: fmt(totalAUM), sub: "sum of latest closing balances" },
+          { label: "Total AUM", value: fmt(totalAUM), sub: "cumulative deposits, all members" },
+          { label: "Current Portfolio Value", value: fmt(totalCurrentValue), sub: "sum of latest closing balances" },
           { label: "Total ROI Earned", value: fmt(totalRoi), sub: "across all periods" },
         ].map((k) => (
           <Card key={k.label} className="rounded-2xl shadow-sm">

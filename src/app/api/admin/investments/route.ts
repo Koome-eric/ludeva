@@ -48,15 +48,20 @@ export async function GET(req: NextRequest) {
         memberName: rows.find((r: any) => r.memberName)?.memberName ?? null,
         accounts,
         periodLabel,
-        totalInvested: summary.totalInvested,
+        // Cumulative capital deposited by this member (sum of principal across
+        // every deposit row) — this is what "AUM" should mean.
+        totalPrincipal: summary.totalPrincipal,
+        // Current portfolio value as of their latest entry (principal + ROI - tax).
+        // NOT the same as cumulative deposits — kept for the per-row balance column.
         latestClosingBalance: summary.latestClosingBalance,
+        totalInvested: summary.totalInvested,
         totalRoi,
         rowCount: rows.length,
         lastUpdated: latestRow.uploadedAt,
       };
     });
 
-    investments.sort((a, b) => b.totalInvested - a.totalInvested);
+    investments.sort((a, b) => b.totalPrincipal - a.totalPrincipal);
 
     return NextResponse.json(investments);
   } catch (err) {

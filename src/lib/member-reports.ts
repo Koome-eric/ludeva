@@ -37,9 +37,26 @@ export function parseReportAmount(value?: string | null): number | null {
 }
 
 export interface MemberInvestmentSummary {
-  /** Current total investment value for the member, derived from reports. Zero if no reports exist. */
+  /**
+   * Cumulative investment capital (AUM) for this member — the sum of the
+   * `principal` field across every report row (i.e. every deposit ever
+   * recorded for them). This is what "deposits from all members, cumulative
+   * investment capital" means, and does NOT include ROI or tax, and is NOT
+   * reduced by withdrawals.
+   */
+  totalPrincipal: number;
+  /** Sum of `roi` across every report row for this member. */
+  totalRoi: number;
+  /** Sum of `withdrawal` across every report row for this member. */
+  totalWithdrawals: number;
+  /**
+   * @deprecated kept for backward compatibility with older callers.
+   * Used to sum `closingBal` (falling back to `principal`) across all rows,
+   * which double counts ROI/tax on top of principal and is NOT a correct AUM
+   * figure. Prefer `totalPrincipal` for AUM.
+   */
   totalInvested: number;
-  /** Most recent closing balance found across all report rows, if any. */
+  /** Most recent closing balance across all report rows — this member's current portfolio value (principal + ROI − tax as of their latest entry), NOT their cumulative deposits. */
   latestClosingBalance: number | null;
   /** Most recent report row that contains a usable closing balance / principal, if any. */
   latestRow: MemberReportRow | null;
@@ -50,21 +67,42 @@ export interface MemberInvestmentSummary {
 /**
  * Computes a member's investment summary purely from their MemberReport rows.
  * Rows are treated as already sorted by `uploadedAt desc` by the caller's query
- * (most recently uploaded report row first); the latest row with a usable
- * closing balance (falling back to principal) determines the current total.
+ * (most recently uploaded report row first).
+ *
+ * Each row represents a distinct deposit/period entry (not a running total),
+ * so cumulative AUM for a member is the sum of `principal` across every row —
+ * NOT the latest closing balance, and NOT a sum of closing balances (which
+ * would double-count ROI/tax on top of principal).
  */
 export function summarizeMemberReports(rows: MemberReportRow[]): MemberInvestmentSummary {
   if (!rows || rows.length === 0) {
-    return { totalInvested: 0, latestClosingBalance: null, latestRow: null, hasReports: false };
+    return {
+      totalPrincipal: 0,
+      totalRoi: 0,
+      totalWithdrawals: 0,
+      totalInvested: 0,
+      latestClosingBalance: null,
+      latestRow: null,
+      hasReports: false,
+    };
   }
 
-  let totalInvested = 0;
+  let totalPrincipal = 0;
+  let totalRoi = 0;
+  let totalWithdrawals = 0;
+  let totalInvested = 0; // deprecated legacy figure, kept for compatibility
   let latestClosingBalance: number | null = null;
   let latestRow: MemberReportRow | null = null;
 
   for (const row of rows) {
     const closing = parseReportAmount(row.closingBal);
     const principal = parseReportAmount(row.principal);
+    const roi = parseReportAmount(row.roi);
+    const withdrawal = parseReportAmount(row.withdrawal);
+
+    if (principal !== null) totalPrincipal += principal;
+    if (roi !== null) totalRoi += roi;
+    if (withdrawal !== null) totalWithdrawals += withdrawal;
 
     if (closing !== null) {
       totalInvested += closing;
@@ -81,10 +119,72 @@ export function summarizeMemberReports(rows: MemberReportRow[]): MemberInvestmen
   }
 
   if (!latestRow) {
-    return { totalInvested: 0, latestClosingBalance: null, latestRow: rows[0], hasReports: true };
+    return {
+      totalPrincipal,
+      totalRoi,
+      totalWithdrawals,
+      totalInvested: 0,
+      latestClosingBalance: null,
+      latestRow: rows[0],
+      hasReports: true,
+    };
   }
 
-  return { totalInvested, latestClosingBalance, latestRow, hasReports: true };
+  return {
+    totalPrincipal,
+    totalRoi,
+    totalWithdrawals,
+    totalInvested,
+    latestClosingBalance,
+    latestRow,
+    hasReports: true,
+  };
+}
+
+export interface PlatformAumSummary {
+  /** Total AUM: sum of `principal` across every report row, for every member. */
+  totalAUM: number;
+  /** Sum of `roi` across every report row, for every member. */
+  totalRoi: number;
+  /** Sum of `withdrawal` across every report row, for every member. */
+  totalWithdrawals: number;
+  /** Count of distinct members (by email) with at least one report row. */
+  totalMembers: number;
+  /** AUM deposited within rows uploaded since `since` (uses uploadedAt, since the free-text `date` column isn't reliably parseable). */
+  aumSince: number;
+}
+
+/**
+ * Computes platform-wide AUM and related totals directly from ALL MemberReport
+ * rows. This is the single source of truth to use for "Total AUM" anywhere in
+ * the app (admin dashboard, investments page, etc.) so the figure is
+ * consistent everywhere: cumulative deposits (principal) from every member,
+ * not a snapshot of current/closing balances.
+ */
+export async function getPlatformAumSummary(since?: Date): Promise<PlatformAumSummary> {
+  const rows: MemberReportRow[] = await (prisma as any).memberReport.findMany();
+
+  let totalAUM = 0;
+  let totalRoi = 0;
+  let totalWithdrawals = 0;
+  let aumSince = 0;
+  const members = new Set<string>();
+
+  for (const row of rows) {
+    const principal = parseReportAmount(row.principal);
+    const roi = parseReportAmount(row.roi);
+    const withdrawal = parseReportAmount(row.withdrawal);
+
+    if (principal !== null) {
+      totalAUM += principal;
+      if (since && row.uploadedAt >= since) aumSince += principal;
+    }
+    if (roi !== null) totalRoi += roi;
+    if (withdrawal !== null) totalWithdrawals += withdrawal;
+    if (row.memberEmail) members.add(row.memberEmail);
+  }
+
+  return { totalAUM, totalRoi, totalWithdrawals, totalMembers: members.size, aumSince };
 }
 
 /**
