@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma';
 import { requireUserApi } from '@/lib/auth-guard';
-import { pusherServer } from '@/lib/pusher';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -45,8 +44,9 @@ export async function POST(req: Request) {
       data: { read: true },
     });
 
-    // Trigger real-time event
-    await pusherServer.trigger(`chat-${roomId}`, 'new-message', message);
+    // Note: realtime delivery is handled by the client polling
+    // GET /api/chat/messages on an interval — no external realtime
+    // service is required here.
 
     return NextResponse.json(message);
   } catch (error) {

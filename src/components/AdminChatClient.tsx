@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { getPusherClient } from '@/lib/pusher-client';
 import { Send, Users, MessageCircle, Search } from 'lucide-react';
+
+const MESSAGE_POLL_INTERVAL_MS = 3000;
+const ROOM_LIST_POLL_INTERVAL_MS = 6000;
 
 type Message = {
   id: string;
@@ -38,6 +40,9 @@ export default function AdminChatClient({ initialRooms, currentUserId }: Props) 
   const [sending, setSending] = useState(false);
   const [search, setSearch] = useState('');
   const [loadingRoom, setLoadingRoom] = useState(false);
+  const [memberResults, setMemberResults] = useState<Member[]>([]);
+  const [searchingMembers, setSearchingMembers] = useState(false);
+  const [startingRoomFor, setStartingRoomFor] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -48,27 +53,119 @@ export default function AdminChatClient({ initialRooms, currentUserId }: Props) 
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activeRoom?.messages]);
 
-  // Subscribe to active room's Pusher channel
+  // Poll the active room's full message history instead of subscribing to a
+  // realtime channel.
   useEffect(() => {
     if (!activeRoomId) return;
+    let cancelled = false;
 
-    const pusher = getPusherClient();
-    const channel = pusher.subscribe(`chat-${activeRoomId}`);
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`/api/admin/messages?roomId=${activeRoomId}`);
+        if (!res.ok || cancelled) return;
+        const fresh: Message[] = await res.json();
+        setRooms((prev) =>
+          prev.map((room) => {
+            if (room.id !== activeRoomId) return room;
+            // Keep any still-pending optimistic (temp-) messages.
+            const pending = room.messages.filter((m) => m.id.startsWith('temp-'));
+            const freshIds = new Set(fresh.map((m) => m.id));
+            return { ...room, messages: [...fresh, ...pending.filter((m) => !freshIds.has(m.id))] };
+          })
+        );
+      } catch {
+        // Silently ignore — will retry on next interval.
+      }
+    };
 
-    channel.bind('new-message', (msg: Message) => {
-      setRooms((prev) =>
-        prev.map((room) => {
-          if (room.id !== activeRoomId) return room;
-          if (room.messages.some((m) => m.id === msg.id)) return room;
-          return { ...room, messages: [...room.messages, msg] };
-        })
-      );
-    });
-
+    const interval = setInterval(fetchMessages, MESSAGE_POLL_INTERVAL_MS);
     return () => {
-      pusher.unsubscribe(`chat-${activeRoomId}`);
+      cancelled = true;
+      clearInterval(interval);
     };
   }, [activeRoomId]);
+
+  // Poll the room list on a slower interval to pick up new conversations and
+  // updated unread counts / last-message previews for inactive rooms.
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchRooms = async () => {
+      try {
+        const res = await fetch('/api/admin/chats');
+        if (!res.ok || cancelled) return;
+        const fresh: Room[] = await res.json();
+        setRooms((prev) =>
+          fresh.map((freshRoom) => {
+            // Preserve the actively-open room's full message history — the
+            // list endpoint only returns a 1-message preview per room.
+            if (freshRoom.id === activeRoomId) {
+              const existing = prev.find((r) => r.id === freshRoom.id);
+              return existing ? { ...freshRoom, messages: existing.messages } : freshRoom;
+            }
+            return freshRoom;
+          })
+        );
+      } catch {
+        // Silently ignore — will retry on next interval.
+      }
+    };
+
+    const interval = setInterval(fetchRooms, ROOM_LIST_POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [activeRoomId]);
+
+  // Debounced search across ALL members (not just ones with an existing
+  // room) so admins can find and start a conversation with anyone.
+  useEffect(() => {
+    const query = search.trim();
+    if (!query) {
+      setMemberResults([]);
+      return;
+    }
+
+    setSearchingMembers(true);
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/admin/members-search?q=${encodeURIComponent(query)}`);
+        if (res.ok) {
+          const members: Member[] = await res.json();
+          setMemberResults(members);
+        }
+      } catch {
+        // Ignore — user can retry by continuing to type.
+      } finally {
+        setSearchingMembers(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [search]);
+
+  // Starts (or opens, if one already exists) a chat room with a member found
+  // via search who doesn't yet appear in the room list.
+  const startChatWithMember = useCallback(async (member: Member) => {
+    setStartingRoomFor(member.id);
+    try {
+      const res = await fetch('/api/admin/chats/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: member.id }),
+      });
+      if (!res.ok) return;
+
+      const room: Room = await res.json();
+      setRooms((prev) => (prev.some((r) => r.id === room.id) ? prev : [room, ...prev]));
+      setActiveRoomId(room.id);
+      setSearch('');
+      setMemberResults([]);
+    } finally {
+      setStartingRoomFor(null);
+    }
+  }, []);
 
   // When switching rooms, fetch full message history
   const openRoom = useCallback(async (roomId: string) => {
@@ -178,6 +275,12 @@ export default function AdminChatClient({ initialRooms, currentUserId }: Props) 
     return name.includes(search.toLowerCase());
   });
 
+  // Members found via search who don't already have a room in the list —
+  // these render as "start a new chat" options.
+  const newMemberResults = memberResults.filter(
+    (m) => !rooms.some((r) => r.member.id === m.id)
+  );
+
   const unreadCount = (room: Room) =>
     room.messages.filter((m) => !m.read && m.senderId !== currentUserId).length;
 
@@ -211,7 +314,7 @@ export default function AdminChatClient({ initialRooms, currentUserId }: Props) 
 
         {/* Room list */}
         <div className="flex-1 overflow-y-auto">
-          {filteredRooms.length === 0 && (
+          {filteredRooms.length === 0 && newMemberResults.length === 0 && !searchingMembers && (
             <p className="text-center text-xs text-gray-400 mt-8">No chats found</p>
           )}
           {filteredRooms.map((room) => {
@@ -254,6 +357,28 @@ export default function AdminChatClient({ initialRooms, currentUserId }: Props) 
               </button>
             );
           })}
+
+          {/* Members found via search who don't have a conversation yet */}
+          {search.trim() && (searchingMembers || newMemberResults.length > 0) && (
+            <div className="border-t border-gray-200 dark:border-gray-800">
+              <p className="px-5 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                {searchingMembers ? 'Searching members…' : 'Start new chat'}
+              </p>
+              {newMemberResults.map((member) => (
+                <button
+                  key={member.id}
+                  onClick={() => startChatWithMember(member)}
+                  disabled={startingRoomFor === member.id}
+                  className="w-full text-left px-5 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+                >
+                  <p className="text-sm font-medium truncate">{member.fullName || member.email}</p>
+                  <p className="text-xs text-gray-400 truncate">
+                    {startingRoomFor === member.id ? 'Starting chat…' : member.email}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

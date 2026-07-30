@@ -33,6 +33,8 @@ interface User {
   teamName?: string;
   selfieUrl?: string;
   idCopyUrl?: string;
+  investmentFormUrl?: string;
+  lockInYears?: number;
   primaryBeneficiaryName?: string;
   primaryBeneficiaryPercentage?: number;
   primaryBeneficiaryIdNumber?: string;
@@ -232,7 +234,7 @@ export function KycTable({ initialUsers }: KycTableProps) {
             </div>
 
             {/* Document Previews */}
-            {(selectedUser.selfieUrl || selectedUser.idCopyUrl) && (
+            {(selectedUser.selfieUrl || selectedUser.idCopyUrl || selectedUser.investmentFormUrl) && (
               <div className="flex gap-4 mb-4">
                 {selectedUser.selfieUrl && (
                   <div className="text-center">
@@ -247,6 +249,19 @@ export function KycTable({ initialUsers }: KycTableProps) {
                     <p className="text-xs text-muted-foreground mb-1">ID Copy</p>
                     <a href={selectedUser.idCopyUrl} target="_blank" rel="noopener noreferrer">
                       <img src={selectedUser.idCopyUrl} alt="ID Copy" className="h-24 w-24 object-cover rounded-lg border" />
+                    </a>
+                  </div>
+                )}
+                {selectedUser.investmentFormUrl && (
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Investment Form</p>
+                    <a
+                      href={selectedUser.investmentFormUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex h-24 w-24 items-center justify-center rounded-lg border text-xs font-medium text-primary underline"
+                    >
+                      View
                     </a>
                   </div>
                 )}
@@ -307,6 +322,7 @@ export function KycTable({ initialUsers }: KycTableProps) {
 
             <Section title="Investment Details">
               <Field label="Initial Investment" value={selectedUser.initialInvestment ? `KES ${selectedUser.initialInvestment.toLocaleString()}` : undefined} />
+              <Field label="Lock-in Period" value={selectedUser.lockInYears ? `${selectedUser.lockInYears} Year${selectedUser.lockInYears > 1 ? 's' : ''}` : undefined} />
               <Field label="Ludeva Number" value={selectedUser.ludevaNumber} />
               <Field label="Submitted At" value={selectedUser.kycSubmittedAt ? format(new Date(selectedUser.kycSubmittedAt), 'dd MMM yyyy HH:mm') : undefined} />
             </Section>

@@ -132,6 +132,12 @@ model User {
   selfieUrl           String?
   idCopyUrl           String?
 
+  // ✅ Investment Application Form (uploaded during KYC onboarding)
+  investmentFormUrl   String?
+
+  // ✅ Chosen lock-in period for the initial investment, in years (1, 2, 3, 5, 7, or 10)
+  lockInYears         Int?
+
   // ✅ Primary Beneficiary
   primaryBeneficiaryName      String?
   primaryBeneficiaryPercentage Float?

@@ -17,6 +17,8 @@ export default async function MemberDashboardPage() {
   const { rows: reportRows, summary } = await getMemberReportSummary(user.email)
 
   const totalInvested = summary.totalInvested
+  const totalWithdrawals = summary.totalWithdrawals
+  const netBalance = summary.netBalance
   const currentBalance = summary.totalInvested
   const estimatedYield = 9.5
 
@@ -61,6 +63,14 @@ export default async function MemberDashboardPage() {
               <p className="text-4xl font-bold tracking-tight">
                 KES {currentBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
               </p>
+              {totalWithdrawals > 0 && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Net Balance (Investments − Withdrawals):{" "}
+                  <span className="font-semibold text-foreground">
+                    KES {netBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                  </span>
+                </p>
+              )}
             </div>
           </div>
 
@@ -74,13 +84,20 @@ export default async function MemberDashboardPage() {
       </section>
 
       {/* Stats Grid */}
-      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
 
         <StatCard
           title="Total Invested"
           value={`KES ${totalInvested.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
           icon={<Wallet />}
           subtitle="Per latest performance report"
+        />
+
+        <StatCard
+          title="Total Withdrawals"
+          value={`KES ${totalWithdrawals.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
+          icon={<ArrowUpRight className="rotate-180" />}
+          subtitle="All-time withdrawals"
         />
 
         <StatCard

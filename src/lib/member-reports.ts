@@ -56,6 +56,8 @@ export interface MemberInvestmentSummary {
    * figure. Prefer `totalPrincipal` for AUM.
    */
   totalInvested: number;
+  /** Net balance = totalPrincipal − totalWithdrawals (deposits minus withdrawals). */
+  netBalance: number;
   /** Most recent closing balance across all report rows — this member's current portfolio value (principal + ROI − tax as of their latest entry), NOT their cumulative deposits. */
   latestClosingBalance: number | null;
   /** Most recent report row that contains a usable closing balance / principal, if any. */
@@ -81,6 +83,7 @@ export function summarizeMemberReports(rows: MemberReportRow[]): MemberInvestmen
       totalRoi: 0,
       totalWithdrawals: 0,
       totalInvested: 0,
+      netBalance: 0,
       latestClosingBalance: null,
       latestRow: null,
       hasReports: false,
@@ -124,6 +127,7 @@ export function summarizeMemberReports(rows: MemberReportRow[]): MemberInvestmen
       totalRoi,
       totalWithdrawals,
       totalInvested: 0,
+      netBalance: totalPrincipal - totalWithdrawals,
       latestClosingBalance: null,
       latestRow: rows[0],
       hasReports: true,
@@ -135,6 +139,7 @@ export function summarizeMemberReports(rows: MemberReportRow[]): MemberInvestmen
     totalRoi,
     totalWithdrawals,
     totalInvested,
+    netBalance: totalPrincipal - totalWithdrawals,
     latestClosingBalance,
     latestRow,
     hasReports: true,
@@ -148,6 +153,8 @@ export interface PlatformAumSummary {
   totalRoi: number;
   /** Sum of `withdrawal` across every report row, for every member. */
   totalWithdrawals: number;
+  /** Net balance across the platform = totalAUM − totalWithdrawals. */
+  netAUM: number;
   /** Count of distinct members (by email) with at least one report row. */
   totalMembers: number;
   /** AUM deposited within rows uploaded since `since` (uses uploadedAt, since the free-text `date` column isn't reliably parseable). */
@@ -184,7 +191,7 @@ export async function getPlatformAumSummary(since?: Date): Promise<PlatformAumSu
     if (row.memberEmail) members.add(row.memberEmail);
   }
 
-  return { totalAUM, totalRoi, totalWithdrawals, totalMembers: members.size, aumSince };
+  return { totalAUM, totalRoi, totalWithdrawals, netAUM: totalAUM - totalWithdrawals, totalMembers: members.size, aumSince };
 }
 
 /**

@@ -30,8 +30,8 @@ import { completeOnboarding } from "./actions";
 const MINIMUM_INVESTMENT = 1000;
 
 const baseFormSchema = z.object({
-  // Account type
-  accountType: z.enum(["INDIVIDUAL", "TEAM"]),
+  // Account type — Individual investors only.
+  accountType: z.literal("INDIVIDUAL"),
   teamName: z.string().optional(),
 
   // Personal info
@@ -61,22 +61,19 @@ const baseFormSchema = z.object({
   initialInvestment: z.coerce
     .number()
     .min(MINIMUM_INVESTMENT, `Minimum investment is KES ${MINIMUM_INVESTMENT}`),
+
+  lockInYears: z.coerce.number().refine(
+    (v) => [1, 2, 3, 5, 7, 10].includes(v),
+    "Please select a lock-in period."
+  ),
 });
 
-// Cross-field rule: a TEAM account must provide a team name.
-const formSchema = baseFormSchema.superRefine((data, ctx) => {
-  if (data.accountType === "TEAM" && (!data.teamName || data.teamName.trim().length < 2)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Team name is required for a team account.",
-      path: ["teamName"],
-    });
-  }
-});
+// No cross-field rules needed now that accountType is fixed to INDIVIDUAL.
+const formSchema = baseFormSchema;
 
 type FormValues = z.infer<typeof baseFormSchema>;
 
-// Upload helper using Cloudinary
+// Upload helper — files are stored in Cloudflare R2 via /api/upload-kyc-doc
 async function uploadFile(file: File, label: string): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
@@ -100,8 +97,9 @@ export default function InvestmentClient() {
   // File state
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [idFile, setIdFile] = useState<File | null>(null);
+  const [investmentFormFile, setInvestmentFormFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [fileErrors, setFileErrors] = useState<{ selfie?: string; id?: string }>({});
+  const [fileErrors, setFileErrors] = useState<{ selfie?: string; id?: string; investmentForm?: string }>({});
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -125,6 +123,7 @@ export default function InvestmentClient() {
       maritalStatus: "",
       numberOfKids: 0,
       initialInvestment: MINIMUM_INVESTMENT,
+      lockInYears: undefined as unknown as number,
     },
   });
 
@@ -137,12 +136,13 @@ export default function InvestmentClient() {
 
   const accountType = form.watch("accountType");
 
-  // Validates that both required documents have been attached.
+  // Validates that all required documents have been attached.
   // Returns true if valid; otherwise sets inline errors and returns false.
   function validateFiles(): boolean {
-    const errors: { selfie?: string; id?: string } = {};
+    const errors: { selfie?: string; id?: string; investmentForm?: string } = {};
     if (!selfieFile) errors.selfie = "Selfie photo is required.";
     if (!idFile) errors.id = "National ID copy is required.";
+    if (!investmentFormFile) errors.investmentForm = "Completed Investment Application Form is required.";
     setFileErrors(errors);
     return Object.keys(errors).length === 0;
   }
@@ -166,6 +166,7 @@ export default function InvestmentClient() {
 
       const selfieUrl = await uploadFile(selfieFile as File, "selfie");
       const idCopyUrl = await uploadFile(idFile as File, "id_copy");
+      const investmentFormUrl = await uploadFile(investmentFormFile as File, "investment_application_form");
 
       setUploading(false);
 
@@ -173,6 +174,7 @@ export default function InvestmentClient() {
         ...values,
         selfieUrl,
         idCopyUrl,
+        investmentFormUrl,
       } as any);
 
       toast({
@@ -231,49 +233,19 @@ export default function InvestmentClient() {
                   <FormField
                     control={form.control}
                     name="accountType"
-                    render={({ field }) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold">Account Type *</FormLabel>
-                        <div className="grid grid-cols-2 gap-3 mt-2">
-                          {[
-                            { value: "INDIVIDUAL", label: "A. Individual Investor", desc: "Personal investment account" },
-                            { value: "TEAM", label: "B. Ludeva Team", desc: "Group / team investment account" },
-                          ].map((opt) => (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              onClick={() => field.onChange(opt.value)}
-                              className={`p-4 rounded-xl border-2 text-left transition-all ${
-                                field.value === opt.value
-                                  ? "border-primary bg-primary/5"
-                                  : "border-gray-200 dark:border-gray-700 hover:border-primary/50"
-                              }`}
-                            >
-                              <div className="font-semibold text-sm">{opt.label}</div>
-                              <div className="text-xs text-muted-foreground mt-1">{opt.desc}</div>
-                            </button>
-                          ))}
+                        <div className="mt-2 p-4 rounded-xl border-2 border-primary bg-primary/5">
+                          <div className="font-semibold text-sm">Individual Investor</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Ludeva investment accounts are currently available for individual investors only.
+                          </div>
                         </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  {accountType === "TEAM" && (
-                    <FormField
-                      control={form.control}
-                      name="teamName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Team Name *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter your Ludeva team name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
                 </div>
               )}
 
@@ -401,7 +373,7 @@ export default function InvestmentClient() {
               {/* ── STEP 4: DOCUMENT UPLOADS & INVESTMENT ── */}
               {step === 4 && (
                 <div className="space-y-5">
-                  <p className="text-sm text-muted-foreground">Please upload clear, legible copies of the required documents. Both documents are required to submit your KYC.</p>
+                  <p className="text-sm text-muted-foreground">Please upload clear, legible copies of the required documents. All documents below are required to submit your KYC.</p>
 
                   <div className="rounded-lg border p-4 space-y-3">
                     <p className="font-semibold text-sm">Your Documents</p>
@@ -450,6 +422,41 @@ export default function InvestmentClient() {
                     </div>
                   </div>
 
+                  <div className="rounded-lg border p-4 space-y-3">
+                    <p className="font-semibold text-sm">Investment Application Form</p>
+                    <p className="text-xs text-muted-foreground">
+                      Download the form, fill it in, then upload the completed copy. This document is required as part of your KYC verification.
+                    </p>
+                    <a
+                      href="/documents/investment-application-form.pdf"
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-sm font-medium text-primary underline underline-offset-2"
+                    >
+                      Download Investment Application Form
+                    </a>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Upload Completed Form *</label>
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        className={`w-full text-sm border rounded-md p-2 ${fileErrors.investmentForm ? "border-destructive" : ""}`}
+                        onChange={e => {
+                          const f = e.target.files?.[0] || null;
+                          setInvestmentFormFile(f);
+                          if (f) setFileErrors(prev => ({ ...prev, investmentForm: undefined }));
+                        }}
+                      />
+                      {investmentFormFile && (
+                        <p className="text-xs text-green-600 mt-1">✓ {investmentFormFile.name}</p>
+                      )}
+                      {fileErrors.investmentForm && (
+                        <p className="text-xs text-destructive mt-1">{fileErrors.investmentForm}</p>
+                      )}
+                    </div>
+                  </div>
+
                   <FormField control={form.control} name="initialInvestment" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Initial Investment Amount (KES) *</FormLabel>
@@ -459,9 +466,31 @@ export default function InvestmentClient() {
                     </FormItem>
                   )} />
 
-                  {(!selfieFile || !idFile) && (
+                  <FormField control={form.control} name="lockInYears" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lock-in Period *</FormLabel>
+                      <FormControl>
+                        <select
+                          className="w-full border rounded-md p-2 bg-background"
+                          value={field.value ?? ""}
+                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                        >
+                          <option value="">Select lock-in period</option>
+                          <option value={1}>1 Year</option>
+                          <option value={2}>2 Years</option>
+                          <option value={3}>3 Years</option>
+                          <option value={5}>5 Years</option>
+                          <option value={7}>7 Years</option>
+                          <option value={10}>10 Years</option>
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  {(!selfieFile || !idFile || !investmentFormFile) && (
                     <p className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-md p-2">
-                      Upload both documents above to enable submission.
+                      Upload all required documents above to enable submission.
                     </p>
                   )}
                 </div>
@@ -480,7 +509,7 @@ export default function InvestmentClient() {
                     className="flex-1"
                     onClick={async () => {
                       const stepFields: Record<number, (keyof FormValues)[]> = {
-                        1: accountType === "TEAM" ? ["accountType", "teamName"] : ["accountType"],
+                        1: ["accountType"],
                         2: ["fullName", "dateOfBirth", "placeOfBirthCounty", "placeOfBirthSubCounty", "placeOfBirthWard", "email", "residentialAddress"],
                         3: ["sourceOfFunds", "employmentStatus"],
                         4: [],
@@ -495,7 +524,7 @@ export default function InvestmentClient() {
                   <Button
                     type="submit"
                     className="flex-1"
-                    disabled={form.formState.isSubmitting || uploading || !selfieFile || !idFile}
+                    disabled={form.formState.isSubmitting || uploading || !selfieFile || !idFile || !investmentFormFile || !form.watch("lockInYears")}
                   >
                     {form.formState.isSubmitting || uploading
                       ? "Submitting KYC..."

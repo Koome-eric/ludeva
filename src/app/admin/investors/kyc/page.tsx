@@ -30,6 +30,8 @@ export default async function KYCManagementPage() {
       teamName: true,
       selfieUrl: true,
       idCopyUrl: true,
+      investmentFormUrl: true,
+      lockInYears: true,
       primaryBeneficiaryName: true,
       primaryBeneficiaryPercentage: true,
       primaryBeneficiaryIdNumber: true,

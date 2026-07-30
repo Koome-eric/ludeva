@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import cloudinary from "@/lib/cloudinary";
+import { uploadBufferToR2, buildObjectKey, isR2Configured, deleteFromR2, keyFromR2Url } from "@/lib/r2";
 
 declare global {
   var io: any;
@@ -146,33 +146,23 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "File required" }, { status: 400 });
       }
 
+      if (!isR2Configured()) {
+        console.error('[R2 UPLOAD] Cloudflare R2 is not configured — check env vars.');
+        return NextResponse.json({ error: 'File storage is not configured' }, { status: 500 });
+      }
+
       fileName = file.name;
 
       const buffer = Buffer.from(await file.arrayBuffer());
+      const key = buildObjectKey("documents", file.name.replace(/\.[^.]+$/, ""), file.name);
 
-      const uploadResult = await new Promise<any>((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream(
-            {
-              folder: "documents",
-              resource_type: "raw",
-              use_filename: true,
-              unique_filename: false,
-            },
-            (err, result) => {
-              if (err) reject(err);
-              else resolve(result);
-            }
-          )
-          .end(buffer);
-      });
-      if (!uploadResult || !uploadResult.secure_url) {
-        console.error('[CLOUDINARY UPLOAD] invalid response', uploadResult);
-        return NextResponse.json({ error: 'Cloudinary upload failed' }, { status: 502 });
+      try {
+        // Store the plain public URL — Content-Disposition is set by the download proxy route
+        fileUrl = await uploadBufferToR2(buffer, key, file.type || "application/octet-stream");
+      } catch (uploadErr) {
+        console.error('[R2 UPLOAD] failed', uploadErr);
+        return NextResponse.json({ error: 'File upload failed' }, { status: 502 });
       }
-
-      // Store the plain secure_url — Content-Disposition is set by the download proxy route
-      fileUrl = uploadResult.secure_url;
     }
 
     const document = await prisma.document.create({
@@ -188,6 +178,29 @@ export async function POST(req: Request) {
       },
     });
 
+    // For CONTENT (text-composed) documents, also store a plain-text copy in
+    // R2 so admin-created documents are downloadable the same way uploaded
+    // files are — not just readable in-app.
+    let finalDocument = document;
+    if (type === "CONTENT" && content && isR2Configured()) {
+      try {
+        const key = `documents/content/${document.id}.txt`;
+        const contentUrl = await uploadBufferToR2(
+          Buffer.from(content, "utf-8"),
+          key,
+          "text/plain; charset=utf-8"
+        );
+        finalDocument = await prisma.document.update({
+          where: { id: document.id },
+          data: { fileUrl: contentUrl, fileName: `${title || "document"}.txt` },
+        });
+      } catch (uploadErr) {
+        // Non-fatal — the document and its content are already saved in the
+        // database and readable in-app; only the R2 backup copy failed.
+        console.error('[R2 UPLOAD] content backup failed', uploadErr);
+      }
+    }
+
     // ✅ Broadcast notification if document is published
     if (isPublished) {
       await broadcastAdminNotification(
@@ -197,7 +210,7 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json(document);
+    return NextResponse.json(finalDocument);
   } catch (error: any) {
     console.error(error);
 
@@ -232,6 +245,25 @@ export async function PUT(req: Request) {
     },
   });
 
+  // Keep the R2 text-file backup of CONTENT documents in sync with edits.
+  let finalUpdated = updated;
+  if (previousDoc?.type === "CONTENT" && content && isR2Configured()) {
+    try {
+      const key = `documents/content/${id}.txt`;
+      const contentUrl = await uploadBufferToR2(
+        Buffer.from(content, "utf-8"),
+        key,
+        "text/plain; charset=utf-8"
+      );
+      finalUpdated = await prisma.document.update({
+        where: { id },
+        data: { fileUrl: contentUrl, fileName: `${title || "document"}.txt` },
+      });
+    } catch (uploadErr) {
+      console.error('[R2 UPLOAD] content backup update failed', uploadErr);
+    }
+  }
+
   // ✅ Broadcast notification if document is being published
   if (isPublished && !previousDoc?.isPublished) {
     await broadcastAdminNotification(
@@ -241,7 +273,7 @@ export async function PUT(req: Request) {
     );
   }
 
-  return NextResponse.json(updated);
+  return NextResponse.json(finalUpdated);
 }
 
 //
@@ -263,6 +295,19 @@ export async function DELETE(req: Request) {
   const deletedDoc = await prisma.document.findUnique({ where: { id } });
 
   await prisma.document.delete({ where: { id } });
+
+  // Clean up the corresponding object in R2, if any, so storage doesn't
+  // accumulate orphaned files.
+  if (deletedDoc?.fileUrl) {
+    const key = keyFromR2Url(deletedDoc.fileUrl);
+    if (key) {
+      try {
+        await deleteFromR2(key);
+      } catch (err) {
+        console.error('[R2 DELETE] failed to remove object for document', id, err);
+      }
+    }
+  }
 
   // ✅ Notify of deletion if document was published
   if (deletedDoc?.isPublished) {

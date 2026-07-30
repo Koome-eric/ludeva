@@ -6,7 +6,8 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 
 const OnboardingDataSchema = z.object({
-  accountType: z.enum(["INDIVIDUAL", "TEAM"]),
+  // Account type is restricted to Individual investors only.
+  accountType: z.literal("INDIVIDUAL"),
   teamName: z.string().optional(),
 
   fullName: z.string().min(2),
@@ -31,17 +32,15 @@ const OnboardingDataSchema = z.object({
   maritalStatus: z.string().optional(),
   numberOfKids: z.coerce.number().optional(),
 
-  // Document URLs (uploaded via Cloudinary) — required for KYC completion.
+  // Document URLs (uploaded to Cloudflare R2) — required for KYC completion.
   selfieUrl: z.string().min(1, "Selfie photo is required."),
   idCopyUrl: z.string().min(1, "National ID copy is required."),
-}).superRefine((data, ctx) => {
-  if (data.accountType === "TEAM" && (!data.teamName || data.teamName.trim().length < 2)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Team name is required for a team account.",
-      path: ["teamName"],
-    });
-  }
+  investmentFormUrl: z.string().min(1, "The completed Investment Application Form is required."),
+
+  // Lock-in period for the initial investment, in years.
+  lockInYears: z.union([
+    z.literal(1), z.literal(2), z.literal(3), z.literal(5), z.literal(7), z.literal(10),
+  ]),
 });
 
 export async function completeOnboarding(
@@ -88,6 +87,8 @@ export async function completeOnboarding(
 
     selfieUrl: d.selfieUrl,
     idCopyUrl: d.idCopyUrl,
+    investmentFormUrl: d.investmentFormUrl,
+    lockInYears: d.lockInYears,
 
     role: 'MEMBER' as const,
   };
@@ -125,6 +126,7 @@ export async function completeOnboarding(
       sourceOfFunds: d.sourceOfFunds,
       employmentStatus: d.employmentStatus,
       currentOccupation: d.currentOccupation,
+      lockInYears: d.lockInYears,
     },
   });
 

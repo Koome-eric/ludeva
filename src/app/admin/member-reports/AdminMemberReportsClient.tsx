@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,17 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Search, Trash2, Users, FileSpreadsheet, RefreshCw, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { Search, Trash2, Users, FileSpreadsheet, RefreshCw, ChevronDown, ChevronUp, Plus, Pencil, Wallet, ArrowDownCircle, PiggyBank } from "lucide-react";
+
+// Parses values like "1,234,567.50" or "KES 1,234" into a finite number,
+// mirroring src/lib/member-reports.ts's parseReportAmount for client-side totals.
+function parseAmount(value?: string | null): number {
+  if (!value) return 0;
+  const cleaned = value.replace(/[^0-9.\-]/g, "");
+  if (!cleaned) return 0;
+  const num = Number(cleaned);
+  return Number.isFinite(num) ? num : 0;
+}
 
 interface ReportRow {
   id: string;
@@ -57,6 +67,22 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
   const [addOpen, setAddOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({
+    memberEmail: "",
+    accountNo: "",
+    periodLabel: "",
+    date: "",
+    principal: "",
+    rate: "",
+    roi: "",
+    withdrawal: "",
+    closingBal: "",
+    notes: "",
+  });
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
     memberEmail: "",
     accountNo: "",
     periodLabel: "",
@@ -128,6 +154,57 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
     }
   };
 
+  const openEditDialog = (row: ReportRow) => {
+    setEditingId(row.id);
+    setEditForm({
+      memberEmail: row.memberEmail || "",
+      accountNo: row.accountNo || "",
+      periodLabel: row.periodLabel || "",
+      date: row.date || "",
+      principal: row.principal || "",
+      rate: row.rate || "",
+      roi: row.roi || "",
+      withdrawal: row.withdrawal || "",
+      closingBal: row.closingBal || "",
+      notes: row.notes || "",
+    });
+    setEditOpen(true);
+  };
+
+  const updateEditField = (field: keyof typeof editForm, value: string) =>
+    setEditForm(prev => ({ ...prev, [field]: value }));
+
+  const submitEditRow = async () => {
+    if (!editingId) return;
+    if (!editForm.memberEmail.trim()) {
+      toast({ variant: "destructive", title: "Member email is required" });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/member-reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...editForm, id: editingId }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to update investment entry");
+      }
+      const data = await res.json();
+
+      setReports(prev => prev.map(r => (r.id === editingId ? data.record : r)));
+      toast({ title: "Investment entry updated" });
+      setEditOpen(false);
+      setEditingId(null);
+    } catch (e: any) {
+      toast({ variant: "destructive", title: e.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const deleteAllForMember = async (email: string) => {
     if (!confirm(`Delete ALL report rows for ${email}? This cannot be undone.`)) return;
     setDeleting(email);
@@ -158,6 +235,20 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
 
   const totalRows = reports.length;
   const totalMembers = Object.keys(memberSummary).length;
+
+  const totals = useMemo(() => {
+    let totalInvestments = 0;
+    let totalWithdrawals = 0;
+    for (const r of reports) {
+      totalInvestments += parseAmount(r.principal);
+      totalWithdrawals += parseAmount(r.withdrawal);
+    }
+    return {
+      totalInvestments,
+      totalWithdrawals,
+      totalBalance: totalInvestments - totalWithdrawals,
+    };
+  }, [reports]);
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -315,6 +406,21 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
         </div>
       </div>
 
+      {/* Summary totals */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Total Investments", value: `KES ${totals.totalInvestments.toLocaleString()}`, icon: <Wallet className="h-4 w-4 text-emerald-600" /> },
+          { label: "Total Withdrawals", value: `KES ${totals.totalWithdrawals.toLocaleString()}`, icon: <ArrowDownCircle className="h-4 w-4 text-red-500" /> },
+          { label: "Total Members", value: totalMembers, icon: <Users className="h-4 w-4" /> },
+          { label: "Total Balance", value: `KES ${totals.totalBalance.toLocaleString()}`, icon: <PiggyBank className="h-4 w-4 text-primary" /> },
+        ].map(k => (
+          <div key={k.label} className="border rounded-xl p-4 bg-card">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">{k.icon}{k.label}</div>
+            <div className="font-bold text-xl">{k.value}</div>
+          </div>
+        ))}
+      </div>
+
       {/* KPI strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
@@ -389,7 +495,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="bg-muted/30">
-                          {["Account", "Period", "Date", "Principal", "Rate", "ROI", "Withdrawal", "Closing Bal", "Quarter/Notes", "Pushed At"].map(h => (
+                          {["Account", "Period", "Date", "Principal", "Rate", "ROI", "Withdrawal", "Closing Bal", "Quarter/Notes", "Pushed At", "Actions"].map(h => (
                             <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">{h}</th>
                           ))}
                         </tr>
@@ -409,6 +515,11 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
                             <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
                               {new Date(row.uploadedAt).toLocaleDateString("en-KE")}
                             </td>
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              <Button size="sm" variant="ghost" onClick={() => openEditDialog(row)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -420,6 +531,128 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
           })}
         </div>
       )}
+
+      {/* Edit Investment Entry Dialog */}
+      <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (!open) setEditingId(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Investment Entry</DialogTitle>
+            <DialogDescription>
+              Updates this report row directly. Changes apply immediately to the member's dashboard,
+              reports page, and investments page.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="edit-memberEmail">Member Email *</Label>
+              <Input
+                id="edit-memberEmail"
+                type="email"
+                value={editForm.memberEmail}
+                onChange={(e) => updateEditField("memberEmail", e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="edit-accountNo">Account No</Label>
+                <Input
+                  id="edit-accountNo"
+                  value={editForm.accountNo}
+                  onChange={(e) => updateEditField("accountNo", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-periodLabel">Period Label</Label>
+                <Input
+                  id="edit-periodLabel"
+                  value={editForm.periodLabel}
+                  onChange={(e) => updateEditField("periodLabel", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-date">Date</Label>
+              <Input
+                id="edit-date"
+                type="date"
+                value={editForm.date}
+                onChange={(e) => updateEditField("date", e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="edit-principal">Principal (KES)</Label>
+                <Input
+                  id="edit-principal"
+                  type="number"
+                  value={editForm.principal}
+                  onChange={(e) => updateEditField("principal", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-closingBal">Closing Balance (KES)</Label>
+                <Input
+                  id="edit-closingBal"
+                  type="number"
+                  value={editForm.closingBal}
+                  onChange={(e) => updateEditField("closingBal", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="edit-rate">Rate</Label>
+                <Input
+                  id="edit-rate"
+                  value={editForm.rate}
+                  onChange={(e) => updateEditField("rate", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-roi">ROI</Label>
+                <Input
+                  id="edit-roi"
+                  value={editForm.roi}
+                  onChange={(e) => updateEditField("roi", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-withdrawal">Withdrawal (KES)</Label>
+              <Input
+                id="edit-withdrawal"
+                type="number"
+                value={editForm.withdrawal}
+                onChange={(e) => updateEditField("withdrawal", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-notes">Notes</Label>
+              <Input
+                id="edit-notes"
+                value={editForm.notes}
+                onChange={(e) => updateEditField("notes", e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={submitEditRow} disabled={saving}>
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

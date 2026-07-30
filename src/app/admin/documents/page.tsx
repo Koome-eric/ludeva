@@ -174,6 +174,8 @@ export default function AdminDocumentsPage() {
     const src = doc.fileName || doc.fileUrl || "";
     if (src.match(/\.(pdf)$/i)) return "pdf";
     if (src.match(/\.(jpg|jpeg|png|webp|gif)$/i)) return "image";
+    if (src.match(/\.(txt|csv)$/i)) return "text";
+    if (src.match(/\.(doc|docx|xls|xlsx|ppt|pptx)$/i)) return "office";
     return "other";
   };
 
@@ -411,6 +413,20 @@ export default function AdminDocumentsPage() {
                   )}
                   {getFileType(previewDoc) === "pdf" && (
                     <iframe src={previewDoc.fileUrl} className="w-full h-[60vh] rounded" />
+                  )}
+                  {getFileType(previewDoc) === "text" && (
+                    <iframe src={previewDoc.fileUrl} className="w-full h-[60vh] rounded border bg-white" />
+                  )}
+                  {getFileType(previewDoc) === "office" && (
+                    <>
+                      <iframe
+                        src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewDoc.fileUrl)}&embedded=true`}
+                        className="w-full h-[60vh] rounded border"
+                      />
+                      <p className="text-xs text-muted-foreground text-center mt-2">
+                        If the preview doesn't load (e.g. the file isn't publicly accessible yet), use Download below.
+                      </p>
+                    </>
                   )}
                   {getFileType(previewDoc) === "other" && (
                     <div className="text-center py-10">

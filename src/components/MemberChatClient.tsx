@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { getPusherClient } from '@/lib/pusher-client';
 import { Send, MessageCircle, ShieldCheck } from 'lucide-react';
+
+const POLL_INTERVAL_MS = 3000;
 
 type Message = {
   id: string;
@@ -35,21 +36,32 @@ export default function MemberChatClient({ initialRoom, currentUserId }: Props) 
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Subscribe to Pusher channel
+  // Poll for new messages instead of subscribing to a realtime channel.
   useEffect(() => {
-    const pusher = getPusherClient();
-    const channel = pusher.subscribe(`chat-${initialRoom.id}`);
+    let cancelled = false;
 
-    channel.bind('new-message', (msg: Message) => {
-      setMessages((prev) => {
-        // Deduplicate — don't add if already present (optimistic add)
-        if (prev.some((m) => m.id === msg.id)) return prev;
-        return [...prev, msg];
-      });
-    });
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`/api/chat/messages?roomId=${initialRoom.id}`);
+        if (!res.ok || cancelled) return;
+        const fresh: Message[] = await res.json();
+        setMessages((prev) => {
+          // Keep any still-pending optimistic (temp-) messages, replace the rest.
+          const pending = prev.filter((m) => m.id.startsWith('temp-'));
+          const freshIds = new Set(fresh.map((m) => m.id));
+          return [...fresh, ...pending.filter((m) => !freshIds.has(m.id))];
+        });
+      } catch {
+        // Silently ignore — will retry on next interval.
+      }
+    };
+
+    fetchMessages();
+    const interval = setInterval(fetchMessages, POLL_INTERVAL_MS);
 
     return () => {
-      pusher.unsubscribe(`chat-${initialRoom.id}`);
+      cancelled = true;
+      clearInterval(interval);
     };
   }, [initialRoom.id]);
 
