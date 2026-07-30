@@ -14,12 +14,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'roomId and content are required' }, { status: 400 });
     }
 
-    // Verify the user belongs to this room (member or admin)
+    // Members may only send into their own room. Admins share one inbox, so
+    // any admin may reply in any room — not just the one auto-assigned as
+    // its adminId.
     const room = await prisma.chatRoom.findFirst({
-      where: {
-        id: roomId,
-        OR: [{ memberId: user.id }, { adminId: user.id }],
-      },
+      where:
+        user.role === 'ADMIN'
+          ? { id: roomId }
+          : { id: roomId, memberId: user.id },
     });
 
     if (!room) {

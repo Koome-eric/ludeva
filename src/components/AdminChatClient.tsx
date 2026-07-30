@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Send, Users, MessageCircle, Search } from 'lucide-react';
+import { Send, Users, MessageCircle, Search, ArrowLeft } from 'lucide-react';
 
 const MESSAGE_POLL_INTERVAL_MS = 3000;
 const ROOM_LIST_POLL_INTERVAL_MS = 6000;
@@ -284,14 +284,22 @@ export default function AdminChatClient({ initialRooms, currentUserId }: Props) 
   const unreadCount = (room: Room) =>
     room.messages.filter((m) => !m.read && m.senderId !== currentUserId).length;
 
+  const initials = (name: string) => name.trim()[0]?.toUpperCase() ?? '?';
+
   return (
-    <div className="flex h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white">
+    // -m-4/-m-6 cancels the parent shell's page padding so the chat fills the
+    // full content area edge-to-edge; height is the viewport minus the 3.5rem
+    // sticky top bar (using dvh so mobile browser chrome doesn't clip it).
+    <div className="-m-4 sm:-m-6 h-[calc(100dvh-3.5rem)] flex bg-white dark:bg-gray-950 text-gray-900 dark:text-white overflow-hidden">
 
-      {/* ── Sidebar ── */}
-      <div className="w-80 flex flex-col border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-
+      {/* ── Sidebar (room list) ── */}
+      <div
+        className={`w-full sm:w-80 sm:flex-shrink-0 flex-col border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 ${
+          activeRoom ? 'hidden sm:flex' : 'flex'
+        }`}
+      >
         {/* Sidebar Header */}
-        <div className="px-5 pt-5 pb-3">
+        <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3 flex-shrink-0">
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-5 h-5 text-emerald-600" />
             <h2 className="font-bold text-base">Member Chats</h2>
@@ -301,59 +309,68 @@ export default function AdminChatClient({ initialRooms, currentUserId }: Props) 
           </div>
 
           {/* Search */}
-          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2">
+          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 sm:py-2 focus-within:ring-2 focus-within:ring-emerald-500/30 focus-within:border-emerald-500 transition-shadow">
             <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search members..."
-              className="flex-1 text-xs bg-transparent outline-none text-gray-700 dark:text-gray-200 placeholder-gray-400"
+              className="flex-1 text-sm sm:text-xs bg-transparent outline-none text-gray-700 dark:text-gray-200 placeholder-gray-400"
             />
           </div>
         </div>
 
         {/* Room list */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {filteredRooms.length === 0 && newMemberResults.length === 0 && !searchingMembers && (
-            <p className="text-center text-xs text-gray-400 mt-8">No chats found</p>
+            <div className="flex flex-col items-center justify-center gap-2 text-gray-400 mt-12 px-6 text-center">
+              <MessageCircle className="w-8 h-8 opacity-30" />
+              <p className="text-xs">
+                {search.trim() ? 'No members match that search' : 'No conversations yet'}
+              </p>
+            </div>
           )}
           {filteredRooms.map((room) => {
             const lastMsg = room.messages[room.messages.length - 1];
             const unread = unreadCount(room);
             const isActive = room.id === activeRoomId;
+            const name = room.member.fullName || room.member.email;
 
             return (
               <button
                 key={room.id}
                 onClick={() => openRoom(room.id)}
-                className={`w-full text-left px-5 py-4 border-b border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 transition-colors ${
-                  isActive ? 'bg-white dark:bg-gray-800 border-l-2 border-l-emerald-500' : ''
+                className={`w-full text-left px-4 sm:px-5 py-3.5 sm:py-4 border-b border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 active:bg-white dark:active:bg-gray-800 transition-colors flex items-center gap-3 ${
+                  isActive ? 'bg-white dark:bg-gray-800 sm:border-l-2 sm:border-l-emerald-500' : ''
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-semibold truncate max-w-[150px]">
-                    {room.member.fullName || room.member.email}
-                  </p>
-                  <div className="flex items-center gap-1.5">
-                    {unread > 0 && (
-                      <span className="w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] flex items-center justify-center font-bold">
-                        {unread}
-                      </span>
-                    )}
-                    {lastMsg && (
-                      <span className="text-[10px] text-gray-400">{formatDate(lastMsg.createdAt)}</span>
-                    )}
-                  </div>
+                <div className="w-10 h-10 flex-shrink-0 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                  {initials(name)}
                 </div>
-                {lastMsg && (
-                  <p className="text-xs text-gray-400 truncate">
-                    {lastMsg.senderId === currentUserId ? 'You: ' : ''}
-                    {lastMsg.content}
-                  </p>
-                )}
-                {!lastMsg && (
-                  <p className="text-xs text-gray-300 italic">No messages yet</p>
-                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <p className="text-sm font-semibold truncate">{name}</p>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {unread > 0 && (
+                        <span className="w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] flex items-center justify-center font-bold">
+                          {unread}
+                        </span>
+                      )}
+                      {lastMsg && (
+                        <span className="text-[10px] text-gray-400">{formatDate(lastMsg.createdAt)}</span>
+                      )}
+                    </div>
+                  </div>
+                  {lastMsg && (
+                    <p className="text-xs text-gray-400 truncate">
+                      {lastMsg.senderId === currentUserId ? 'You: ' : ''}
+                      {lastMsg.content}
+                    </p>
+                  )}
+                  {!lastMsg && (
+                    <p className="text-xs text-gray-300 italic">No messages yet</p>
+                  )}
+                </div>
               </button>
             );
           })}
@@ -361,46 +378,61 @@ export default function AdminChatClient({ initialRooms, currentUserId }: Props) 
           {/* Members found via search who don't have a conversation yet */}
           {search.trim() && (searchingMembers || newMemberResults.length > 0) && (
             <div className="border-t border-gray-200 dark:border-gray-800">
-              <p className="px-5 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+              <p className="px-4 sm:px-5 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                 {searchingMembers ? 'Searching members…' : 'Start new chat'}
               </p>
-              {newMemberResults.map((member) => (
-                <button
-                  key={member.id}
-                  onClick={() => startChatWithMember(member)}
-                  disabled={startingRoomFor === member.id}
-                  className="w-full text-left px-5 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
-                >
-                  <p className="text-sm font-medium truncate">{member.fullName || member.email}</p>
-                  <p className="text-xs text-gray-400 truncate">
-                    {startingRoomFor === member.id ? 'Starting chat…' : member.email}
-                  </p>
-                </button>
-              ))}
+              {newMemberResults.map((member) => {
+                const name = member.fullName || member.email;
+                return (
+                  <button
+                    key={member.id}
+                    onClick={() => startChatWithMember(member)}
+                    disabled={startingRoomFor === member.id}
+                    className="w-full text-left px-4 sm:px-5 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-3"
+                  >
+                    <div className="w-9 h-9 flex-shrink-0 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
+                      {initials(name)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{name}</p>
+                      <p className="text-xs text-gray-400 truncate">
+                        {startingRoomFor === member.id ? 'Starting chat…' : member.email}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
       </div>
 
       {/* ── Chat Panel ── */}
-      <div className="flex-1 flex flex-col">
+      <div className={`flex-1 min-w-0 flex-col ${activeRoom ? 'flex' : 'hidden sm:flex'}`}>
         {activeRoom ? (
           <>
             {/* Chat Header */}
-            <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
-              <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-sm font-bold text-emerald-700 dark:text-emerald-300">
-                {(activeRoom.member.fullName || activeRoom.member.email)[0].toUpperCase()}
+            <div className="flex items-center gap-3 px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm flex-shrink-0">
+              <button
+                onClick={() => setActiveRoomId(null)}
+                className="sm:hidden -ml-1 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex-shrink-0"
+                aria-label="Back to conversations"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-sm font-bold text-emerald-700 dark:text-emerald-300 flex-shrink-0">
+                {initials(activeRoom.member.fullName || activeRoom.member.email)}
               </div>
-              <div>
-                <p className="font-semibold text-sm">
+              <div className="min-w-0">
+                <p className="font-semibold text-sm truncate">
                   {activeRoom.member.fullName || activeRoom.member.email}
                 </p>
-                <p className="text-xs text-gray-400">{activeRoom.member.email}</p>
+                <p className="text-xs text-gray-400 truncate">{activeRoom.member.email}</p>
               </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3 bg-gray-50 dark:bg-gray-950">
+            <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-5 space-y-3 bg-gray-50 dark:bg-gray-950 min-h-0">
               {loadingRoom && (
                 <div className="text-center text-xs text-gray-400 py-4">Loading messages...</div>
               )}
@@ -415,7 +447,7 @@ export default function AdminChatClient({ initialRooms, currentUserId }: Props) 
                 return (
                   <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                     <div
-                      className={`max-w-[65%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                      className={`max-w-[85%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words ${
                         isMine
                           ? 'bg-emerald-600 text-white rounded-br-sm'
                           : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-bl-sm shadow-sm'
@@ -436,7 +468,7 @@ export default function AdminChatClient({ initialRooms, currentUserId }: Props) 
             </div>
 
             {/* Input */}
-            <div className="px-4 py-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+            <div className="px-3 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex-shrink-0 pb-[max(env(safe-area-inset-bottom),0.625rem)] sm:pb-3">
               <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-2">
                 <input
                   ref={inputRef}
@@ -450,16 +482,16 @@ export default function AdminChatClient({ initialRooms, currentUserId }: Props) 
                 <button
                   onClick={sendMessage}
                   disabled={!input.trim() || sending}
-                  className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white disabled:opacity-40 transition-opacity hover:bg-emerald-700"
+                  className="w-8 h-8 flex-shrink-0 rounded-full bg-emerald-600 flex items-center justify-center text-white disabled:opacity-40 transition-opacity hover:bg-emerald-700"
                 >
                   <Send className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <p className="text-[10px] text-center text-gray-400 mt-1.5">Press Enter to send</p>
+              <p className="hidden sm:block text-[10px] text-center text-gray-400 mt-1.5">Press Enter to send</p>
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-400">
+          <div className="hidden sm:flex flex-col items-center justify-center h-full gap-3 text-gray-400">
             <MessageCircle className="w-12 h-12 opacity-20" />
             <p className="text-sm font-medium">Select a chat to get started</p>
             <p className="text-xs">All member conversations appear on the left</p>

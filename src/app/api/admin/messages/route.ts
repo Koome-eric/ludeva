@@ -16,9 +16,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'roomId is required' }, { status: 400 });
     }
 
-    // Verify admin owns this room
+    // Shared inbox — any admin can open any member's room.
     const room = await prisma.chatRoom.findFirst({
-      where: { id: roomId, adminId: user.id },
+      where: { id: roomId },
     });
 
     if (!room) {

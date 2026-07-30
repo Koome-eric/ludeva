@@ -9,8 +9,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Shared inbox — every admin sees every member conversation. Rooms are
+    // still auto-assigned an adminId when created (for the "who started it"
+    // record), but visibility and replies are not restricted to that admin;
+    // otherwise a member becomes invisible (and unsearchable) to every admin
+    // except the one that happened to get auto-assigned.
     const rooms = await prisma.chatRoom.findMany({
-      where: { adminId: user.id },
       include: {
         member: {
           select: { id: true, fullName: true, email: true },

@@ -154,20 +154,14 @@ export default function AdminDocumentsPage() {
     }
   };
 
-  const handleDownload = async (doc: Doc) => {
-    if (!doc.fileUrl) return;
-    try {
-      const res = await fetch(doc.fileUrl);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = doc.fileName || doc.title || "document";
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      toast({ variant: "destructive", title: "Download failed" });
-    }
+  const handleDownload = (doc: Doc) => {
+    if (!doc.id) return;
+    // Go through the server-side proxy (same one the member Documents Hub
+    // uses) instead of fetching the R2 public URL directly from the browser.
+    // A direct fetch() to the R2 bucket is blocked by CORS since R2 public
+    // buckets don't send Access-Control-Allow-Origin by default, and this
+    // route also guarantees the original filename/extension is preserved.
+    window.location.href = `/api/documents/download?id=${encodeURIComponent(doc.id)}`;
   };
 
   const getFileType = (doc: Doc) => {
@@ -187,21 +181,21 @@ export default function AdminDocumentsPage() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Documents & Content</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Documents & Content</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Upload files or write content. Published items appear in the Members Documents Hub.
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={fetchDocs}>
+          <Button variant="outline" size="sm" onClick={fetchDocs} className="flex-1 sm:flex-none">
             <RefreshCw className="h-4 w-4 mr-2" /> Refresh
           </Button>
-          <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
+          <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }} className="flex-1 sm:flex-none">
             <Plus className="h-4 w-4 mr-2" /> New Document
           </Button>
         </div>
@@ -321,35 +315,37 @@ export default function AdminDocumentsPage() {
       ) : (
         <div className="space-y-3">
           {docs.map(doc => (
-            <div key={doc.id} className="border rounded-xl p-4 flex items-center gap-4 hover:bg-muted/20 transition-colors">
-              
-              {/* Icon */}
-              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                {doc.type === "CONTENT" ? <FileText className="h-5 w-5 text-purple-500" /> : <FileIcon doc={doc} />}
-              </div>
+            <div key={doc.id} className="border rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 hover:bg-muted/20 transition-colors">
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-medium truncate">{doc.title}</p>
-                  <Badge variant={doc.type === "FILE" ? "outline" : "secondary"} className="text-xs">
-                    {doc.type === "FILE" ? (doc.fileName?.split(".").pop()?.toUpperCase() || "FILE") : "CONTENT"}
-                  </Badge>
-                  <Badge
-                    className={`text-xs ${doc.isPublished ? "bg-green-100 text-green-700 border-green-200" : "bg-orange-100 text-orange-700 border-orange-200"}`}
-                    variant="outline"
-                  >
-                    {doc.isPublished ? "● Published" : "○ Draft"}
-                  </Badge>
+              <div className="flex items-start sm:items-center gap-3 min-w-0">
+                {/* Icon */}
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                  {doc.type === "CONTENT" ? <FileText className="h-5 w-5 text-purple-500" /> : <FileIcon doc={doc} />}
                 </div>
-                {doc.description && <p className="text-sm text-muted-foreground mt-0.5 truncate">{doc.description}</p>}
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {new Date(doc.createdAt).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}
-                </p>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-medium truncate">{doc.title}</p>
+                    <Badge variant={doc.type === "FILE" ? "outline" : "secondary"} className="text-xs">
+                      {doc.type === "FILE" ? (doc.fileName?.split(".").pop()?.toUpperCase() || "FILE") : "CONTENT"}
+                    </Badge>
+                    <Badge
+                      className={`text-xs ${doc.isPublished ? "bg-green-100 text-green-700 border-green-200" : "bg-orange-100 text-orange-700 border-orange-200"}`}
+                      variant="outline"
+                    >
+                      {doc.isPublished ? "● Published" : "○ Draft"}
+                    </Badge>
+                  </div>
+                  {doc.description && <p className="text-sm text-muted-foreground mt-0.5 truncate">{doc.description}</p>}
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {new Date(doc.createdAt).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </div>
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-1 flex-shrink-0">
+              <div className="flex items-center gap-1 flex-shrink-0 self-end sm:self-auto -mx-1 sm:mx-0 overflow-x-auto">
                 <Button size="sm" variant="ghost" onClick={() => setPreviewDoc(doc)} title="Preview">
                   <Eye className="h-4 w-4" />
                 </Button>
@@ -409,13 +405,23 @@ export default function AdminDocumentsPage() {
               {previewDoc.type === "FILE" && previewDoc.fileUrl && (
                 <>
                   {getFileType(previewDoc) === "image" && (
-                    <img src={previewDoc.fileUrl} alt={previewDoc.title} className="max-w-full max-h-[60vh] mx-auto object-contain rounded" />
+                    <img
+                      src={`/api/documents/preview?id=${encodeURIComponent(previewDoc.id)}`}
+                      alt={previewDoc.title}
+                      className="max-w-full max-h-[60vh] mx-auto object-contain rounded"
+                    />
                   )}
                   {getFileType(previewDoc) === "pdf" && (
-                    <iframe src={previewDoc.fileUrl} className="w-full h-[60vh] rounded" />
+                    <iframe
+                      src={`/api/documents/preview?id=${encodeURIComponent(previewDoc.id)}`}
+                      className="w-full h-[60vh] rounded"
+                    />
                   )}
                   {getFileType(previewDoc) === "text" && (
-                    <iframe src={previewDoc.fileUrl} className="w-full h-[60vh] rounded border bg-white" />
+                    <iframe
+                      src={`/api/documents/preview?id=${encodeURIComponent(previewDoc.id)}`}
+                      className="w-full h-[60vh] rounded border bg-white"
+                    />
                   )}
                   {getFileType(previewDoc) === "office" && (
                     <>

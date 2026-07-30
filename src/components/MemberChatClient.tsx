@@ -124,21 +124,24 @@ export default function MemberChatClient({ initialRoom, currentUserId }: Props) 
     });
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-950">
+    // -m-4/-m-6 cancels the parent shell's page padding so the chat fills the
+    // full content area edge-to-edge; height is the viewport minus the 3.5rem
+    // sticky top bar (using dvh so mobile browser chrome doesn't clip it).
+    <div className="-m-4 sm:-m-6 h-[calc(100dvh-3.5rem)] flex flex-col bg-gray-50 dark:bg-gray-950 overflow-hidden">
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-6 py-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
-        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
+      <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm flex-shrink-0">
+        <div className="w-10 h-10 flex-shrink-0 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
           <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <div>
-          <p className="font-semibold text-sm text-gray-900 dark:text-white">{adminName}</p>
+        <div className="min-w-0">
+          <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{adminName}</p>
           <p className="text-xs text-emerald-500">Support Team</p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3">
+      <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-6 space-y-3 min-h-0">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-400">
             <MessageCircle className="w-10 h-10 opacity-30" />
@@ -151,7 +154,7 @@ export default function MemberChatClient({ initialRoom, currentUserId }: Props) 
           return (
             <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                className={`max-w-[85%] sm:max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words ${
                   isMine
                     ? 'bg-emerald-600 text-white rounded-br-sm'
                     : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-bl-sm shadow-sm'
@@ -172,7 +175,7 @@ export default function MemberChatClient({ initialRoom, currentUserId }: Props) 
       </div>
 
       {/* Input */}
-      <div className="px-4 py-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+      <div className="px-3 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex-shrink-0 pb-[max(env(safe-area-inset-bottom),0.625rem)] sm:pb-3">
         <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-2">
           <input
             ref={inputRef}
@@ -186,12 +189,12 @@ export default function MemberChatClient({ initialRoom, currentUserId }: Props) 
           <button
             onClick={sendMessage}
             disabled={!input.trim() || sending}
-            className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white disabled:opacity-40 transition-opacity hover:bg-emerald-700"
+            className="w-8 h-8 flex-shrink-0 rounded-full bg-emerald-600 flex items-center justify-center text-white disabled:opacity-40 transition-opacity hover:bg-emerald-700"
           >
             <Send className="w-3.5 h-3.5" />
           </button>
         </div>
-        <p className="text-[10px] text-center text-gray-400 mt-1.5">Press Enter to send</p>
+        <p className="hidden sm:block text-[10px] text-center text-gray-400 mt-1.5">Press Enter to send</p>
       </div>
     </div>
   );
