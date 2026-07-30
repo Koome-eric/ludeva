@@ -44,6 +44,16 @@ export async function GET(req: Request) {
       data: { read: true },
     });
 
+    // A member has exactly one chat room, so opening it unambiguously means
+    // they've seen every pending chat notification — clear them here too so
+    // the bell badge doesn't stay stuck after they've read the messages.
+    if (user.role !== 'ADMIN') {
+      await prisma.notification.updateMany({
+        where: { userId: user.id, type: 'MESSAGE', isRead: false },
+        data: { isRead: true },
+      });
+    }
+
     return NextResponse.json(messages);
   } catch (error) {
     console.error('[CHAT MESSAGES ERROR]', error);

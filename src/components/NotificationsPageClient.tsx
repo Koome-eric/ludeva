@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell, TrendingUp, Wallet, ShieldCheck, Info, CheckCheck, Loader2 } from "lucide-react";
+import { Bell, TrendingUp, Wallet, ShieldCheck, Info, CheckCheck, Loader2, MessageCircle } from "lucide-react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,7 @@ const typeIcon: Record<string, any> = {
   PAYMENT: Wallet,
   KYC: ShieldCheck,
   SYSTEM: Info,
+  MESSAGE: MessageCircle,
 };
 
 const typeColor: Record<string, string> = {
@@ -27,6 +28,7 @@ const typeColor: Record<string, string> = {
   PAYMENT: "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300",
   KYC: "bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300",
   SYSTEM: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
+  MESSAGE: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300",
 };
 
 export default function NotificationsPageClient({

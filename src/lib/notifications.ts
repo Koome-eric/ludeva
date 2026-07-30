@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-type NotificationType = "SYSTEM" | "INVESTMENT" | "PAYMENT" | "KYC";
+type NotificationType = "SYSTEM" | "INVESTMENT" | "PAYMENT" | "KYC" | "MESSAGE";
 
 // ------------------ Notify All Members ------------------
 // Creates one notification row per member (not a single userId:null row) so

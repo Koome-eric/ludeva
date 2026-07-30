@@ -64,6 +64,7 @@ enum NotificationType {
   INVESTMENT
   PAYMENT
   KYC
+  MESSAGE
 }
 
 enum DocumentType {

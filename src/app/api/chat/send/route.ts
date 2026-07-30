@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { requireUserApi } from '@/lib/auth-guard';
 import { NextResponse } from 'next/server';
+import { notifyUser, notifyAllAdmins } from '@/lib/notifications';
 
 export async function POST(req: Request) {
   try {
@@ -45,6 +46,27 @@ export async function POST(req: Request) {
       },
       data: { read: true },
     });
+
+    // Surface the message in the recipient's notification bell too, not just
+    // inside the chat itself — so it's noticed even when they're not on the
+    // Messages screen.
+    const senderName = user.fullName || user.email;
+    const preview = content.trim().length > 100 ? `${content.trim().slice(0, 100)}…` : content.trim();
+
+    if (user.role === 'ADMIN') {
+      await notifyUser(
+        room.memberId,
+        `💬 New message from ${senderName}`,
+        preview,
+        'MESSAGE'
+      );
+    } else {
+      await notifyAllAdmins(
+        `💬 New message from ${senderName}`,
+        preview,
+        'MESSAGE'
+      );
+    }
 
     // Note: realtime delivery is handled by the client polling
     // GET /api/chat/messages on an interval — no external realtime

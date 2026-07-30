@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell as BellIcon, TrendingUp, Wallet, ShieldCheck, Info, CheckCheck } from "lucide-react";
+import { Bell as BellIcon, TrendingUp, Wallet, ShieldCheck, Info, CheckCheck, MessageCircle } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +21,7 @@ const typeIcon: Record<string, any> = {
   PAYMENT: Wallet,
   KYC: ShieldCheck,
   SYSTEM: Info,
+  MESSAGE: MessageCircle,
 };
 
 const typeColor: Record<string, string> = {
@@ -28,6 +29,7 @@ const typeColor: Record<string, string> = {
   PAYMENT: "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300",
   KYC: "bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300",
   SYSTEM: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
+  MESSAGE: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300",
 };
 
 export function AdminNotificationsBell({
