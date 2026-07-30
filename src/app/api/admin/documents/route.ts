@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { uploadBufferToR2, buildObjectKey, isR2Configured, deleteFromR2, keyFromR2Url } from "@/lib/r2";
+import { notifyAllMembers } from "@/lib/notifications";
 
 declare global {
   var io: any;
@@ -12,32 +13,14 @@ const SUPER_ADMIN_CLERK_IDS = [
   "user_3B9OSNbtBdz7tP5pghbHX2FvQDp",
 ];
 
-// ✅ Notify all members of admin activity
+// Documents Hub is member-facing, so publish/removal alerts go to members
+// only (tagged audience: MEMBER) — not into every admin's own feed too.
 async function broadcastAdminNotification(
   title: string,
   message: string,
   type: 'SYSTEM' | 'INVESTMENT' | 'PAYMENT' | 'KYC' = 'SYSTEM'
 ) {
-  try {
-    // Create system notification (userId: null means it's for everyone)
-    const notification = await prisma.notification.create({
-      data: {
-        userId: null,
-        title,
-        message,
-        type,
-      },
-    });
-
-    // Emit real-time notification to all connected clients
-    if (globalThis.io) {
-      globalThis.io.emit('notification:broadcast', notification);
-    }
-
-    return notification;
-  } catch (error) {
-    console.error('[BROADCAST NOTIFICATION ERROR]', error);
-  }
+  return notifyAllMembers(title, message, type);
 }
 
 async function getAdminUser() {

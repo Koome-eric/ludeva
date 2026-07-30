@@ -15,7 +15,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, PieChart, RefreshCw, Eye, Pencil, Trash2 } from "lucide-react";
+import { Search, PieChart, RefreshCw, Eye, Pencil, Trash2, TrendingUp, TrendingDown, Wallet, Landmark } from "lucide-react";
 
 const SHEETS_SECRET = process.env.NEXT_PUBLIC_SHEETS_API_SECRET || "ludeva-sheets-secret-2025";
 
@@ -68,6 +68,17 @@ function fmt(n: number | null | undefined) {
   return `KES ${n.toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+// Mirrors parseReportAmount() in @/lib/member-reports (kept local/pure here
+// since that module also pulls in prisma, which shouldn't ship to the client
+// bundle). Parses values like "1,234,567.50" or "KES 1,234" into a number.
+function parseNum(value?: string | null): number {
+  if (!value) return 0;
+  const cleaned = value.replace(/[^0-9.\-]/g, "");
+  if (!cleaned) return 0;
+  const num = Number(cleaned);
+  return Number.isFinite(num) ? num : 0;
+}
+
 export default function InvestmentsPage() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
@@ -114,6 +125,29 @@ export default function InvestmentsPage() {
     () => (manageEmail ? rawReports.filter((r) => r.memberEmail === manageEmail) : []),
     [manageEmail, rawReports]
   );
+
+  // Summary header for the member currently open in the View/Manage dialog —
+  // computed fresh from their raw report rows so it always reflects any
+  // edits/deletes made in the dialog immediately, without waiting on a refetch.
+  const manageSummary = useMemo(() => {
+    let totalInvestment = 0;
+    let totalRoi = 0;
+    let totalWithdrawals = 0;
+    let latestBalance: number | null = null;
+
+    // manageRows already comes newest-first (memberReport query orders by
+    // uploadedAt desc), so the first row with a closing balance is the latest.
+    for (const row of manageRows) {
+      totalInvestment += parseNum(row.principal);
+      totalRoi += parseNum(row.roi);
+      totalWithdrawals += parseNum(row.withdrawal);
+      if (latestBalance === null && row.closingBal) {
+        latestBalance = parseNum(row.closingBal);
+      }
+    }
+
+    return { totalInvestment, totalRoi, totalWithdrawals, latestBalance };
+  }, [manageRows]);
 
   const openEditRecord = (row: ReportRow) => {
     setEditingId(row.id);
@@ -197,7 +231,7 @@ export default function InvestmentsPage() {
   const totalCurrentValue = investments.reduce((acc, inv) => acc + (inv.latestClosingBalance ?? 0), 0);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -319,13 +353,49 @@ export default function InvestmentsPage() {
 
       {/* View / Manage Records Modal */}
       <Dialog open={!!manageEmail} onOpenChange={(open) => { if (!open) setManageEmail(null); }}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Investment Records — {manageEmail}</DialogTitle>
+            <DialogTitle className="break-all">Investment Records — {manageEmail}</DialogTitle>
             <DialogDescription>
               View, edit, or delete each individual record for this member.
             </DialogDescription>
           </DialogHeader>
+
+          {/* Summary header — one card per key figure for this member's account */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <Card className="border-l-4 border-l-emerald-500">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1.5">
+                  <Landmark className="h-3.5 w-3.5" /> Total Investment
+                </div>
+                <p className="text-sm sm:text-lg font-bold break-words">{fmt(manageSummary.totalInvestment)}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-green-500">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1.5">
+                  <TrendingUp className="h-3.5 w-3.5" /> Total ROI
+                </div>
+                <p className="text-sm sm:text-lg font-bold text-green-600 break-words">{fmt(manageSummary.totalRoi)}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-amber-500">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1.5">
+                  <TrendingDown className="h-3.5 w-3.5" /> Total Withdrawals
+                </div>
+                <p className="text-sm sm:text-lg font-bold text-amber-600 break-words">{fmt(manageSummary.totalWithdrawals)}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-blue-500">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1.5">
+                  <Wallet className="h-3.5 w-3.5" /> Total Account Balance
+                </div>
+                <p className="text-sm sm:text-lg font-bold text-blue-600 break-words">{fmt(manageSummary.latestBalance)}</p>
+              </CardContent>
+            </Card>
+          </div>
 
           <div className="overflow-x-auto max-h-[60vh]">
             <table className="w-full text-xs">

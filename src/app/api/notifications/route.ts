@@ -29,7 +29,7 @@ export async function GET() {
       where: {
         OR: [
           { userId: user.id },
-          { userId: null }, // system notifications
+          { userId: null, audience: { in: ["MEMBER", "ALL"] } }, // member-audience system notifications only
         ],
       },
       orderBy: { createdAt: "desc" },

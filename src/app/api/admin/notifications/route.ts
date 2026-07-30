@@ -1,30 +1,39 @@
 // src/app/api/admin/notifications/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { notifyAllAdmins } from "@/lib/notifications";
 
 declare global {
   var io: any;
 }
 
-const SUPER_ADMIN_CLERK_ID = "user_38qCNW1RIEGrQ6rORph6s2348NX";
-
 // ---------------- GET ADMIN NOTIFICATIONS ----------------
+// Every admin gets their own admin-relevant feed — not just one hardcoded
+// super-admin id. Scoped to notifications addressed to this admin
+// specifically, plus any ADMIN-audience broadcast (e.g. internal ops
+// announcements). MEMBER-audience broadcasts never show up here.
 export async function GET() {
   try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const admin = await prisma.user.findUnique({
-      where: { clerkId: SUPER_ADMIN_CLERK_ID },
-      select: { id: true },
+      where: { clerkId },
+      select: { id: true, role: true },
     });
 
-    if (!admin) {
-      return NextResponse.json({ error: "Super admin not found" }, { status: 404 });
+    if (!admin || admin.role !== "ADMIN") {
+      return NextResponse.json({ error: "Admin not found" }, { status: 404 });
     }
 
     const notifications = await prisma.notification.findMany({
       where: {
         OR: [
           { userId: admin.id },
-          { userId: null },
+          { userId: null, audience: { in: ["ADMIN", "ALL"] } },
         ],
       },
       orderBy: { createdAt: "desc" },
@@ -58,37 +67,11 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ---------------- SEND LIVE ADMIN NOTIFICATION ----------------
+// ---------------- SEND LIVE ADMIN NOTIFICATION (all admins) ----------------
 export async function notifyAdminLive(
   title: string,
   message: string,
   type: "SYSTEM" | "INVESTMENT" | "PAYMENT" | "KYC" = "SYSTEM"
 ) {
-  try {
-    const admin = await prisma.user.findUnique({
-      where: { clerkId: SUPER_ADMIN_CLERK_ID },
-      select: { id: true },
-    });
-
-    if (!admin) return;
-
-    const notification = await prisma.notification.create({
-      data: {
-        userId: admin.id,
-        title,
-        message,
-        type,
-      },
-    });
-
-    if (globalThis.io) {
-      globalThis.io
-        .to(`admin:${admin.id}`)
-        .emit("notification:new", notification);
-    }
-
-    return notification;
-  } catch (err) {
-    console.error("notifyAdminLive error:", err);
-  }
+  return notifyAllAdmins(title, message, type);
 }

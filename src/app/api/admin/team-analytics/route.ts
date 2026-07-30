@@ -3,37 +3,22 @@ import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
+import { notifyAllAdmins } from '@/lib/notifications';
 
 declare global {
   var io: any;
 }
 
-// ✅ Notify all members of admin activity
+// Team Analytics is an internal/admin-only feature (there is no member-facing
+// page for it), so activity alerts here go to the rest of the admin team —
+// not to every member's account notification feed.
 async function broadcastAdminNotification(
   title: string,
   message: string,
-  type: 'SYSTEM' | 'INVESTMENT' | 'PAYMENT' | 'KYC' = 'SYSTEM'
+  type: 'SYSTEM' | 'INVESTMENT' | 'PAYMENT' | 'KYC' = 'SYSTEM',
+  excludeUserId?: string
 ) {
-  try {
-    // Create system notification (userId: null means it's for everyone)
-    const notification = await prisma.notification.create({
-      data: {
-        userId: null,
-        title,
-        message,
-        type,
-      },
-    });
-
-    // Emit real-time notification to all connected clients
-    if (globalThis.io) {
-      globalThis.io.emit('notification:broadcast', notification);
-    }
-
-    return notification;
-  } catch (error) {
-    console.error('[BROADCAST NOTIFICATION ERROR]', error);
-  }
+  return notifyAllAdmins(title, message, type, { excludeUserId });
 }
 
 // POST /api/admin/team-analytics
@@ -105,7 +90,8 @@ export async function POST(req: Request) {
     await broadcastAdminNotification(
       '📊 Team Analytics Updated',
       `Admin ${admin.fullName || admin.email} has uploaded new team analytics: "${label}". Check the Teams page for the latest data.`,
-      'SYSTEM'
+      'SYSTEM',
+      admin.id
     );
 
     return NextResponse.json(record);

@@ -4,6 +4,7 @@ import { clerkClient, currentUser } from '@clerk/nextjs/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { notifyAllAdmins } from '@/lib/notifications';
 
 const OnboardingDataSchema = z.object({
   // Account type is restricted to Individual investors only.
@@ -58,6 +59,8 @@ export async function completeOnboarding(
     where: { clerkId: clerkUser.id },
   });
 
+  const isFirstTimeCompletion = !user?.onboardingCompleted;
+
   const userData: any = {
     clerkId: clerkUser.id,
     email: d.email,
@@ -100,6 +103,14 @@ export async function completeOnboarding(
     });
   } else {
     user = await prisma.user.create({ data: userData });
+  }
+
+  if (isFirstTimeCompletion) {
+    await notifyAllAdmins(
+      '🆕 New Investor Onboarded',
+      `${d.fullName} (${d.email}) has completed onboarding with an initial investment of KES ${Math.round(d.initialInvestment).toLocaleString()}. KYC documents are ready for review.`,
+      'KYC'
+    );
   }
 
   const client = await clerkClient();

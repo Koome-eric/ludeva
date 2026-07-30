@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { notifyUser } from '@/lib/notifications';
 
 /**
  * Approve a user's KYC and set the submission date if not already set
@@ -14,6 +15,13 @@ export async function approveKyc(userId: string) {
       kycSubmittedAt: { set: new Date() }, // always record submission date
     },
   });
+
+  await notifyUser(
+    userId,
+    '✅ KYC Approved',
+    'Your identity verification has been approved. Your account is now fully active.',
+    'KYC'
+  );
 
   revalidatePath('/admin/investors/kyc');
   return { success: true, user };
@@ -30,6 +38,13 @@ export async function rejectKyc(userId: string) {
       kycSubmittedAt: { set: new Date() }, // record submission date
     },
   });
+
+  await notifyUser(
+    userId,
+    '⚠️ KYC Rejected',
+    'Your identity verification could not be approved. Please review your submitted documents and resubmit, or contact support for help.',
+    'KYC'
+  );
 
   revalidatePath('/admin/investors/kyc');
   return { success: true, user };

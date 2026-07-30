@@ -2,17 +2,18 @@ import { prisma } from "@/lib/prisma";
 
 type NotificationType = "SYSTEM" | "INVESTMENT" | "PAYMENT" | "KYC";
 
-// ✅ Hard-coded super admin
-const SUPER_ADMIN_CLERK_ID = "user_38qCNW1RIEGrQ6rORph6s2348NX";
-
 // ------------------ Notify All Members ------------------
+// Creates one notification row per member (not a single userId:null row) so
+// read/unread state is tracked per member individually. Tagged audience:
+// MEMBER so it never leaks into an admin's own notification feed.
 export async function notifyAllMembers(
   title: string,
   message: string,
-  type: NotificationType = "SYSTEM"
+  type: NotificationType = "SYSTEM",
+  opts: { excludeUserId?: string } = {}
 ) {
   const members = await prisma.user.findMany({
-    where: { role: "MEMBER" },
+    where: { role: "MEMBER", ...(opts.excludeUserId ? { id: { not: opts.excludeUserId } } : {}) },
     select: { id: true },
   });
 
@@ -23,14 +24,14 @@ export async function notifyAllMembers(
     title,
     message,
     type,
+    audience: "MEMBER" as const,
   }));
 
   await prisma.notification.createMany({ data: notifications });
 
-  // Emit via socket
   if (globalThis.io) {
     notifications.forEach(n =>
-      globalThis.io.to(`member:${n.userId}`).emit("member:notification:new", n)
+      globalThis.io.to(`user:${n.userId}`).emit("notification:new", n)
     );
   }
 }
@@ -42,40 +43,61 @@ export async function notifyUser(
   message: string,
   type: NotificationType = "SYSTEM"
 ) {
+  const recipient = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+
   const notification = await prisma.notification.create({
-    data: { userId, title, message, type },
+    data: {
+      userId,
+      title,
+      message,
+      type,
+      audience: recipient?.role === "ADMIN" ? "ADMIN" : "MEMBER",
+    },
   });
 
   if (globalThis.io) {
-    globalThis.io.to(`user:${userId}`).emit("user:notification:new", notification);
+    globalThis.io.to(`user:${userId}`).emit("notification:new", notification);
   }
+
+  return notification;
 }
 
-// ------------------ Notify Super Admin ------------------
-export async function notifyAdmin(
+// ------------------ Notify ALL Admins ------------------
+// Every admin (role: 'ADMIN', which includes auto-upgraded super admins) gets
+// their own notification row — not just one hardcoded super-admin id. This is
+// the shared "admin inbox" equivalent for alerts: new investments, new KYC
+// submissions, new investor sign-ups, deposit requests, etc.
+export async function notifyAllAdmins(
   title: string,
   message: string,
-  type: NotificationType = "SYSTEM"
+  type: NotificationType = "SYSTEM",
+  opts: { excludeUserId?: string } = {}
 ) {
-  try {
-    const superAdmin = await prisma.user.findUnique({
-      where: { clerkId: SUPER_ADMIN_CLERK_ID },
-      select: { id: true },
-    });
-    if (!superAdmin) return;
+  const admins = await prisma.user.findMany({
+    where: { role: "ADMIN", ...(opts.excludeUserId ? { id: { not: opts.excludeUserId } } : {}) },
+    select: { id: true },
+  });
 
-    // ✅ Store notification in DB
-    const notification = await prisma.notification.create({
-      data: { userId: superAdmin.id, title, message, type },
-    });
+  if (!admins.length) return;
 
-    // ✅ Emit live via socket
-    if (globalThis.io) {
-      globalThis.io.to(`admin:${superAdmin.id}`).emit("admin:notification:new", notification);
-    }
+  // Individual creates (not createMany) so each row gets a real id back —
+  // needed for live socket delivery + mark-as-read to work immediately,
+  // and the admin list here is small enough that this is cheap.
+  const notifications = await Promise.all(
+    admins.map(admin =>
+      prisma.notification.create({
+        data: { userId: admin.id, title, message, type, audience: "ADMIN" },
+      })
+    )
+  );
 
-    return notification;
-  } catch (err) {
-    console.error("notifyAdmin error:", err);
+  if (globalThis.io) {
+    notifications.forEach(n =>
+      globalThis.io.to(`admin:${n.userId}`).emit("admin:notification:new", n)
+    );
   }
 }
+
+// Back-compat alias — old call sites used notifyAdmin() expecting the single
+// super admin to hear about it. It now correctly reaches every admin.
+export const notifyAdmin = notifyAllAdmins;
