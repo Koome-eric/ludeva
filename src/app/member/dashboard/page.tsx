@@ -16,11 +16,15 @@ export default async function MemberDashboardPage() {
   // of any initialInvestment/payment records on file.
   const { rows: reportRows, summary } = await getMemberReportSummary(user.email)
 
-  const totalInvested = summary.totalInvested
+  const totalInvested = summary.totalPrincipal
+  const totalRoi = summary.totalRoi
   const totalWithdrawals = summary.totalWithdrawals
+  // Account Balance = Total Investment + Total ROI − Total Withdrawals.
+  // (Previously this used the raw spreadsheet closing-balance figure, which
+  // could be stale or inconsistent — this is now computed the same way
+  // everywhere in the app.)
   const netBalance = summary.netBalance
-  const currentBalance = summary.totalInvested
-  const estimatedYield = 9.5
+  const currentBalance = summary.netBalance
 
   // Most recent investment date: the most recent report row that carries a
   // usable amount (closing balance or principal), falling back to that
@@ -59,18 +63,14 @@ export default async function MemberDashboardPage() {
             </p>
 
             <div className="mt-6">
-              <p className="text-sm text-muted-foreground">Portfolio Value</p>
+              <p className="text-sm text-muted-foreground">Account Balance</p>
               <p className="text-4xl font-bold tracking-tight">
                 KES {currentBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
               </p>
-              {totalWithdrawals > 0 && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Net Balance (Investments − Withdrawals):{" "}
-                  <span className="font-semibold text-foreground">
-                    KES {netBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                  </span>
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                Total Investment (KES {totalInvested.toLocaleString("en-US", { maximumFractionDigits: 0 })}) + Total ROI (KES {totalRoi.toLocaleString("en-US", { maximumFractionDigits: 0 })})
+                {totalWithdrawals > 0 && ` − Total Withdrawals (KES ${totalWithdrawals.toLocaleString("en-US", { maximumFractionDigits: 0 })})`}
+              </p>
             </div>
           </div>
 
@@ -101,10 +101,10 @@ export default async function MemberDashboardPage() {
         />
 
         <StatCard
-          title="Estimated Yield"
-          value={`${estimatedYield}%`}
+          title="Total ROI"
+          value={`KES ${totalRoi.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
           icon={<TrendingUp />}
-          subtitle="Indicative annual return"
+          subtitle="Cumulative returns earned"
         />
 
         <StatCard

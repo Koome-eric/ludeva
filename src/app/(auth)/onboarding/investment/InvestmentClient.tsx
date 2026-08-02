@@ -97,9 +97,8 @@ export default function InvestmentClient() {
   // File state
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [idFile, setIdFile] = useState<File | null>(null);
-  const [investmentFormFile, setInvestmentFormFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [fileErrors, setFileErrors] = useState<{ selfie?: string; id?: string; investmentForm?: string }>({});
+  const [fileErrors, setFileErrors] = useState<{ selfie?: string; id?: string }>({});
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -139,10 +138,9 @@ export default function InvestmentClient() {
   // Validates that all required documents have been attached.
   // Returns true if valid; otherwise sets inline errors and returns false.
   function validateFiles(): boolean {
-    const errors: { selfie?: string; id?: string; investmentForm?: string } = {};
+    const errors: { selfie?: string; id?: string } = {};
     if (!selfieFile) errors.selfie = "Selfie photo is required.";
     if (!idFile) errors.id = "National ID copy is required.";
-    if (!investmentFormFile) errors.investmentForm = "Completed Investment Application Form is required.";
     setFileErrors(errors);
     return Object.keys(errors).length === 0;
   }
@@ -166,7 +164,6 @@ export default function InvestmentClient() {
 
       const selfieUrl = await uploadFile(selfieFile as File, "selfie");
       const idCopyUrl = await uploadFile(idFile as File, "id_copy");
-      const investmentFormUrl = await uploadFile(investmentFormFile as File, "investment_application_form");
 
       setUploading(false);
 
@@ -174,7 +171,6 @@ export default function InvestmentClient() {
         ...values,
         selfieUrl,
         idCopyUrl,
-        investmentFormUrl,
       } as any);
 
       toast({
@@ -422,10 +418,15 @@ export default function InvestmentClient() {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border p-4 space-y-3">
+                  <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
                     <p className="font-semibold text-sm">Investment Application Form</p>
                     <p className="text-xs text-muted-foreground">
-                      Download the form, fill it in, then upload the completed copy. This document is required as part of your KYC verification.
+                      Download the original form below, print it, fill it in, and sign it. Then email the
+                      signed copy to{' '}
+                      <a href="mailto:invest@ludevaplc.co.ke" className="font-medium text-primary underline underline-offset-2">
+                        invest@ludevaplc.co.ke
+                      </a>
+                      . You do not need to upload it here — this step is separate from your KYC submission.
                     </p>
                     <a
                       href="/documents/investment-application-form.pdf"
@@ -434,27 +435,8 @@ export default function InvestmentClient() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center text-sm font-medium text-primary underline underline-offset-2"
                     >
-                      Download Investment Application Form
+                      Download Original Investment Application Form
                     </a>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Upload Completed Form *</label>
-                      <input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        className={`w-full text-sm border rounded-md p-2 ${fileErrors.investmentForm ? "border-destructive" : ""}`}
-                        onChange={e => {
-                          const f = e.target.files?.[0] || null;
-                          setInvestmentFormFile(f);
-                          if (f) setFileErrors(prev => ({ ...prev, investmentForm: undefined }));
-                        }}
-                      />
-                      {investmentFormFile && (
-                        <p className="text-xs text-green-600 mt-1">✓ {investmentFormFile.name}</p>
-                      )}
-                      {fileErrors.investmentForm && (
-                        <p className="text-xs text-destructive mt-1">{fileErrors.investmentForm}</p>
-                      )}
-                    </div>
                   </div>
 
                   <FormField control={form.control} name="initialInvestment" render={({ field }) => (
@@ -488,9 +470,9 @@ export default function InvestmentClient() {
                     </FormItem>
                   )} />
 
-                  {(!selfieFile || !idFile || !investmentFormFile) && (
+                  {(!selfieFile || !idFile) && (
                     <p className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-md p-2">
-                      Upload all required documents above to enable submission.
+                      Upload your selfie and National ID above to enable submission.
                     </p>
                   )}
                 </div>
@@ -524,7 +506,7 @@ export default function InvestmentClient() {
                   <Button
                     type="submit"
                     className="flex-1"
-                    disabled={form.formState.isSubmitting || uploading || !selfieFile || !idFile || !investmentFormFile || !form.watch("lockInYears")}
+                    disabled={form.formState.isSubmitting || uploading || !selfieFile || !idFile || !form.watch("lockInYears")}
                   >
                     {form.formState.isSubmitting || uploading
                       ? "Submitting KYC..."

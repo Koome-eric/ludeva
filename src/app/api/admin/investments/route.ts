@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { parseReportAmount, summarizeMemberReports } from "@/lib/member-reports";
+import { summarizeMemberReports } from "@/lib/member-reports";
 
 const SHEETS_API_SECRET = process.env.SHEETS_API_SECRET || "ludeva-sheets-secret-2025";
 
@@ -37,11 +37,6 @@ export async function GET(req: NextRequest) {
 
       const periodLabel = rows.find((r: any) => r.periodLabel)?.periodLabel ?? null;
 
-      const totalRoi = rows.reduce((acc: number, r: any) => {
-        const roi = parseReportAmount(r.roi);
-        return roi !== null ? acc + roi : acc;
-      }, 0);
-
       return {
         id: email,
         memberEmail: email,
@@ -51,11 +46,19 @@ export async function GET(req: NextRequest) {
         // Cumulative capital deposited by this member (sum of principal across
         // every deposit row) — this is what "AUM" should mean.
         totalPrincipal: summary.totalPrincipal,
-        // Current portfolio value as of their latest entry (principal + ROI - tax).
-        // NOT the same as cumulative deposits — kept for the per-row balance column.
+        totalRoi: summary.totalRoi,
+        totalWithdrawals: summary.totalWithdrawals,
+        // Current account balance = Total Investment + Total ROI − Total
+        // Withdrawals. This is the figure to show as "balance" anywhere in
+        // the UI — NOT latestClosingBalance (the raw spreadsheet closing-
+        // balance column), which can be stale, hand-entered inconsistently,
+        // or simply wrong for a given row.
+        netBalance: summary.netBalance,
+        // Current portfolio value as of their latest entry, straight from the
+        // spreadsheet's closing balance column. Kept for reference/audit only
+        // — do not present this as "Account Balance" (see netBalance above).
         latestClosingBalance: summary.latestClosingBalance,
         totalInvested: summary.totalInvested,
-        totalRoi,
         rowCount: rows.length,
         lastUpdated: latestRow.uploadedAt,
       };

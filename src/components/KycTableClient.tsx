@@ -268,6 +268,13 @@ export function KycTable({ initialUsers }: KycTableProps) {
               </div>
             )}
 
+            {!selectedUser.investmentFormUrl && (
+              <p className="text-xs text-muted-foreground -mt-2 mb-4">
+                No investment application form uploaded — signed copies are emailed directly to{' '}
+                <span className="font-medium">invest@ludevaplc.co.ke</span>, not attached to KYC.
+              </p>
+            )}
+
             <Section title="Personal Information">
               <Field label="Full Name" value={selectedUser.fullName} />
               <Field label="Date of Birth" value={selectedUser.dateOfBirth ? format(new Date(selectedUser.dateOfBirth), 'dd MMM yyyy') : undefined} />

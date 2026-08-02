@@ -238,15 +238,19 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
 
   const totals = useMemo(() => {
     let totalInvestments = 0;
+    let totalRoi = 0;
     let totalWithdrawals = 0;
     for (const r of reports) {
       totalInvestments += parseAmount(r.principal);
+      totalRoi += parseAmount(r.roi);
       totalWithdrawals += parseAmount(r.withdrawal);
     }
     return {
       totalInvestments,
+      totalRoi,
       totalWithdrawals,
-      totalBalance: totalInvestments - totalWithdrawals,
+      // Account Balance = Total Investment + Total ROI − Total Withdrawals.
+      totalBalance: totalInvestments + totalRoi - totalWithdrawals,
     };
   }, [reports]);
 

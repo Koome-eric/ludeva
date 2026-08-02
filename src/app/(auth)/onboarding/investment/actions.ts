@@ -36,7 +36,9 @@ const OnboardingDataSchema = z.object({
   // Document URLs (uploaded to Cloudflare R2) — required for KYC completion.
   selfieUrl: z.string().min(1, "Selfie photo is required."),
   idCopyUrl: z.string().min(1, "National ID copy is required."),
-  investmentFormUrl: z.string().min(1, "The completed Investment Application Form is required."),
+  // No longer collected during onboarding — clients email the signed,
+  // original Investment Application Form to invest@ludevaplc.co.ke instead.
+  investmentFormUrl: z.string().optional(),
 
   // Lock-in period for the initial investment, in years.
   lockInYears: z.union([

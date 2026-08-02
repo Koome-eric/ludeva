@@ -130,10 +130,13 @@ export default function MemberReportsClient({ reports, member }: Props) {
   };
 
   // Calculate summary stats
-  const totalClosingBalance = sortedRows.reduce((sum, row) => {
-    const value = parseReportAmount(row.closingBal);
-    return sum + (value ?? 0);
-  }, 0);
+  // Account Balance = Total Investment + Total ROI − Total Withdrawals.
+  // (Summing the "Closing Balance" column across every row would double-count
+  // — each row is a snapshot for that period, not an incremental amount.)
+  const totalPrincipal = sortedRows.reduce((sum, row) => sum + (parseReportAmount(row.principal) ?? 0), 0);
+  const totalRoiSum = sortedRows.reduce((sum, row) => sum + (parseReportAmount(row.roi) ?? 0), 0);
+  const totalWithdrawalsSum = sortedRows.reduce((sum, row) => sum + (parseReportAmount(row.withdrawal) ?? 0), 0);
+  const accountBalance = totalPrincipal + totalRoiSum - totalWithdrawalsSum;
   const latestROI = sortedRows.find((r) => r.roi && r.roi !== "0.00")?.roi;
   const accountNos = [...new Set(sortedRows.map((r) => r.accountNo).filter(Boolean))];
 
@@ -177,9 +180,9 @@ export default function MemberReportsClient({ reports, member }: Props) {
           </Card>
           <Card className="rounded-xl">
             <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Total Closing Balance</p>
+              <p className="text-xs text-muted-foreground">Account Balance</p>
               <p className="text-lg font-bold text-green-600 mt-1">
-                {`KES ${totalClosingBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
+                {`KES ${accountBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
               </p>
             </CardContent>
           </Card>

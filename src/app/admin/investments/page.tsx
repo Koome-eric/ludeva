@@ -27,6 +27,11 @@ type MemberInvestment = {
   periodLabel?: string | null;
   totalPrincipal: number;
   totalInvested: number;
+  totalWithdrawals: number;
+  // Account Balance = Total Investment + Total ROI − Total Withdrawals.
+  netBalance: number;
+  // Raw spreadsheet closing-balance figure — reference/audit only, do not
+  // present this as "Account Balance" (see netBalance above).
   latestClosingBalance: number | null;
   totalRoi: number;
   rowCount: number;
@@ -133,20 +138,20 @@ export default function InvestmentsPage() {
     let totalInvestment = 0;
     let totalRoi = 0;
     let totalWithdrawals = 0;
-    let latestBalance: number | null = null;
 
-    // manageRows already comes newest-first (memberReport query orders by
-    // uploadedAt desc), so the first row with a closing balance is the latest.
     for (const row of manageRows) {
       totalInvestment += parseNum(row.principal);
       totalRoi += parseNum(row.roi);
       totalWithdrawals += parseNum(row.withdrawal);
-      if (latestBalance === null && row.closingBal) {
-        latestBalance = parseNum(row.closingBal);
-      }
     }
 
-    return { totalInvestment, totalRoi, totalWithdrawals, latestBalance };
+    // Account Balance = Total Investment + Total ROI − Total Withdrawals.
+    // (Not the raw "Closing Balance" column — that's a per-row spreadsheet
+    // figure that can be stale or entered inconsistently, which is exactly
+    // what produced the mismatched balance the client flagged.)
+    const accountBalance = totalInvestment + totalRoi - totalWithdrawals;
+
+    return { totalInvestment, totalRoi, totalWithdrawals, accountBalance };
   }, [manageRows]);
 
   const openEditRecord = (row: ReportRow) => {
@@ -226,9 +231,12 @@ export default function InvestmentsPage() {
   // "all the deposits from all members, cumulative investment capital".
   const totalAUM = investments.reduce((acc, inv) => acc + (inv.totalPrincipal ?? 0), 0);
   const totalRoi = investments.reduce((acc, inv) => acc + inv.totalRoi, 0);
-  // Current portfolio value (what "AUM" used to show here) — kept as its own
-  // metric since it's still useful, just not what "AUM" should mean.
-  const totalCurrentValue = investments.reduce((acc, inv) => acc + (inv.latestClosingBalance ?? 0), 0);
+  const totalWithdrawals = investments.reduce((acc, inv) => acc + (inv.totalWithdrawals ?? 0), 0);
+  // Account Balance = Total Investment + Total ROI − Total Withdrawals.
+  // Computed the same way everywhere in the app — NOT a sum of the raw
+  // spreadsheet closing-balance column, which can be stale or inconsistent
+  // per-row (this was the source of the mismatch flagged by the client).
+  const totalAccountBalance = investments.reduce((acc, inv) => acc + (inv.netBalance ?? 0), 0);
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
@@ -261,7 +269,7 @@ export default function InvestmentsPage() {
         {[
           { label: "Total Members", value: investments.length.toString(), sub: "with report data" },
           { label: "Total AUM", value: fmt(totalAUM), sub: "cumulative deposits, all members" },
-          { label: "Current Portfolio Value", value: fmt(totalCurrentValue), sub: "sum of latest closing balances" },
+          { label: "Total Account Balance", value: fmt(totalAccountBalance), sub: "Investment + ROI − Withdrawals" },
           { label: "Total ROI Earned", value: fmt(totalRoi), sub: "across all periods" },
         ].map((k) => (
           <Card key={k.label} className="rounded-2xl shadow-sm">
@@ -289,7 +297,7 @@ export default function InvestmentsPage() {
                     <th className="text-left p-4">Member</th>
                     <th className="text-left p-4">Account(s)</th>
                     <th className="text-left p-4">Period</th>
-                    <th className="text-right p-4">Latest Closing Bal</th>
+                    <th className="text-right p-4">Account Balance</th>
                     <th className="text-right p-4">Total ROI</th>
                     <th className="text-right p-4">Rows</th>
                     <th className="text-right p-4">Last Updated</th>
@@ -320,7 +328,7 @@ export default function InvestmentsPage() {
                         </div>
                       </td>
                       <td className="p-4 text-muted-foreground">{inv.periodLabel || "—"}</td>
-                      <td className="p-4 text-right font-semibold">{fmt(inv.latestClosingBalance)}</td>
+                      <td className="p-4 text-right font-semibold">{fmt(inv.netBalance)}</td>
                       <td className="p-4 text-right text-green-600 font-medium">
                         {inv.totalRoi > 0 ? fmt(inv.totalRoi) : "—"}
                       </td>
@@ -392,7 +400,7 @@ export default function InvestmentsPage() {
                 <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1.5">
                   <Wallet className="h-3.5 w-3.5" /> Total Account Balance
                 </div>
-                <p className="text-sm sm:text-lg font-bold text-blue-600 break-words">{fmt(manageSummary.latestBalance)}</p>
+                <p className="text-sm sm:text-lg font-bold text-blue-600 break-words">{fmt(manageSummary.accountBalance)}</p>
               </CardContent>
             </Card>
           </div>
