@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, Video, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, Video, X, CheckCircle2, AlertCircle, Loader2, Download } from "lucide-react";
 
 // ------------------ Schema ------------------
 const formSchema = z.object({
@@ -44,8 +44,8 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const MAX_VIDEO_DURATION_SECONDS = 60;
-const MAX_VIDEO_SIZE_MB = 50;
+const MAX_VIDEO_DURATION_SECONDS = 90; // 1 minute 30 seconds
+const MAX_VIDEO_SIZE_MB = 75;
 
 type VideoState =
   | { status: "idle" }
@@ -113,7 +113,7 @@ export default function ContentAggregation() {
       if (duration > MAX_VIDEO_DURATION_SECONDS) {
         setVideo({
           status: "error",
-          message: `Video is ${Math.round(duration)}s — maximum allowed is ${MAX_VIDEO_DURATION_SECONDS}s (1 minute).`,
+          message: `Video is ${Math.round(duration)}s — maximum allowed is ${MAX_VIDEO_DURATION_SECONDS}s (1 min 30 sec).`,
         });
         return;
       }
@@ -216,7 +216,7 @@ export default function ContentAggregation() {
               {
                 title: "Creator Onboarding",
                 content: [
-                  "Download contract from Documents section",
+                  "Download the creator contract form below",
                   "Fill in professional credentials",
                   "Attach portfolio of work",
                   "Specify content categories",
@@ -453,7 +453,7 @@ export default function ContentAggregation() {
                         <label className="text-sm font-medium leading-none">
                           Sample Video{" "}
                           <span className="text-xs text-muted-foreground font-normal">
-                            (optional · max 1 min · max {MAX_VIDEO_SIZE_MB} MB)
+                            (optional · max 1:30 · max {MAX_VIDEO_SIZE_MB} MB)
                           </span>
                         </label>
 
@@ -487,7 +487,7 @@ export default function ContentAggregation() {
                                   Click to attach a sample video
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  MP4, MOV, WebM · up to 1 minute · max {MAX_VIDEO_SIZE_MB} MB
+                                  MP4, MOV, WebM · up to 1:30 · max {MAX_VIDEO_SIZE_MB} MB
                                 </p>
                               </>
                             )}
@@ -578,12 +578,34 @@ export default function ContentAggregation() {
                 <div className="mt-8">
                   <h4 className="font-semibold text-lg mb-3 text-gray-900 dark:text-white">Onboarding Process</h4>
                   <ul className="space-y-2 text-gray-600 dark:text-gray-300 text-sm">
-                    <li>• Download and fill the creator contract</li>
+                    <li>• Download, sign, and send us the creator contract (below)</li>
                     <li>• Provide professional credentials</li>
                     <li>• Submit your portfolio & categories</li>
-                    <li>• Attach a 1-minute sample video (optional)</li>
-                    <li>• Send to creator@ludevaplc.co.ke</li>
+                    <li>• Attach a sample video, up to 1 min 30 sec (optional)</li>
+                    <li>• Send the signed contract to creator@ludevaplc.co.ke</li>
                   </ul>
+                </div>
+
+                {/* Creator Contract Form download */}
+                <div className="mt-8 p-5 rounded-2xl bg-white/70 dark:bg-gray-800 border dark:border-gray-700 shadow-sm">
+                  <h4 className="font-semibold text-base mb-2 text-gray-900 dark:text-white">Creator Contract Form</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                    Download the form, fill it in, sign it, then email the signed copy to{" "}
+                    <a href="mailto:creator@ludevaplc.co.ke" className="font-medium text-primary underline underline-offset-2">
+                      creator@ludevaplc.co.ke
+                    </a>
+                    . This is separate from the application form above.
+                  </p>
+                  <a
+                    href="/documents/creator-contract-form.pdf"
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-primary underline underline-offset-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Creator Contract Form
+                  </a>
                 </div>
 
                 <div className="mt-10 p-5 rounded-2xl bg-white/70 dark:bg-gray-800 border dark:border-gray-700 shadow-sm">

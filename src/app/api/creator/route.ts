@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { uploadBufferToR2, isR2Configured } from "@/lib/r2";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
-const MAX_VIDEO_DURATION_SECONDS = 60;
+// Bumped alongside the 90s duration limit (a 90s clip is roughly 1.5x the
+// bytes of a 60s clip at the same bitrate) so raising the duration limit
+// doesn't quietly reintroduce upload failures for otherwise-valid videos.
+const MAX_VIDEO_SIZE_BYTES = 75 * 1024 * 1024; // 75 MB
+const MAX_VIDEO_DURATION_SECONDS = 90; // 1 minute 30 seconds
 
 export const dynamic = "force-dynamic";
 
@@ -51,13 +55,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Video validation (server-side)
-    let videoAttachment: { filename: string; content: Buffer } | null = null;
+    // ── Video handling ──────────────────────────────────────
+    // Videos are uploaded to Cloudflare R2 and linked in the email, rather
+    // than attached to the email directly. Email providers (Resend included)
+    // cap total message size well below what a real 60-90s video weighs —
+    // that mismatch was the actual reason sample videos were failing to
+    // "upload" before. Storing on R2 and linking also means the file stays
+    // reviewable/downloadable after the fact, unlike a bounced attachment.
+    let videoUrl: string | null = null;
+    let videoSizeMB: string | null = null;
 
     if (videoFile && videoFile.size > 0) {
       if (videoFile.size > MAX_VIDEO_SIZE_BYTES) {
         return NextResponse.json(
-          { error: `Video must be under ${MAX_VIDEO_SIZE_BYTES / 1024 / 1024} MB` },
+          { error: `Video must be under ${Math.round(MAX_VIDEO_SIZE_BYTES / 1024 / 1024)} MB` },
           { status: 400 }
         );
       }
@@ -65,19 +76,29 @@ export async function POST(req: Request) {
       const duration = parseFloat(videoDuration ?? "0");
       if (duration > MAX_VIDEO_DURATION_SECONDS) {
         return NextResponse.json(
-          { error: `Video must be 60 seconds or under (received ${Math.round(duration)}s)` },
+          { error: `Video must be ${MAX_VIDEO_DURATION_SECONDS} seconds or under (received ${Math.round(duration)}s)` },
           { status: 400 }
         );
       }
 
+      if (!isR2Configured()) {
+        console.error("R2 not configured — cannot store creator sample video");
+        return NextResponse.json(
+          { error: "Video upload is temporarily unavailable. Please submit the form without a video, or email your sample video directly to creator@ludevaplc.co.ke." },
+          { status: 500 }
+        );
+      }
+
       const arrayBuffer = await videoFile.arrayBuffer();
-      videoAttachment = {
-        filename: videoFile.name || "sample-video.mp4",
-        content: Buffer.from(arrayBuffer),
-      };
+      const buffer = Buffer.from(arrayBuffer);
+      const safeName = (videoFile.name || "sample-video.mp4").replace(/[^a-zA-Z0-9.\-_]/g, "_");
+      const key = `creator-applications/${Date.now()}-${safeName}`;
+
+      videoUrl = await uploadBufferToR2(buffer, key, videoFile.type || "video/mp4");
+      videoSizeMB = (videoFile.size / 1024 / 1024).toFixed(1);
     }
 
-    console.log("Sending creator email…", videoAttachment ? "with video attachment" : "no video");
+    console.log("Sending creator email…", videoUrl ? `with video link (${videoUrl})` : "no video");
 
     const emailPayload: Parameters<typeof resend.emails.send>[0] = {
       from: "Ludeva Creators <creator@ludevaplc.co.ke>",
@@ -111,10 +132,8 @@ export async function POST(req: Request) {
           <hr style="margin:20px 0;" />
 
           ${
-            videoAttachment
-              ? `<p>🎥 <strong>Sample video attached:</strong> ${videoAttachment.filename} (${
-                  videoDuration ? `${videoDuration}s` : "duration unknown"
-                })</p>`
+            videoUrl
+              ? `<p>🎥 <strong>Sample video:</strong> <a href="${videoUrl}" target="_blank">${videoUrl}</a> (${videoDuration ? `${videoDuration}s, ` : ""}${videoSizeMB} MB)</p>`
               : "<p>📎 No sample video submitted.</p>"
           }
 
@@ -122,16 +141,6 @@ export async function POST(req: Request) {
           <p style="font-size:12px; color:#888;">Submitted via Ludeva Creator Platform</p>
         </div>
       `,
-      ...(videoAttachment
-        ? {
-            attachments: [
-              {
-                filename: videoAttachment.filename,
-                content: videoAttachment.content,
-              },
-            ],
-          }
-        : {}),
     };
 
     const response = await resend.emails.send(emailPayload);
@@ -141,7 +150,7 @@ export async function POST(req: Request) {
       throw new Error((response as any).error.message);
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, videoUrl });
   } catch (err: any) {
     console.error("Error sending email:", err);
     return NextResponse.json(
