@@ -1,7 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { DepositForm } from "@/components/DepositForm"
+import { getCurrentUserFromDB } from "@/lib/user"
+import { assertKycApproved } from "@/lib/auth-guard"
+import { redirect } from "next/navigation"
 
-export default function DepositPage() {
+export default async function DepositPage() {
+  const user = await getCurrentUserFromDB();
+  if (!user) redirect("/sign-in");
+  assertKycApproved(user);
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
 

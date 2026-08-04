@@ -178,7 +178,7 @@ export default function InvestmentClient() {
         description: "Your investment account is being reviewed.",
       });
 
-      router.push("/member/dashboard");
+      router.push("/member/pending-approval");
     } catch (error: any) {
       setUploading(false);
       toast({

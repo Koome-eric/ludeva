@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { getCurrentUserFromDB } from "@/lib/user";
 import { redirect } from "next/navigation";
+import { assertKycApproved } from "@/lib/auth-guard";
 import Link from "next/link";
 import { getMemberReportSummary, parseReportAmount } from "@/lib/member-reports";
 import { InvestmentActions } from "./InvestmentActions";
@@ -48,6 +49,7 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
   const { from, to } = await searchParams;
   const user = await getCurrentUserFromDB();
   if (!user) redirect("/sign-in");
+  assertKycApproved(user);
 
   const { rows } = await getMemberReportSummary(user.email);
 

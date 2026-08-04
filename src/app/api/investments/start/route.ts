@@ -42,6 +42,25 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Verify KYC has been approved by an admin before allowing any real
+    // money movement — checking login alone isn't enough since this
+    // endpoint can be called directly.
+    if (!user.onboardingCompleted) {
+      return NextResponse.json({
+        success: false,
+        error: "Please complete onboarding before making a deposit.",
+      });
+    }
+    if (user.kycStatus !== "APPROVED") {
+      return NextResponse.json({
+        success: false,
+        error:
+          user.kycStatus === "REJECTED"
+            ? "Your KYC verification was not approved. Please contact support before depositing."
+            : "Your account is still awaiting KYC approval. Deposits unlock once an admin verifies your account.",
+      });
+    }
+
     /*
     --------------------------------
     Get EXISTING investment

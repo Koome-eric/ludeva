@@ -12,6 +12,7 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { stkPush } from '@/lib/mpesa';
 import { auth } from '@clerk/nextjs/server';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
@@ -21,6 +22,30 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    // Verify KYC has been approved by an admin — checking login alone here
+    // was the gap that let unapproved/unverified sign-ups initiate real
+    // M-Pesa deposits. A page-level redirect isn't enough on its own since
+    // this endpoint can be called directly.
+    const dbUser = await prisma.user.findUnique({ where: { clerkId: userId } });
+    if (!dbUser || !dbUser.onboardingCompleted) {
+      return NextResponse.json(
+        { success: false, error: 'Please complete onboarding before making a deposit.' },
+        { status: 403 }
+      );
+    }
+    if (dbUser.kycStatus !== 'APPROVED') {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            dbUser.kycStatus === 'REJECTED'
+              ? 'Your KYC verification was not approved. Please contact support before depositing.'
+              : 'Your account is still awaiting KYC approval. Deposits unlock once an admin verifies your account.',
+        },
+        { status: 403 }
       );
     }
 

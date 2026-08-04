@@ -11,14 +11,18 @@ import { ProfileForm } from "./ProfileForm";
 import { getCurrentUserFromDB } from "@/lib/user";
 import { redirect } from "next/navigation";
 
-type KycStatus = "Completed" | "Pending";
+type KycStatus = "PENDING" | "APPROVED" | "REJECTED";
 
-function getKycStatus(onboardingCompleted: boolean): KycStatus {
-  return onboardingCompleted ? "Completed" : "Pending";
+function getKycStatusVariant(status: KycStatus): "success" | "warning" | "destructive" {
+  if (status === "APPROVED") return "success";
+  if (status === "REJECTED") return "destructive";
+  return "warning";
 }
 
-function getKycStatusVariant(status: KycStatus): "success" | "warning" {
-  return status === "Completed" ? "success" : "warning";
+function getKycStatusLabel(status: KycStatus): string {
+  if (status === "APPROVED") return "Approved";
+  if (status === "REJECTED") return "Rejected — resubmission needed";
+  return "Pending admin review";
 }
 
 // ✅ Format Account Type for UI
@@ -36,7 +40,7 @@ export default async function ProfilePage() {
   const user = await getCurrentUserFromDB();
   if (!user) redirect("/sign-in");
 
-  const kycStatus = getKycStatus(user.onboardingCompleted);
+  const kycStatus = (user.kycStatus as KycStatus) || "PENDING";
 
   // ✅ SAFE ACCESS (fix TS edge cases)
   const rawAccountType = (user as any).accountType as string | undefined;
@@ -88,7 +92,7 @@ export default async function ProfilePage() {
             variant={getKycStatusVariant(kycStatus)}
             className="self-start sm:self-center"
           >
-            KYC Status: {kycStatus}
+            KYC Status: {getKycStatusLabel(kycStatus)}
           </Badge>
         </CardHeader>
 

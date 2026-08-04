@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserFromDB } from "@/lib/user";
 import { redirect } from "next/navigation";
+import { assertKycApproved } from "@/lib/auth-guard";
 import { format } from "date-fns";
 import { ExportButton } from "./ExportButton";
 
@@ -29,6 +30,7 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
 
   const user = await getCurrentUserFromDB();
   if (!user) redirect("/sign-in");
+  assertKycApproved(user);
 
   /* ---------------------------------- */
   /* Fetch ALL Data (No Filters)        */

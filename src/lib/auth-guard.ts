@@ -14,6 +14,13 @@ export const SUPER_ADMIN_CLERK_IDS = [
 // ─────────────────────────────────────────────
 // requireOnboardingComplete
 // Use in: member dashboard pages
+//
+// Gates on BOTH onboarding form completion AND admin KYC approval.
+// Completing the onboarding form only means the applicant submitted their
+// data/documents — it does not mean an admin has reviewed and approved
+// them. Without the kycStatus check below, anyone who filled the form got
+// immediate full portal access regardless of review status, which is the
+// exact gap that let unverified sign-ups reach the member portal.
 // ─────────────────────────────────────────────
 export async function requireOnboardingComplete() {
   const { userId: clerkId } = await auth();
@@ -26,8 +33,22 @@ export async function requireOnboardingComplete() {
 
   if (!user) redirect('/onboarding/investment');
   if (!user.onboardingCompleted) redirect('/onboarding/investment');
+  if (user.kycStatus !== 'APPROVED') redirect('/member/pending-approval');
 
   return user;
+}
+
+// ─────────────────────────────────────────────
+// requireApprovedMember
+// Use in: any member page exposing financial data (investments,
+// transactions, reports, etc.) whose auth currently goes through
+// getCurrentUserFromDB() instead of requireOnboardingComplete(). Call this
+// right after fetching the user to add the same KYC gate.
+// ─────────────────────────────────────────────
+export function assertKycApproved(user: { onboardingCompleted: boolean; kycStatus: string } | null) {
+  if (!user) redirect('/sign-in');
+  if (!user.onboardingCompleted) redirect('/onboarding/investment');
+  if (user.kycStatus !== 'APPROVED') redirect('/member/pending-approval');
 }
 
 // ─────────────────────────────────────────────
