@@ -32,7 +32,7 @@ const isMemberRoute = createRouteMatcher(["/member/(.*)"]);
 
 const SUPER_ADMIN_CLERK_IDS = [
   "user_3HXA2IEixF5gsA8QUNz0bzvk7B2",
-  "user_3B9OSNbtBdz7tP5pghbHX2FvQDp",
+  "user_3HXCbicqEmKShQGMcqzCKQBtNcw",
 ];
 
 export default clerkMiddleware(async (auth, req) => {

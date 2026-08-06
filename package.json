@@ -8,19 +8,22 @@
     "dev": "next dev -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "sync-clerk-users": "tsx scripts/sync-clerk-users.ts",
+    "inspect-user": "tsx scripts/inspect-user.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.685.0",
+    "@clerk/backend": "^3.15.1",
     "@clerk/clerk-react": "^5.59.6",
     "@clerk/nextjs": "^6.36.10",
     "@clerk/shared": "^3.43.2",

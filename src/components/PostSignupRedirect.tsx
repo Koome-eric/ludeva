@@ -9,15 +9,19 @@ export function PostSignupRedirect() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
 
-  const SUPER_ADMIN_CLERK_ID = 'user_38qCNW1RIEGrQ6rORph6s2348NX';
+  const SUPER_ADMIN_CLERK_IDS = [
+    'user_3HXA2IEixF5gsA8QUNz0bzvk7B2',
+    'user_3HXCbicqEmKShQGMcqzCKQBtNcw',
+    'user_38qCNW1RIEGrQ6rORph6s2348NX',
+  ];
 
   useEffect(() => {
     if (!isLoaded || !user) return;
 
     const redirect = async () => {
       try {
-        // SUPER ADMIN
-        if (user.id === SUPER_ADMIN_CLERK_ID) {
+        // SUPER ADMINS bypass onboarding and go straight to admin dashboard
+        if (SUPER_ADMIN_CLERK_IDS.includes(user.id)) {
           router.replace('/admin/dashboard');
           return;
         }
@@ -25,6 +29,7 @@ export function PostSignupRedirect() {
         // Always check DB first
         const res = await fetch('/api/auth/check-user', {
           method: 'POST',
+          cache: 'no-store',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ clerkId: user.id }),
         });

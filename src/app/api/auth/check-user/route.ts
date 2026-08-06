@@ -19,12 +19,28 @@ export async function POST(request: NextRequest) {
   });
 
   if (!user) {
-    return NextResponse.json({ exists: false, onboardingCompleted: false, role: null });
+    return NextResponse.json(
+      { exists: false, onboardingCompleted: false, role: null },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+        },
+      }
+    );
   }
 
-  return NextResponse.json({
-    exists: true,
-    onboardingCompleted: user.onboardingCompleted,
-    role: user.role,
-  });
+  return NextResponse.json(
+    {
+      exists: true,
+      onboardingCompleted: user.onboardingCompleted,
+      role: user.role,
+    },
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+      },
+    }
+  );
 }

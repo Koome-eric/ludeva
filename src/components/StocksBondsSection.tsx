@@ -185,43 +185,65 @@ export default function StocksBondsSection() {
             </h2>
           </div>
 
-          <div className="overflow-x-auto border rounded-lg">
-            <table className="w-full text-left">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="p-4">Feature</th>
-                  <th className="p-4">Money Market Fund</th>
-                  <th className="p-4">Stocks & Bonds</th>
-                </tr>
-              </thead>
+          {(() => {
+            const rows = [
+              { feature: "Risk Level", mmf: "Low", stocks: "High" },
+              { feature: "Expected Returns", mmf: "Stable / Moderate", stocks: "High / Variable" },
+              { feature: "Investment Horizon", mmf: "Short – Medium Term", stocks: "Long Term" },
+              { feature: "Asset Types", mmf: "Treasury Bills & Short-Term Debt", stocks: "Equities & Corporate Bonds" },
+            ];
 
-              <tbody>
-                <tr className="border-t">
-                  <td className="p-4 font-medium">Risk Level</td>
-                  <td className="p-4">Low</td>
-                  <td className="p-4">High</td>
-                </tr>
+            return (
+              <>
+                {/* Mobile & tablet: stacked comparison cards */}
+                <div className="grid gap-4 sm:grid-cols-2 md:hidden">
+                  {rows.map((row) => (
+                    <div
+                      key={row.feature}
+                      className="rounded-xl border bg-card p-5 shadow-sm"
+                    >
+                      <p className="text-sm font-semibold text-muted-foreground mb-3">
+                        {row.feature}
+                      </p>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground">Money Market Fund</span>
+                          <span className="font-medium text-right">{row.mmf}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground">Stocks & Bonds</span>
+                          <span className="font-medium text-right">{row.stocks}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-                <tr className="border-t">
-                  <td className="p-4 font-medium">Expected Returns</td>
-                  <td className="p-4">Stable / Moderate</td>
-                  <td className="p-4">High / Variable</td>
-                </tr>
+                {/* Desktop: full table */}
+                <div className="hidden md:block overflow-x-auto border rounded-lg">
+                  <table className="w-full text-left">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="p-4">Feature</th>
+                        <th className="p-4">Money Market Fund</th>
+                        <th className="p-4">Stocks & Bonds</th>
+                      </tr>
+                    </thead>
 
-                <tr className="border-t">
-                  <td className="p-4 font-medium">Investment Horizon</td>
-                  <td className="p-4">Short – Medium Term</td>
-                  <td className="p-4">Long Term</td>
-                </tr>
-
-                <tr className="border-t">
-                  <td className="p-4 font-medium">Asset Types</td>
-                  <td className="p-4">Treasury Bills & Short-Term Debt</td>
-                  <td className="p-4">Equities & Corporate Bonds</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    <tbody>
+                      {rows.map((row) => (
+                        <tr key={row.feature} className="border-t">
+                          <td className="p-4 font-medium">{row.feature}</td>
+                          <td className="p-4">{row.mmf}</td>
+                          <td className="p-4">{row.stocks}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            );
+          })()}
         </Container>
       </section>
     </>

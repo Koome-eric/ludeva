@@ -5,10 +5,10 @@ export default function PublicFooter() {
   return (
     <footer className="bg-card border-t">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 sm:gap-8 text-center sm:text-left">
           
           {/* Logo + Description */}
-          <div>
+          <div className="flex flex-col items-center sm:items-start">
             <Link href="/" className="flex items-center mb-4">
               {/* Light mode logo */}
               <Image

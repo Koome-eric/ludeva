@@ -125,7 +125,37 @@ export default function TeamsSection() {
             high-value investors.
           </p>
 
-          <div className="overflow-x-auto">
+          {/* Mobile & tablet: card list (avoids cramped horizontal scrolling) */}
+          <div className="grid gap-4 sm:grid-cols-2 md:hidden">
+            {tierData.map((tier) => (
+              <div
+                key={tier.tier}
+                className="rounded-2xl border border-border/50 bg-card p-5 shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-lg font-bold font-headline text-primary">
+                    {tier.tier}
+                  </span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {tier.size} members
+                  </span>
+                </div>
+                <dl className="space-y-1.5 text-sm">
+                  <div className="flex items-center justify-between">
+                    <dt className="text-muted-foreground">Monthly Contribution</dt>
+                    <dd className="font-semibold">{tier.monthly}</dd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <dt className="text-muted-foreground">Payout Value</dt>
+                    <dd className="font-semibold">{tier.payout}</dd>
+                  </div>
+                </dl>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: full table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border border-gray-300">
               <thead className="bg-primary text-primary-foreground">
                 <tr>
