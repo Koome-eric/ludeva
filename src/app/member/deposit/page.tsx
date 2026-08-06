@@ -28,7 +28,25 @@ export default async function DepositPage() {
         </CardHeader>
 
         <CardContent>
-          <DepositForm />
+          {/* Deposits via M-Pesa are not yet activated — show informational overlay */}
+          <div className="relative">
+            <div className="p-4 rounded-md border bg-yellow-50 text-yellow-900 mb-4">
+              <strong>Notice:</strong> Depositing funds via M-Pesa is not yet activated.
+              For now, please make manual deposits (bank transfer or cash) and upload your deposit records
+              through the Member Reports. Our team will process deposits manually and update your account.
+            </div>
+
+            <div className="pointer-events-none opacity-50 select-none">
+              <DepositForm />
+            </div>
+
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-white/80 dark:bg-gray-900/80 rounded-md p-4 border text-center shadow">
+                <p className="font-semibold">Deposits Temporarily Disabled</p>
+                <p className="text-sm text-muted-foreground">M-Pesa deposits are not active yet. Follow the instructions above to deposit manually.</p>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

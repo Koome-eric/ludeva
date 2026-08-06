@@ -49,6 +49,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Prevent investments into Bond / Fixed Income products — bonds removed platform-wide
+    if (product.type === 'BOND' || product.category === 'FIXED_INCOME') {
+      return NextResponse.json({ error: 'Investments in bonds are no longer supported' }, { status: 400 });
+    }
+
     if (amount < product.minAmount) {
       return NextResponse.json(
         { error: `Minimum investment is KES ${product.minAmount}` },

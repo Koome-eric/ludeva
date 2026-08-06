@@ -17,6 +17,8 @@
     "db:seed": "prisma db seed",
     "sync-clerk-users": "tsx scripts/sync-clerk-users.ts",
     "inspect-user": "tsx scripts/inspect-user.ts"
+    ,
+    "compress:docs": "node scripts/compress-docs.js"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -72,6 +74,7 @@
     "papaparse": "^5.5.3",
     "patch-package": "^8.0.0",
     "pdfjs-dist": "^5.5.207",
+    "archiver": "^5.3.1",
     "react": "^19.2.1",
     "react-chartjs-2": "^5.3.1",
     "react-csv": "^2.2.2",

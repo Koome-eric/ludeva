@@ -241,7 +241,6 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
               >
                 <option value="MONEY_MARKET">Money Market</option>
                 <option value="EQUITY">Stocks</option>
-                <option value="FIXED_INCOME">Bonds</option>
               </select>
 
               {/* Type */}
@@ -250,12 +249,11 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
                 value={formProduct.type}
                 onChange={e => setFormProduct({
                   ...formProduct,
-                  type: e.target.value as "MMF" | "STOCK" | "BOND"
+                  type: e.target.value as "MMF" | "STOCK"
                 })}
               >
                 <option value="MMF">MMF</option>
                 <option value="STOCK">Stock</option>
-                <option value="BOND">Bond</option>
               </select>
 
               <Input

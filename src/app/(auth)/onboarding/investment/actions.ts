@@ -12,6 +12,7 @@ const OnboardingDataSchema = z.object({
   teamName: z.string().optional(),
 
   fullName: z.string().min(2),
+  phone: z.string().min(10),
   email: z.string().email(),
   sourceOfFunds: z.string().optional(),
 
@@ -81,6 +82,7 @@ export async function completeOnboarding(
     countyOfBirth: d.placeOfBirthCounty || d.countyOfBirth,
     countyOfResidence: d.countyOfResidence,
     residentialAddress: d.residentialAddress,
+    phone: d.phone,
 
     employmentStatus: d.employmentStatus,
     professionalBackground: d.professionalBackground,

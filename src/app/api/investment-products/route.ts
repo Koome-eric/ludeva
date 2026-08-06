@@ -11,6 +11,7 @@ declare global {
 export async function GET() {
   try {
     const products = await prisma.investmentProduct.findMany({
+      where: { type: { not: 'BOND' } },
       orderBy: { createdAt: "desc" },
     });
 
@@ -31,6 +32,11 @@ export async function POST(req: NextRequest) {
         { error: "Name, category & type are required" },
         { status: 400 }
       );
+    }
+
+    // Disallow creating Bond products — bonds have been removed platform-wide.
+    if (body.type === 'BOND' || body.category === 'FIXED_INCOME') {
+      return NextResponse.json({ error: 'Bonds are no longer supported' }, { status: 400 });
     }
 
     const product = await prisma.investmentProduct.create({

@@ -11,7 +11,7 @@ const valuePropositions = [
   {
     title: "Enhanced Growth Potential",
     description:
-      "Stocks offer capital appreciation as companies grow while bonds provide steady income streams, creating powerful long-term wealth accumulation.",
+      "Stocks offer capital appreciation as companies grow, creating powerful long-term wealth accumulation.",
     icon: TrendingUp,
   },
   {
@@ -30,7 +30,7 @@ const valuePropositions = [
 
 const investmentBenefits = [
   "Long-term capital appreciation",
-  "Access to corporate and sovereign bonds",
+  "Access to broader equity markets",
   "Exposure to global and emerging markets",
   "Professional investment analysis and research",
   "Diversified portfolio strategies",
@@ -40,8 +40,8 @@ export default function StocksBondsSection() {
   return (
     <>
       <PageHero
-        title="Ludeva Stocks & Bonds Portfolio"
-        description="Expand your investment potential with a diversified high-growth portfolio designed for long-term wealth creation."
+        title="Ludeva Stocks Portfolio"
+        description="Expand your investment potential with a diversified equity portfolio designed for long-term wealth creation."
         imageSrc="/images/hero3.jpg"
       />
 
@@ -50,19 +50,17 @@ export default function StocksBondsSection() {
         <Container>
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h3 className="text-2xl font-bold mb-4">
-                Unlock Higher Growth Opportunities
-              </h3>
+                <h3 className="text-2xl font-bold mb-4">Unlock Higher Growth Opportunities</h3>
 
               <p className="text-muted-foreground mb-6">
-                The Ludeva Stocks & Bonds portfolio provides investors access
-                to high-growth investment opportunities beyond traditional
+                The Ludeva Stocks portfolio provides investors access to
+                high-growth investment opportunities beyond traditional
                 savings and money market funds.
                 <br />
                 <br />
-                By combining equities and fixed-income securities, investors
-                can pursue higher long-term returns while maintaining
-                diversified exposure across industries and markets.
+                Our equities-focused approach helps investors pursue higher
+                long-term returns while maintaining diversified exposure
+                across industries and markets.
               </p>
 
               <Button
@@ -75,9 +73,7 @@ export default function StocksBondsSection() {
             </div>
 
             <div className="bg-background p-8 rounded-lg border shadow-sm">
-              <h3 className="text-xl font-bold mb-4">
-                What Are Stocks & Bonds?
-              </h3>
+              <h3 className="text-xl font-bold mb-4">What Are Stocks?</h3>
 
               <p className="text-muted-foreground">
                 Stocks represent ownership in companies, allowing investors to
@@ -85,13 +81,8 @@ export default function StocksBondsSection() {
                 dividends.
                 <br />
                 <br />
-                Bonds are fixed-income investments where investors lend money
-                to governments or corporations in exchange for periodic
-                interest payments and the return of principal at maturity.
-                <br />
-                <br />
-                Together, stocks and bonds form a diversified portfolio capable
-                of balancing growth and income opportunities.
+                An equities-focused portfolio aims for long-term capital
+                appreciation through diversified holdings across sectors.
               </p>
             </div>
           </div>
@@ -102,12 +93,10 @@ export default function StocksBondsSection() {
       <section className="py-16 md:py-24">
         <Container>
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold font-headline">
-              Why Invest in Stocks & Bonds?
-            </h2>
+            <h2 className="text-3xl font-bold font-headline">Why Invest in Stocks?</h2>
             <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">
-              Our Stocks & Bonds portfolio is designed for investors seeking
-              higher returns, broader diversification, and long-term financial
+              Our Stocks portfolio is designed for investors seeking higher
+              returns, broader diversification, and long-term financial
               growth.
             </p>
           </div>
@@ -141,14 +130,12 @@ export default function StocksBondsSection() {
         <Container>
           <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
-              <h2 className="text-3xl font-bold font-headline mb-4">
-                Investment Benefits
-              </h2>
+              <h2 className="text-3xl font-bold font-headline mb-4">Investment Benefits</h2>
 
               <p className="text-muted-foreground mb-6">
-                The Ludeva Stocks & Bonds portfolio allows investors to pursue
+                The Ludeva Stocks portfolio allows investors to pursue
                 ambitious financial goals through diversified and strategically
-                managed investments.
+                managed equity investments.
               </p>
 
               <ul className="space-y-4">
@@ -180,9 +167,7 @@ export default function StocksBondsSection() {
       <section className="py-16 md:py-24">
         <Container>
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold font-headline">
-              MMF vs Stocks & Bonds
-            </h2>
+                <h2 className="text-3xl font-bold font-headline">MMF vs Stocks</h2>
           </div>
 
           {(() => {
@@ -226,7 +211,7 @@ export default function StocksBondsSection() {
                       <tr>
                         <th className="p-4">Feature</th>
                         <th className="p-4">Money Market Fund</th>
-                        <th className="p-4">Stocks & Bonds</th>
+                        <th className="p-4">Stocks</th>
                       </tr>
                     </thead>
 

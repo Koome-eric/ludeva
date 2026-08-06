@@ -36,6 +36,7 @@ const baseFormSchema = z.object({
 
   // Personal info
   fullName: z.string().min(2, "Full name is required."),
+  phone: z.string().min(10, "Phone number is required."),
   dateOfBirth: z.string().min(10, "Date of birth is required."),
   placeOfBirthCounty: z.string().min(2, "County of birth is required."),
   placeOfBirthSubCounty: z.string().min(2, "Sub-county of birth is required."),
@@ -106,6 +107,7 @@ export default function InvestmentClient() {
     defaultValues: {
       accountType: "INDIVIDUAL",
       teamName: "",
+        phone: "",
       fullName: "",
       dateOfBirth: "",
       placeOfBirthCounty: "",
@@ -129,6 +131,8 @@ export default function InvestmentClient() {
   React.useEffect(() => {
     if (isLoaded && user) {
       form.setValue("fullName", user.fullName || "");
+      // Set primary phone number if available
+      form.setValue("phone", (user as any).primaryPhoneNumber?.phoneNumber || "");
       form.setValue("email", user.primaryEmailAddress?.emailAddress || "");
     }
   }, [isLoaded, user, form]);
@@ -274,6 +278,10 @@ export default function InvestmentClient() {
 
                   <FormField control={form.control} name="email" render={({ field }) => (
                     <FormItem><FormLabel>Email Address *</FormLabel><FormControl><Input type="email" readOnly {...field} /></FormControl><FormMessage /></FormItem>
+                  )} />
+
+                  <FormField control={form.control} name="phone" render={({ field }) => (
+                    <FormItem><FormLabel>Phone Number *</FormLabel><FormControl><Input type="tel" placeholder="e.g. 2547XXXXXXXX" {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
 
                   <FormField control={form.control} name="residentialAddress" render={({ field }) => (
@@ -492,7 +500,7 @@ export default function InvestmentClient() {
                     onClick={async () => {
                       const stepFields: Record<number, (keyof FormValues)[]> = {
                         1: ["accountType"],
-                        2: ["fullName", "dateOfBirth", "placeOfBirthCounty", "placeOfBirthSubCounty", "placeOfBirthWard", "email", "residentialAddress"],
+                        2: ["fullName", "dateOfBirth", "placeOfBirthCounty", "placeOfBirthSubCounty", "placeOfBirthWard", "email", "phone", "residentialAddress"],
                         3: ["sourceOfFunds", "employmentStatus"],
                         4: [],
                       };

@@ -59,7 +59,7 @@ const menuData: Menu[] = [
       },
       {
         id: 42,
-        title: "Ludeva Stocks & Bonds",
+        title: "Ludeva Stocks",
         path: "/stocks-bonds",
         newTab: false,
       },
