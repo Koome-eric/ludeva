@@ -2,6 +2,9 @@
 import { prisma } from '@/lib/prisma';
 import { KycTable } from '@/components/KycTableClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function KYCManagementPage() {
   const users = await prisma.user.findMany({
     where: { role: 'MEMBER' },
