@@ -72,7 +72,7 @@ export default function AdminTeamAnalyticsPage() {
     try {
       const res = await fetch('/api/admin/team-analytics', { method: 'POST', body: form });
       if (res.ok) {
-        setStatus({ type: 'success', message: 'Analytics uploaded successfully. It is now live on the Teams page.' });
+        setStatus({ type: 'success', message: 'Analytics uploaded successfully. It is now live on the L Chama page.' });
         setFile(null);
         setLabel('');
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -89,7 +89,7 @@ export default function AdminTeamAnalyticsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this analytics record? It will no longer appear on the Teams page.')) return;
+    if (!confirm('Delete this analytics record? It will no longer appear on the L Chama page.')) return;
     setDeletingId(id);
     try {
       await fetch(`/api/admin/team-analytics/${id}`, { method: 'DELETE' });
@@ -110,10 +110,10 @@ export default function AdminTeamAnalyticsPage() {
 
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Team Analytics</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">L Chama Analytics</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Upload a CSV or Excel file. The most recent upload will automatically appear as a table
-          in the <strong>Teams</strong> page under "Team Analytics".
+          in the <strong>L Chama</strong> page under "L Chama Analytics".
         </p>
       </div>
 
@@ -132,7 +132,7 @@ export default function AdminTeamAnalyticsPage() {
           <input
             value={label}
             onChange={(e) => setLabel(e.target.value)}
-            placeholder="e.g. May 2025 Team Analytics"
+            placeholder="e.g. May 2025 L Chama Analytics"
             className="w-full border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
@@ -275,7 +275,7 @@ export default function AdminTeamAnalyticsPage() {
 
       {/* Tip */}
       <p className="text-xs text-gray-400 text-center">
-        💡 The <strong>most recently uploaded</strong> file is always what appears on the public Teams page.
+        💡 The <strong>most recently uploaded</strong> file is always what appears on the public L Chama page.
         To update, simply upload a new file — old records are kept as history.
       </p>
     </div>

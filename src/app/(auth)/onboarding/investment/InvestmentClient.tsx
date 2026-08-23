@@ -30,8 +30,8 @@ import { completeOnboarding } from "./actions";
 const MINIMUM_INVESTMENT = 1000;
 
 const baseFormSchema = z.object({
-  // Account type — Individual investors only.
-  accountType: z.literal("INDIVIDUAL"),
+  // Account type — Individual or Team.
+  accountType: z.enum(["INDIVIDUAL", "TEAM"]),
   teamName: z.string().optional(),
 
   // Personal info
@@ -69,8 +69,11 @@ const baseFormSchema = z.object({
   ),
 });
 
-// No cross-field rules needed now that accountType is fixed to INDIVIDUAL.
-const formSchema = baseFormSchema;
+// Team applicants must supply a team name.
+const formSchema = baseFormSchema.refine(
+  (d) => d.accountType !== "TEAM" || (d.teamName && d.teamName.trim().length >= 2),
+  { message: "Team name is required (at least 2 characters).", path: ["teamName"] }
+);
 
 type FormValues = z.infer<typeof baseFormSchema>;
 
@@ -233,19 +236,64 @@ export default function InvestmentClient() {
                   <FormField
                     control={form.control}
                     name="accountType"
-                    render={() => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold">Account Type *</FormLabel>
-                        <div className="mt-2 p-4 rounded-xl border-2 border-primary bg-primary/5">
-                          <div className="font-semibold text-sm">Individual Investor</div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Ludeva investment accounts are currently available for individual investors only.
-                          </div>
+                        <div className="mt-2 grid sm:grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => field.onChange("INDIVIDUAL")}
+                            className={`text-left p-4 rounded-xl border-2 transition-colors ${
+                              field.value === "INDIVIDUAL"
+                                ? "border-primary bg-primary/5"
+                                : "border-muted hover:border-primary/40"
+                            }`}
+                          >
+                            <div className="font-semibold text-sm">Individual Investor</div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Invest on your own. You're the sole owner of the account.
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => field.onChange("TEAM")}
+                            className={`text-left p-4 rounded-xl border-2 transition-colors ${
+                              field.value === "TEAM"
+                                ? "border-primary bg-primary/5"
+                                : "border-muted hover:border-primary/40"
+                            }`}
+                          >
+                            <div className="font-semibold text-sm">Team / Group Account</div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Sign up as a team. You become the owner and can invite others to invest
+                              individually and manage the shared dashboard together.
+                            </div>
+                          </button>
                         </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {accountType === "TEAM" && (
+                    <FormField
+                      control={form.control}
+                      name="teamName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Team Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. The Njoroge Family Investment Group" {...field} />
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground">
+                            You'll finish this onboarding as the team owner, then invite the rest of your
+                            team by email from L Chama once you're approved.
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
               )}
 
@@ -499,7 +547,7 @@ export default function InvestmentClient() {
                     className="flex-1"
                     onClick={async () => {
                       const stepFields: Record<number, (keyof FormValues)[]> = {
-                        1: ["accountType"],
+                        1: accountType === "TEAM" ? ["accountType", "teamName"] : ["accountType"],
                         2: ["fullName", "dateOfBirth", "placeOfBirthCounty", "placeOfBirthSubCounty", "placeOfBirthWard", "email", "phone", "residentialAddress"],
                         3: ["sourceOfFunds", "employmentStatus"],
                         4: [],

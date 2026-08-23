@@ -35,7 +35,7 @@ const menuData: Menu[] = [
 
   {
     id: 7,
-    title: "Teams",
+    title: "L Chama",
     path: "/about/teams",
     newTab: false,
   },

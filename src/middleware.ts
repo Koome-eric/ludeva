@@ -25,6 +25,8 @@ const isPublicRoute = createRouteMatcher([
   "/api/upload-kyc-doc",
   "/api/member-reports",
   "/api/admin/investments",
+  "/team/invite/(.*)",
+  "/member/team",
 ]);
 
 const isAdminRoute = createRouteMatcher(["/admin/(.*)"]);

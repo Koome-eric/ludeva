@@ -83,6 +83,18 @@ enum AccountType {
   TEAM
 }
 
+enum TeamInviteStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+enum InvestmentScope {
+  PERSONAL
+  POOLED
+}
+
 enum EmploymentStatus {
   EMPLOYED
   SELF_EMPLOYED
@@ -177,10 +189,95 @@ model User {
   adminChats   ChatRoom[] @relation("AdminChats")
   sentMessages Message[]  @relation("SentMessages")
 
+  // ✅ Team panel relations
+  ownedTeam       Team?            @relation("TeamOwner")
+  teamMembership  TeamMembership?  @relation("TeamMembershipUser")
+  sentInvites     TeamInvite[]     @relation("TeamInvitesSentBy")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("user")
+}
+
+// ─────────────────────────────────────────────
+// Team Panel
+// A Team is created by the member who signs up as AccountType.TEAM
+// (the "owner"). The owner invites other members by email; once a
+// member accepts their invite, a TeamMembership links them to the
+// team with their own custom permission set, and they get access to
+// the shared team dashboard/services under the same team.
+// ─────────────────────────────────────────────
+model Team {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  name    String
+  ownerId String @unique @db.ObjectId
+  owner   User   @relation("TeamOwner", fields: [ownerId], references: [id])
+
+  members TeamMembership[]
+  invites TeamInvite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("team")
+}
+
+// ✅ Per-member custom permissions within a team. Owner implicitly has
+// every permission — these flags apply to invited members. All default
+// to false so a newly invited member only gets what the inviter grants.
+model TeamMembership {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  teamId String @db.ObjectId
+  userId String @unique @db.ObjectId
+
+  team Team @relation(fields: [teamId], references: [id])
+  user User @relation("TeamMembershipUser", fields: [userId], references: [id])
+
+  // Custom permissions (owner always has full access regardless of these)
+  canInvite          Boolean @default(false) // generate/send new invite links
+  canManagePermissions Boolean @default(false) // edit other members' permissions
+  canRemoveMembers   Boolean @default(false) // remove members from the team
+  canInvestPooled    Boolean @default(true)  // contribute to the shared team investment
+  canViewPooledFunds Boolean @default(true)  // view the shared/pooled investment balance
+  canViewAllReports  Boolean @default(false) // view every member's personal reports, not just their own
+  canWithdraw        Boolean @default(false) // request withdrawals from pooled funds
+  canManageAnalytics Boolean @default(false) // upload/manage team analytics documents
+
+  joinedAt DateTime @default(now())
+
+  @@map("teammembership")
+}
+
+// ✅ An invite is created with the target email + the permission set the
+// inviter wants that person to have once they accept. Token is emailed
+// via a link; accepting requires signing in/up with that same email.
+model TeamInvite {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  teamId String @db.ObjectId
+  team   Team   @relation(fields: [teamId], references: [id])
+
+  email       String
+  token       String           @unique
+  status      TeamInviteStatus @default(PENDING)
+  invitedById String           @db.ObjectId
+  invitedBy   User             @relation("TeamInvitesSentBy", fields: [invitedById], references: [id])
+
+  // Permissions to grant on acceptance — mirrors TeamMembership flags
+  canInvite            Boolean @default(false)
+  canManagePermissions Boolean @default(false)
+  canRemoveMembers     Boolean @default(false)
+  canInvestPooled      Boolean @default(true)
+  canViewPooledFunds   Boolean @default(true)
+  canViewAllReports    Boolean @default(false)
+  canWithdraw          Boolean @default(false)
+  canManageAnalytics   Boolean @default(false)
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teaminvite")
 }
 
 model ChatRoom {
@@ -243,6 +340,13 @@ model Investment {
   productName String
   roi         Float
   duration    Int
+
+  // ✅ Team panel: who this investment belongs to, personal vs pooled.
+  // userId always stays the member who initiated/paid for it. When
+  // scope is POOLED, teamId is set and the amount counts toward the
+  // team's shared balance; when PERSONAL, it's only that member's own.
+  teamId String?         @db.ObjectId
+  scope  InvestmentScope @default(PERSONAL)
 
   user     User              @relation(fields: [userId], references: [id])
   product  InvestmentProduct @relation(fields: [productId], references: [id])

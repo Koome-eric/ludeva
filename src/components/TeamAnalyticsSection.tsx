@@ -60,9 +60,9 @@ export default async function TeamAnalyticsSection({ data: propData }: Props) {
             <BarChart3 className="w-4 h-4" />
             Live Data
           </div>
-          <h2 className="text-3xl font-bold mb-2">Team Analytics</h2>
+          <h2 className="text-3xl font-bold mb-2">L Chama Analytics</h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Up-to-date performance data across all Ludeva Teams Global tiers.
+            Up-to-date performance data across all L Chama tiers.
           </p>
         </div>
 

@@ -7,8 +7,9 @@ import { revalidatePath } from 'next/cache';
 import { notifyAllAdmins } from '@/lib/notifications';
 
 const OnboardingDataSchema = z.object({
-  // Account type is restricted to Individual investors only.
-  accountType: z.literal("INDIVIDUAL"),
+  // Account type — Individual or Team. Team applicants additionally supply
+  // a team name; they become the team owner once onboarding completes.
+  accountType: z.enum(["INDIVIDUAL", "TEAM"]),
   teamName: z.string().optional(),
 
   fullName: z.string().min(2),
@@ -45,7 +46,10 @@ const OnboardingDataSchema = z.object({
   lockInYears: z.union([
     z.literal(1), z.literal(2), z.literal(3), z.literal(5), z.literal(7), z.literal(10),
   ]),
-});
+}).refine(
+  (d) => d.accountType !== "TEAM" || (d.teamName && d.teamName.trim().length >= 2),
+  { message: "Team name is required for a Team account.", path: ["teamName"] }
+);
 
 export async function completeOnboarding(
   data: z.infer<typeof OnboardingDataSchema>
@@ -107,6 +111,28 @@ export async function completeOnboarding(
     });
   } else {
     user = await prisma.user.create({ data: userData });
+  }
+
+  // ✅ Team account: create the Team row (owner = this user) the first time
+  // they complete onboarding as TEAM. Idempotent — re-submitting doesn't
+  // create a second team, and someone already on/owning a team can't
+  // spin up another one here.
+  if (d.accountType === 'TEAM') {
+    const [ownsTeam, isTeamMember] = await Promise.all([
+      prisma.team.findUnique({ where: { ownerId: user.id } }),
+      prisma.teamMembership.findUnique({ where: { userId: user.id } }),
+    ]);
+
+    if (!ownsTeam && !isTeamMember) {
+      await prisma.team.create({
+        data: { name: d.teamName!.trim(), ownerId: user.id },
+      });
+    } else if (ownsTeam && d.teamName && ownsTeam.name !== d.teamName.trim()) {
+      await prisma.team.update({
+        where: { id: ownsTeam.id },
+        data: { name: d.teamName.trim() },
+      });
+    }
   }
 
   if (isFirstTimeCompletion) {
