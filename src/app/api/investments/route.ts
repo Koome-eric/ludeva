@@ -15,6 +15,10 @@ function mapCategoryToFundType(category: string) {
       return "STOCK";
     case "FIXED_INCOME":
       return "BOND";
+    case "SAVINGS":
+      return "SAVINGS";
+    case "JUNIOR":
+      return "JUNIOR";
     default:
       return "MMF";
   }
@@ -52,6 +56,21 @@ export async function POST(req: NextRequest) {
     // Prevent investments into Bond / Fixed Income products — bonds removed platform-wide
     if (product.type === 'BOND' || product.category === 'FIXED_INCOME') {
       return NextResponse.json({ error: 'Investments in bonds are no longer supported' }, { status: 400 });
+    }
+
+    // Ludeva Junior Account: a guardian must have at least one APPROVED
+    // application (birth certificate + child's photo + guardian KYC
+    // reviewed by an admin) before they can fund it on a child's behalf.
+    if (product.type === 'JUNIOR') {
+      const approvedApplication = await prisma.juniorAccountApplication.findFirst({
+        where: { guardianId: user.id, status: 'APPROVED' },
+      });
+      if (!approvedApplication) {
+        return NextResponse.json(
+          { error: 'Submit a Junior Account application and get it approved before funding it. Go to Accounts → Ludeva Junior Account to apply.' },
+          { status: 403 }
+        );
+      }
     }
 
     if (amount < product.minAmount) {

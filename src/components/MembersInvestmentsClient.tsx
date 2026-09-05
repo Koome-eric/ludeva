@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Landmark, Sprout, Layers, X } from "lucide-react";
+import { TrendingUp, Landmark, Sprout, Layers, PiggyBank, X } from "lucide-react";
 
 interface Product {
   id: string;
@@ -28,6 +28,8 @@ const getCategoryIcon = (category: string) => {
       return <Landmark className="h-5 w-5" />;
     case "Agriculture":
       return <Sprout className="h-5 w-5" />;
+    case "SAVINGS":
+      return <PiggyBank className="h-5 w-5" />;
     default:
       return <Layers className="h-5 w-5" />;
   }

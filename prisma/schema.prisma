@@ -18,6 +18,8 @@ enum FundType {
   STOCK
   BOND
   FIXED_DEPOSIT
+  SAVINGS
+  JUNIOR
 }
 
 enum ProductCategory {
@@ -25,6 +27,8 @@ enum ProductCategory {
   EQUITY
   FIXED_INCOME
   FIXED_DEPOSIT
+  SAVINGS
+  JUNIOR
 }
 
 enum InvestmentStatus {
@@ -193,6 +197,11 @@ model User {
   ownedTeam       Team?            @relation("TeamOwner")
   teamMembership  TeamMembership?  @relation("TeamMembershipUser")
   sentInvites     TeamInvite[]     @relation("TeamInvitesSentBy")
+
+  // ✅ Ludeva Junior Account applications submitted as a guardian, and (for
+  // admins) the ones they've reviewed.
+  juniorApplications         JuniorAccountApplication[] @relation("JuniorGuardian")
+  juniorApplicationsReviewed JuniorAccountApplication[] @relation("JuniorReviewer")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -364,6 +373,7 @@ model InvestmentProduct {
   category        ProductCategory
   description     String?
   roi             Float
+  roiMax          Float? // optional upper bound, for range display e.g. "9–13% p.a."
   duration        Int
   minAmount       Float
   maxAmount       Float?
@@ -474,4 +484,51 @@ model MemberReport {
   updatedAt   DateTime @updatedAt
   
   @@map("memberreport")
+}
+
+// ─────────────────────────────────────────────
+// Ludeva Junior Account application — a parent/guardian applies on behalf
+// of a child. Reviewed manually by an admin (documents are real KYC:
+// birth certificate + child's passport photo, plus the guardian's own
+// ID/passport, phone, and KRA PIN). Files are uploaded via the same R2
+// pipeline as the adult KYC flow (see /api/upload-kyc-doc), so these
+// fields hold public R2 URLs, not raw file data.
+//
+// Approval doesn't create a separate ledger record — it flips the
+// application to APPROVED, which /api/investments checks before letting
+// the guardian invest into the active JUNIOR product on the child's
+// behalf (see the JUNIOR gate in that route).
+// ─────────────────────────────────────────────
+enum JuniorApplicationStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model JuniorAccountApplication {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  guardianId String @db.ObjectId
+  guardian   User   @relation("JuniorGuardian", fields: [guardianId], references: [id])
+
+  childFullName    String
+  childDateOfBirth DateTime?
+
+  guardianIdNumber String
+  guardianPhone    String
+  guardianKraPin   String
+
+  birthCertUrl  String // R2 URL
+  childPhotoUrl String // R2 URL
+
+  status       JuniorApplicationStatus @default(PENDING_REVIEW)
+  reviewNotes  String?
+  reviewedById String?                 @db.ObjectId
+  reviewedBy   User?                   @relation("JuniorReviewer", fields: [reviewedById], references: [id])
+  reviewedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("junioraccountapplication")
 }

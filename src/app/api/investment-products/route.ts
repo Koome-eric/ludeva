@@ -11,7 +11,10 @@ declare global {
 export async function GET() {
   try {
     const products = await prisma.investmentProduct.findMany({
-      where: { type: { not: 'BOND' } },
+      // Bonds are retired platform-wide; JUNIOR is intentionally excluded
+      // from the generic catalog grid — it has its own gated application
+      // flow at /member/accounts, not a plain "enter an amount" invest form.
+      where: { type: { notIn: ['BOND', 'JUNIOR'] } },
       orderBy: { createdAt: "desc" },
     });
 
@@ -43,8 +46,9 @@ export async function POST(req: NextRequest) {
       data: {
         name: body.name,
         category: body.category, // ProductCategory enum
-        type: body.type,         // FundType enum: MMF | STOCK | BOND
+        type: body.type,         // FundType enum: MMF | STOCK | BOND | SAVINGS | JUNIOR
         roi: Number(body.roi) || 0,
+        roiMax: body.roiMax !== undefined && body.roiMax !== "" ? Number(body.roiMax) : null,
         duration: Number(body.duration) || 30,
         minAmount: Number(body.minAmount) || 0,
         maxAmount: body.maxAmount ? Number(body.maxAmount) : undefined,

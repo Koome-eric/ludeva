@@ -11,14 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { RealtimeListener } from "@/components/realtime-listener";
-import { TrendingUp, Landmark, Sprout, Layers, Plus, Edit2 } from "lucide-react";
+import { TrendingUp, Landmark, Sprout, Layers, Plus, Edit2, PiggyBank, Baby } from "lucide-react";
 
 interface Product {
   id: string;
   name: string;
-  category: "MONEY_MARKET" | "EQUITY" | "FIXED_INCOME";
-  type: "MMF" | "STOCK" | "BOND";
+  category: "MONEY_MARKET" | "EQUITY" | "FIXED_INCOME" | "SAVINGS" | "JUNIOR";
+  type: "MMF" | "STOCK" | "BOND" | "SAVINGS" | "JUNIOR";
   roi: number;
+  roiMax?: number | null;
   duration: number;
   minAmount?: number;
   maxAmount?: number;
@@ -35,9 +36,10 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
 
   const [formProduct, setFormProduct] = useState({
     name: "",
-    category: "MONEY_MARKET" as "MONEY_MARKET" | "EQUITY" | "FIXED_INCOME",
-    type: "MMF" as "MMF" | "STOCK" | "BOND",
+    category: "MONEY_MARKET" as "MONEY_MARKET" | "EQUITY" | "FIXED_INCOME" | "SAVINGS" | "JUNIOR",
+    type: "MMF" as "MMF" | "STOCK" | "BOND" | "SAVINGS" | "JUNIOR",
     roi: "0",
+    roiMax: "",
     duration: "30",
     minAmount: "0",
     maxAmount: "",
@@ -52,6 +54,8 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
       case "MONEY_MARKET": return <TrendingUp className="h-5 w-5" />;
       case "EQUITY": return <Landmark className="h-5 w-5" />;
       case "FIXED_INCOME": return <Sprout className="h-5 w-5" />;
+      case "SAVINGS": return <PiggyBank className="h-5 w-5" />;
+      case "JUNIOR": return <Baby className="h-5 w-5" />;
       default: return <Layers className="h-5 w-5" />;
     }
   };
@@ -66,6 +70,7 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
       category: "MONEY_MARKET",
       type: "MMF",
       roi: "0",
+      roiMax: "",
       duration: "30",
       minAmount: "0",
       maxAmount: "",
@@ -84,6 +89,7 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
       category: product.category,
       type: product.type,
       roi: String(product.roi ?? 0),
+      roiMax: product.roiMax != null ? String(product.roiMax) : "",
       duration: String(product.duration ?? 30),
       minAmount: String(product.minAmount ?? 0),
       maxAmount: product.maxAmount ? String(product.maxAmount) : "",
@@ -101,6 +107,7 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
     const payload = {
       ...formProduct,
       roi: parseFloat(formProduct.roi),
+      roiMax: formProduct.roiMax ? parseFloat(formProduct.roiMax) : null,
       duration: parseInt(formProduct.duration),
       minAmount: parseFloat(formProduct.minAmount),
       maxAmount: formProduct.maxAmount ? parseFloat(formProduct.maxAmount) : undefined,
@@ -197,7 +204,10 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
             </CardHeader>
 
             <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between"><span>ROI</span><span>{product.roi}%</span></div>
+              <div className="flex justify-between">
+                <span>ROI</span>
+                <span>{product.roiMax ? `${product.roi}–${product.roiMax}%` : `${product.roi}%`}</span>
+              </div>
               <div className="flex justify-between"><span>Duration</span><span>{product.duration} days</span></div>
               <div className="flex justify-between"><span>Min Investment</span><span>KES {(product.minAmount ?? 0).toLocaleString()}</span></div>
               <div className="flex justify-between"><span>Max Investment</span><span>{product.maxAmount ?? "-"}</span></div>
@@ -236,11 +246,13 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
                 value={formProduct.category}
                 onChange={e => setFormProduct({
                   ...formProduct,
-                  category: e.target.value as "MONEY_MARKET" | "EQUITY" | "FIXED_INCOME"
+                  category: e.target.value as "MONEY_MARKET" | "EQUITY" | "FIXED_INCOME" | "SAVINGS" | "JUNIOR"
                 })}
               >
                 <option value="MONEY_MARKET">Money Market</option>
-                <option value="EQUITY">Stocks</option>
+                <option value="EQUITY">Shares (Stocks)</option>
+                <option value="SAVINGS">Savings</option>
+                <option value="JUNIOR">Junior Account</option>
               </select>
 
               {/* Type */}
@@ -249,11 +261,13 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
                 value={formProduct.type}
                 onChange={e => setFormProduct({
                   ...formProduct,
-                  type: e.target.value as "MMF" | "STOCK"
+                  type: e.target.value as "MMF" | "STOCK" | "SAVINGS" | "JUNIOR"
                 })}
               >
                 <option value="MMF">MMF</option>
-                <option value="STOCK">Stock</option>
+                <option value="STOCK">Stock (Shares Account)</option>
+                <option value="SAVINGS">Savings</option>
+                <option value="JUNIOR">Junior</option>
               </select>
 
               <Input
@@ -261,6 +275,12 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
                 placeholder="ROI (%)"
                 value={formProduct.roi}
                 onChange={e => setFormProduct({ ...formProduct, roi: e.target.value })}
+              />
+              <Input
+                type="number"
+                placeholder="ROI Max (%) — optional, for a range like 9–13%"
+                value={formProduct.roiMax}
+                onChange={e => setFormProduct({ ...formProduct, roiMax: e.target.value })}
               />
               <Input
                 type="number"

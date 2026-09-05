@@ -34,6 +34,7 @@ export const adminSidebarItems: SidebarItem[] = [
     subItems: [
       { name: "All Investors", path: "/admin/investors" },
       { name: "KYC Management", path: "/admin/investors/kyc" },
+      { name: "Junior Accounts", path: "/admin/investors/junior-accounts" },
     ],
   },
   {

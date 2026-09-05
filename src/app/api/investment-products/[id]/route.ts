@@ -39,6 +39,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
         category: body.category,
         type: body.type,
         roi: Number(body.roi),
+        roiMax: body.roiMax !== undefined && body.roiMax !== "" ? Number(body.roiMax) : null,
         duration: Number(body.duration),
         minAmount: Number(body.minAmount),
         maxAmount: body.maxAmount ? Number(body.maxAmount) : undefined,

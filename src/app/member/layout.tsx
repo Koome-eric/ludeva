@@ -11,6 +11,7 @@ import {
   TrendingUp,
   User,
   Users,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -38,6 +39,7 @@ const menuItems = [
   { href: "/member/deposit", label: "Make a Deposit", icon: CirclePlus },
   { href: "/member/investments", label: "My Investments", icon: GanttChartSquare },
   { href: "/member/products", label: "Ludeva Products", icon: LayoutDashboard },
+  { href: "/member/accounts", label: "Accounts", icon: Wallet },
   { href: "/member/transactions", label: "Transactions", icon: Repeat },
   { href: "/member/chat", label: "Messages", icon: MessageCircle },
   { href: "/member/notifications", label: "Notifications", icon: FileText },
