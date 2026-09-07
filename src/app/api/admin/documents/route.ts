@@ -10,8 +10,8 @@ declare global {
 }
 
 const SUPER_ADMIN_CLERK_IDS = [
-  "user_38qCNW1RIEGrQ6rORph6s2348NX",
-  "user_3B9OSNbtBdz7tP5pghbHX2FvQDp",
+  "user_3HXA2IEixF5gsA8QUNz0bzvk7B2",
+  "user_3HXCbicqEmKShQGMcqzCKQBtNcw",
 ];
 
 // Documents Hub is member-facing, so publish/removal alerts go to members

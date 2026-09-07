@@ -11,7 +11,6 @@ export default function PostAuthPage() {
   const SUPER_ADMIN_CLERK_IDS = [
     'user_3HXA2IEixF5gsA8QUNz0bzvk7B2',
     'user_3HXCbicqEmKShQGMcqzCKQBtNcw',
-    'user_38qCNW1RIEGrQ6rORph6s2348NX',
   ];
 
   useEffect(() => {

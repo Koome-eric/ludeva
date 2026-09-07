@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET(req: NextRequest) {
   try {
     // Hard-coded super admin ID
-    const SUPER_ADMIN_CLERK_ID = "user_38qCNW1RIEGrQ6rORph6s2348NX";
+    const SUPER_ADMIN_CLERK_ID = "user_3HXA2IEixF5gsA8QUNz0bzvk7B2";
 
     // OPTIONAL: Fetch user from DB (can skip if just testing)
     // const user = await getCurrentUserFromDB();
