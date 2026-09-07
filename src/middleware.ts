@@ -33,7 +33,6 @@ const isPublicRoute = createRouteMatcher([
   "/api/admin/login",
   "/api/admin/logout",
   "/team/invite/(.*)",
-  "/member/team",
 ]);
 
 const isAdminRoute = createRouteMatcher(["/admin/(.*)"]);

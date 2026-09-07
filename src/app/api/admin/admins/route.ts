@@ -1,35 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdminApi } from "@/lib/auth-guard";
+import { requireSuperAdminApi, SUPER_ADMIN_CLERK_IDS } from "@/lib/auth-guard";
 import { hashAdminPassword } from "@/lib/admin-auth";
 
 // ─────────────────────────────────────────────
-// GET  /api/admin/admins      — list all super-admin-created admin accounts
+// GET  /api/admin/admins      — list all admins: the hardcoded Clerk super
+//                                admins plus every super-admin-created
+//                                AdminAccount
 // POST /api/admin/admins      — create a new admin account (email + password)
 //
 // Restricted to SUPER_ADMIN_CLERK_IDS. The two hardcoded super admins
-// (middleware.ts / auth-guard.ts) aren't AdminAccount rows themselves —
-// this only manages the admins *they* create.
+// (middleware.ts / auth-guard.ts) aren't AdminAccount rows — they're
+// surfaced here by reading their linked `User` rows and flagged with
+// isSuperAdmin so the UI can hide edit/delete (those routes only know how
+// to mutate AdminAccount rows, not the hardcoded Clerk IDs).
 // ─────────────────────────────────────────────
 
 export async function GET() {
   const { error } = await requireSuperAdminApi();
   if (error) return error;
 
-  const admins = await prisma.adminAccount.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  const [superAdminUsers, admins] = await Promise.all([
+    prisma.user.findMany({
+      where: { clerkId: { in: SUPER_ADMIN_CLERK_IDS } },
+    }),
+    prisma.adminAccount.findMany({
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
 
-  return NextResponse.json(
-    admins.map((a) => ({
-      id: a.id,
-      email: a.email,
-      fullName: a.fullName,
-      isActive: a.isActive,
-      lastLoginAt: a.lastLoginAt,
-      createdAt: a.createdAt,
-    }))
-  );
+  const superAdmins = superAdminUsers.map((u) => ({
+    id: `clerk_${u.clerkId}`,
+    email: u.email,
+    fullName: u.fullName || "Super Admin",
+    isActive: true,
+    // Not tracked in the DB for Clerk-authenticated super admins — they
+    // sign in through Clerk directly, not the admin_account login flow.
+    lastLoginAt: null,
+    createdAt: u.createdAt,
+    isSuperAdmin: true as const,
+  }));
+
+  const createdAdmins = admins.map((a) => ({
+    id: a.id,
+    email: a.email,
+    fullName: a.fullName,
+    isActive: a.isActive,
+    lastLoginAt: a.lastLoginAt,
+    createdAt: a.createdAt,
+    isSuperAdmin: false as const,
+  }));
+
+  return NextResponse.json([...superAdmins, ...createdAdmins]);
 }
 
 export async function POST(req: NextRequest) {

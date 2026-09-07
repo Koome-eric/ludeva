@@ -10,7 +10,6 @@ import {
   Repeat,
   TrendingUp,
   User,
-  Users,
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
@@ -44,7 +43,6 @@ const menuItems = [
   { href: "/member/chat", label: "Messages", icon: MessageCircle },
   { href: "/member/notifications", label: "Notifications", icon: FileText },
   { href: "/member/reports", label: "My Reports", icon: TrendingUp },
-  { href: "/member/team", label: "L Chama", icon: Users },
   { href: "/member/profile", label: "Profile & KYC", icon: User },
 ];
 

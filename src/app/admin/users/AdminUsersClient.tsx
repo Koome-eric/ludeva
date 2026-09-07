@@ -42,6 +42,9 @@ interface AdminAccount {
   isActive: boolean;
   lastLoginAt: string | null;
   createdAt: string;
+  // True for the two hardcoded Clerk super admins (surfaced from their
+  // User row, not an AdminAccount row) — edit/delete don't apply to them.
+  isSuperAdmin?: boolean;
 }
 
 export function AdminUsersClient({ isSuperAdmin }: { isSuperAdmin: boolean }) {
@@ -135,7 +138,14 @@ export function AdminUsersClient({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                 <TableBody>
                   {admins.map((admin) => (
                     <TableRow key={admin.id}>
-                      <TableCell className="font-medium">{admin.fullName}</TableCell>
+                      <TableCell className="font-medium">
+                        {admin.fullName}
+                        {admin.isSuperAdmin && (
+                          <Badge variant="outline" className="ml-2 align-middle">
+                            Super Admin
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell>{admin.email}</TableCell>
                       <TableCell>
                         <Badge className={admin.isActive ? "bg-green-600" : "bg-red-600"}>
@@ -143,22 +153,30 @@ export function AdminUsersClient({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {admin.lastLoginAt
+                        {admin.isSuperAdmin
+                          ? "—"
+                          : admin.lastLoginAt
                           ? new Date(admin.lastLoginAt).toLocaleString()
                           : "Never"}
                       </TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button size="sm" variant="outline" onClick={() => setEditing(admin)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 hover:text-red-700"
-                          onClick={() => setDeleting(admin)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {admin.isSuperAdmin ? (
+                          <span className="text-xs text-muted-foreground">Not editable</span>
+                        ) : (
+                          <>
+                            <Button size="sm" variant="outline" onClick={() => setEditing(admin)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => setDeleting(admin)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
