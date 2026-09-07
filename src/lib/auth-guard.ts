@@ -1,6 +1,8 @@
 import { auth } from '@clerk/nextjs/server';
+import { cookies } from 'next/headers';
 import { prisma } from './prisma';
 import { redirect } from 'next/navigation';
+import { ADMIN_SESSION_COOKIE_NAME, verifyAdminSessionToken } from './admin-auth';
 
 // ─────────────────────────────────────────────
 // Super admin Clerk IDs — single source of truth
@@ -10,6 +12,38 @@ export const SUPER_ADMIN_CLERK_IDS = [
   'user_38qCNW1RIEGrQ6rORph6s2348NX',
   'user_3B9OSNbtBdz7tP5pghbHX2FvQDp',
 ];
+
+// ─────────────────────────────────────────────
+// getAdminAccountSessionUser
+//
+// Resolves the `ludeva_admin_session` cookie (set on login for
+// super-admin-created AdminAccounts — see src/lib/admin-auth.ts and
+// /api/admin/login) into the linked `User` row. Returns null if there's
+// no cookie, it's invalid/expired, or the underlying account was
+// deactivated/deleted since the cookie was issued.
+//
+// This is the fallback path used below whenever there's no Clerk
+// session, so admins created via the "Admin Users" panel can use the
+// rest of the admin panel exactly like a Clerk-authenticated admin.
+// ─────────────────────────────────────────────
+export async function getAdminAccountSessionUser() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value;
+  if (!token) return null;
+
+  const payload = await verifyAdminSessionToken(token);
+  if (!payload) return null;
+
+  const account = await prisma.adminAccount.findUnique({
+    where: { id: payload.adminAccountId },
+  });
+  if (!account || !account.isActive) return null;
+
+  const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+  if (!user || user.role !== 'ADMIN') return null;
+
+  return user;
+}
 
 // ─────────────────────────────────────────────
 // requireOnboardingComplete
@@ -76,7 +110,11 @@ export async function getCurrentUserIfOnboarded() {
 export async function isUserAdmin(): Promise<boolean> {
   const { userId: clerkId } = await auth();
 
-  if (!clerkId) return false;
+  if (!clerkId) {
+    // No Clerk session — check for a super-admin-issued admin account session
+    const sessionUser = await getAdminAccountSessionUser();
+    return sessionUser?.role === 'ADMIN';
+  }
 
   if (SUPER_ADMIN_CLERK_IDS.includes(clerkId)) return true;
 
@@ -95,7 +133,16 @@ export async function isUserAdmin(): Promise<boolean> {
 export async function requireAdmin() {
   const { userId: clerkId } = await auth();
 
-  if (!clerkId) redirect('/sign-in');
+  if (!clerkId) {
+    // No Clerk session — fall back to a super-admin-issued admin account
+    // session (created via the "Admin Users" panel, logged in at
+    // /admin/login). middleware.ts already keeps non-admin-session traffic
+    // off /admin/*, so reaching here with neither means the cookie is
+    // missing/expired.
+    const sessionUser = await getAdminAccountSessionUser();
+    if (!sessionUser) redirect('/admin/login');
+    return sessionUser;
+  }
 
   // Auto-sync super admin into DB
   let user = await prisma.user.findUnique({ where: { clerkId } });
@@ -148,12 +195,40 @@ export async function requireUser() {
 export async function requireUserApi() {
   const { userId: clerkId } = await auth();
 
-  if (!clerkId) return null;
+  if (!clerkId) {
+    // No Clerk session — a super-admin-created admin account (see
+    // /admin/login) still counts as a valid user here, e.g. for the
+    // admin side of chat/messaging.
+    return getAdminAccountSessionUser();
+  }
 
   const user = await prisma.user.findUnique({ where: { clerkId } });
 
   return user ?? null;
 }
+// ─────────────────────────────────────────────
+// requireSuperAdminApi
+// Use in: /api/admin/admins routes (create/edit/delete admin accounts)
+//
+// Deliberately Clerk-only — does NOT fall back to the admin-session
+// cookie. Admin accounts created through this feature can manage the
+// rest of the panel like any admin, but only the two hardcoded
+// SUPER_ADMIN_CLERK_IDS may create, edit, or delete other admins.
+// ─────────────────────────────────────────────
+export async function requireSuperAdminApi(): Promise<
+  { clerkId: string; error: null } |
+  { clerkId: null; error: NextResponse }
+> {
+  const { NextResponse } = await import("next/server");
+  const { userId: clerkId } = await auth();
+
+  if (!clerkId || !SUPER_ADMIN_CLERK_IDS.includes(clerkId)) {
+    return { clerkId: null, error: NextResponse.json({ error: "Forbidden — super admin only" }, { status: 403 }) };
+  }
+
+  return { clerkId, error: null };
+}
+
 // ─────────────────────────────────────────────
 // requireAdminApi
 // Use in: /api/admin/* routes (returns 401/403 instead of redirecting)
@@ -169,7 +244,13 @@ export async function requireAdminApi(): Promise<
   const { userId: clerkId } = await auth();
 
   if (!clerkId) {
-    return { user: null, error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+    // No Clerk session — fall back to a super-admin-issued admin account
+    // session (see getAdminAccountSessionUser above).
+    const sessionUser = await getAdminAccountSessionUser();
+    if (!sessionUser) {
+      return { user: null, error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+    }
+    return { user: sessionUser, error: null };
   }
 
   const user = await prisma.user.findUnique({ where: { clerkId } });

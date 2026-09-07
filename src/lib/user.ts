@@ -1,5 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from './prisma';
+import { getAdminAccountSessionUser } from './auth-guard';
 
 /**
  * Retrieves the currently authenticated user's record from your local database.
@@ -13,7 +14,10 @@ import { prisma } from './prisma';
 export async function getCurrentUserFromDB() {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    return null;
+    // No Clerk session — check for a super-admin-issued admin account
+    // session so created admins (see /admin/users and /admin/login) work
+    // in code paths that read the current user via this helper.
+    return getAdminAccountSessionUser();
   }
 
   const user = await prisma.user.findUnique({

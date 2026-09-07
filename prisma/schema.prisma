@@ -210,6 +210,35 @@ model User {
 }
 
 // ─────────────────────────────────────────────
+// Admin Accounts
+// Created directly by a super admin (see SUPER_ADMIN_CLERK_IDS) with an
+// email + password, independent of Clerk. Lets a super admin issue admin
+// credentials without the person needing a Clerk sign-up. Each AdminAccount
+// is paired with a `User` row (role ADMIN) via `linkedUserId` so the rest
+// of the admin panel — which reads `User` records — keeps working
+// unchanged. See src/lib/admin-auth.ts and src/lib/auth-guard.ts.
+// ─────────────────────────────────────────────
+model AdminAccount {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  email        String    @unique
+  passwordHash String
+  fullName     String
+  isActive     Boolean   @default(true)
+
+  // Clerk ID of the super admin who created this account
+  createdByClerkId String
+
+  // The linked User row (role ADMIN) this account logs in as
+  linkedUserId String @unique @db.ObjectId
+
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("admin_account")
+}
+
+// ─────────────────────────────────────────────
 // Team Panel
 // A Team is created by the member who signs up as AccountType.TEAM
 // (the "owner"). The owner invites other members by email; once a

@@ -40,7 +40,7 @@ export default function StocksBondsSection() {
   return (
     <>
       <PageHero
-        title="Ludeva Stocks Portfolio"
+        title="Shares Account"
         description="Expand your investment potential with a diversified equity portfolio designed for long-term wealth creation."
         imageSrc="/images/hero3.jpg"
       />

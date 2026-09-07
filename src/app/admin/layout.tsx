@@ -1,9 +1,11 @@
 "use client";
 
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 
 import {
   SidebarProvider,
@@ -17,12 +19,22 @@ import {
 import { AdminSidebar } from "./AdminSidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
+import { Button } from "@/components/ui/button";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  // /admin/login is the sign-in screen for super-admin-created admin
+  // accounts — it must render on its own, without the sidebar/header
+  // chrome (and without <UserButton>, which assumes a Clerk session).
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -70,14 +82,7 @@ export default function AdminLayout({
           <div className="ml-auto flex items-center gap-4">
             <AdminNotificationsBell />
             <ThemeToggle />
-            <UserButton
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  avatarBox: "h-9 w-9 rounded-lg",
-                },
-              }}
-            />
+            <AdminAccountControl />
           </div>
         </header>
 
@@ -89,5 +94,63 @@ export default function AdminLayout({
         </main>
       </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+// Renders Clerk's <UserButton> for Clerk-authenticated admins (super
+// admins, and any admin whose role was set the old way). For admins
+// created via the "Admin Users" panel — who have no Clerk session at all
+// — falls back to a plain logout button that clears the custom session
+// cookie via /api/admin/logout.
+function AdminAccountControl() {
+  const { isSignedIn, isLoaded } = useUser();
+  const router = useRouter();
+  const [checkedCustomSession, setCheckedCustomSession] = useState(false);
+  const [isCustomSession, setIsCustomSession] = useState(false);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (isSignedIn) {
+      setCheckedCustomSession(true);
+      return;
+    }
+    // No Clerk session loaded — check whether this is a custom
+    // admin-account session instead.
+    fetch("/api/admin/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setIsCustomSession(Boolean(data?.isAdminAccountSession)))
+      .finally(() => setCheckedCustomSession(true));
+  }, [isLoaded, isSignedIn]);
+
+  if (!isLoaded || !checkedCustomSession) {
+    return <div className="h-9 w-9 rounded-lg bg-muted animate-pulse" />;
+  }
+
+  if (isCustomSession) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={async () => {
+          await fetch("/api/admin/logout", { method: "POST" });
+          router.push("/admin/login");
+          router.refresh();
+        }}
+      >
+        <LogOut className="mr-2 h-4 w-4" />
+        Log out
+      </Button>
+    );
+  }
+
+  return (
+    <UserButton
+      afterSignOutUrl="/"
+      appearance={{
+        elements: {
+          avatarBox: "h-9 w-9 rounded-lg",
+        },
+      }}
+    />
   );
 }

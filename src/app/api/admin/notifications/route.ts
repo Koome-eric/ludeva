@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { notifyAllAdmins } from "@/lib/notifications";
+import { getAdminAccountSessionUser } from "@/lib/auth-guard";
 
 declare global {
   var io: any;
@@ -16,14 +17,19 @@ declare global {
 export async function GET() {
   try {
     const { userId: clerkId } = await auth();
-    if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
-    const admin = await prisma.user.findUnique({
-      where: { clerkId },
-      select: { id: true, role: true },
-    });
+    let admin: { id: string; role: string } | null = null;
+
+    if (clerkId) {
+      admin = await prisma.user.findUnique({
+        where: { clerkId },
+        select: { id: true, role: true },
+      });
+    } else {
+      // No Clerk session — check for a super-admin-created admin account
+      // session instead (see /admin/login).
+      admin = await getAdminAccountSessionUser();
+    }
 
     if (!admin || admin.role !== "ADMIN") {
       return NextResponse.json({ error: "Admin not found" }, { status: 404 });

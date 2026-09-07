@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { uploadBufferToR2, buildObjectKey, isR2Configured, deleteFromR2, keyFromR2Url } from "@/lib/r2";
 import { notifyAllMembers } from "@/lib/notifications";
+import { getAdminAccountSessionUser } from "@/lib/auth-guard";
 
 declare global {
   var io: any;
@@ -25,7 +26,13 @@ async function broadcastAdminNotification(
 
 async function getAdminUser() {
   const { userId } = await auth();
-  if (!userId) return null;
+
+  if (!userId) {
+    // No Clerk session — check for a super-admin-created admin account
+    // session instead (see /admin/login). Those accounts are already
+    // role ADMIN, so no auto-create/upgrade step is needed for them.
+    return getAdminAccountSessionUser();
+  }
 
   const clerkUser = await currentUser();
 

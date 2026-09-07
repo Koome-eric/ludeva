@@ -52,21 +52,21 @@ const menuData: Menu[] = [
     newTab: false,
     submenu: [
       {
-        id: 41,
-        title: "Money Market Funds",
-        path: "/mmf",
-        newTab: false,
-      },
-      {
         id: 42,
-        title: "Ludeva Stocks",
+        title: "Shares Account",
         path: "/stocks-bonds",
         newTab: false,
       },
       {
-        id: 45,
-        title: "Fixed Deposit Account",
-        path: "/services/fixed-deposit",
+        id: 46,
+        title: "Savings Account",
+        path: "/savings",
+        newTab: false,
+      },
+      {
+        id: 47,
+        title: "Ludeva Junior Account",
+        path: "/junior-account",
         newTab: false,
       },
       {
