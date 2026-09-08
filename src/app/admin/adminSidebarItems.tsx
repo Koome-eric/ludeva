@@ -11,6 +11,7 @@ import {
   TrendingUp,
   MessageCircle,
   Bell,
+  PiggyBank,
 } from "lucide-react";
 import React from "react";
 
@@ -66,6 +67,13 @@ export const adminSidebarItems: SidebarItem[] = [
     name: "Member Reports",
     path: "/admin/member-reports",
     icon: <TrendingUp className="h-4 w-4" />,
+  },
+  {
+    // ✅ NEW — Savings Account entries (running-balance), separate from
+    // Member Reports (Investments)
+    name: "Savings Accounts",
+    path: "/admin/savings",
+    icon: <PiggyBank className="h-4 w-4" />,
   },
   {
     name: "Messages",

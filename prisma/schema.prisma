@@ -516,6 +516,40 @@ model MemberReport {
 }
 
 // ─────────────────────────────────────────────
+// Savings Account — a second product alongside Investments, fed from its
+// own "Savings Data" tab in the same workbook used for MemberReport.
+// Investments (MMF) calculate a fresh return on the principal in that
+// row; Savings instead carries the previous closing balance forward,
+// adds a deposit, subtracts a withdrawal, then applies interest to the
+// running balance — so it gets its own model rather than reusing
+// MemberReport's principal/rate/roi columns. Same push pipeline
+// (POST /api/savings, x-sheets-secret header), same admin
+// review/correction UI pattern (/admin/savings).
+// ─────────────────────────────────────────────
+model SavingsEntry {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  memberEmail String
+  accountNo   String?
+  memberName  String?
+
+  date           String?
+  openingBalance String?
+  deposit        String?
+  withdrawal     String?
+  monthlyRate    String?
+  interestEarned String?
+  closingBalance String?
+  periodLabel    String?
+  notes          String?
+
+  uploadedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("savingsentry")
+}
+
+// ─────────────────────────────────────────────
 // Ludeva Junior Account application — a parent/guardian applies on behalf
 // of a child. Reviewed manually by an admin (documents are real KYC:
 // birth certificate + child's passport photo, plus the guardian's own

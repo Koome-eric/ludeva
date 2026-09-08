@@ -7,6 +7,7 @@ import {
   GanttChartSquare,
   LayoutDashboard,
   MessageCircle,
+  PiggyBank,
   Repeat,
   TrendingUp,
   User,
@@ -43,6 +44,7 @@ const menuItems = [
   { href: "/member/chat", label: "Messages", icon: MessageCircle },
   { href: "/member/notifications", label: "Notifications", icon: FileText },
   { href: "/member/reports", label: "My Reports", icon: TrendingUp },
+  { href: "/member/savings", label: "Savings Account", icon: PiggyBank },
   { href: "/member/profile", label: "Profile & KYC", icon: User },
 ];
 
