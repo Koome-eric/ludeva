@@ -17,6 +17,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -67,6 +69,10 @@ const baseFormSchema = z.object({
     (v) => [1, 2, 3, 5, 7, 10].includes(v),
     "Please select a lock-in period."
   ),
+
+  termsAccepted: z.boolean().refine((v) => v === true, {
+    message: "You must accept the Privacy Policy & Terms and Conditions to submit your application.",
+  }),
 });
 
 // Team applicants must supply a team name.
@@ -128,6 +134,7 @@ export default function InvestmentClient() {
       numberOfKids: 0,
       initialInvestment: MINIMUM_INVESTMENT,
       lockInYears: undefined as unknown as number,
+      termsAccepted: false,
     },
   });
 
@@ -531,6 +538,44 @@ export default function InvestmentClient() {
                       Upload your selfie and National ID above to enable submission.
                     </p>
                   )}
+
+                  <FormField control={form.control} name="termsAccepted" render={({ field }) => (
+                    <FormItem className="rounded-lg border p-4">
+                      <div className="flex items-start gap-3">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="mt-0.5"
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="font-normal text-sm cursor-pointer">
+                            I have read and agree to Ludeva&apos;s{" "}
+                            <Link
+                              href="/privacy-policy"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-primary underline underline-offset-2"
+                            >
+                              Privacy Policy
+                            </Link>{" "}
+                            and{" "}
+                            <Link
+                              href="/privacy-policy#terms-and-conditions"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-primary underline underline-offset-2"
+                            >
+                              Terms &amp; Conditions
+                            </Link>
+                            . *
+                          </FormLabel>
+                          <FormMessage />
+                        </div>
+                      </div>
+                    </FormItem>
+                  )} />
                 </div>
               )}
 
@@ -562,7 +607,7 @@ export default function InvestmentClient() {
                   <Button
                     type="submit"
                     className="flex-1"
-                    disabled={form.formState.isSubmitting || uploading || !selfieFile || !idFile || !form.watch("lockInYears")}
+                    disabled={form.formState.isSubmitting || uploading || !selfieFile || !idFile || !form.watch("lockInYears") || !form.watch("termsAccepted")}
                   >
                     {form.formState.isSubmitting || uploading
                       ? "Submitting KYC..."

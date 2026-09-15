@@ -181,6 +181,11 @@ model User {
   kycStatus      KycStatus @default(PENDING)
   kycSubmittedAt DateTime?
 
+  // ✅ Records when the investor accepted the Privacy Policy & Terms &
+  // Conditions during onboarding. Required before a KYC application can be
+  // submitted for approval.
+  termsAcceptedAt DateTime?
+
   investments   Investment[]
   payments      Payment[]
   transactions  Transaction[]

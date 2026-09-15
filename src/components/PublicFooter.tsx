@@ -70,12 +70,12 @@ export default function PublicFooter() {
             <h4 className="font-semibold mb-3">Legal</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/" className="text-muted-foreground hover:text-primary">
+                <Link href="/privacy-policy" className="text-muted-foreground hover:text-primary">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/" className="text-muted-foreground hover:text-primary">
+                <Link href="/privacy-policy#terms-and-conditions" className="text-muted-foreground hover:text-primary">
                   Terms of Service
                 </Link>
               </li>

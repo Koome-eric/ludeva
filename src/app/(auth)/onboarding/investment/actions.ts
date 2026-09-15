@@ -46,6 +46,12 @@ const OnboardingDataSchema = z.object({
   lockInYears: z.union([
     z.literal(1), z.literal(2), z.literal(3), z.literal(5), z.literal(7), z.literal(10),
   ]),
+
+  // Must be explicitly accepted on the client before an application can be
+  // submitted for approval — see /privacy-policy.
+  termsAccepted: z.literal(true, {
+    errorMap: () => ({ message: "You must accept the Privacy Policy & Terms and Conditions." }),
+  }),
 }).refine(
   (d) => d.accountType !== "TEAM" || (d.teamName && d.teamName.trim().length >= 2),
   { message: "Team name is required for a Team account.", path: ["teamName"] }
@@ -78,6 +84,9 @@ export async function completeOnboarding(
     initialInvestment: Math.round(d.initialInvestment),
     onboardingCompleted: true,
     kycSubmittedAt: new Date(),
+    // Only reached because `termsAccepted` passed the schema's literal(true)
+    // check above, so this is always the moment of acceptance.
+    termsAcceptedAt: new Date(),
 
     dateOfBirth: d.dateOfBirth ? new Date(d.dateOfBirth) : undefined,
     placeOfBirthCounty: d.placeOfBirthCounty,
