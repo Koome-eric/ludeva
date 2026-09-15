@@ -18,6 +18,15 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Trash2, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { deleteMember } from "@/app/api/admin/kyc-action/route";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type AccountType = "INDIVIDUAL" | "TEAM";
 
 type Investor = {
   id: string;
@@ -27,6 +36,7 @@ type Investor = {
   phone: string | null;
   nationalId: string | null;
   onboardingCompleted: boolean;
+  accountType: AccountType;
 };
 
 const getKycStatusVariant = (status: boolean): "success" | "warning" => (status ? "success" : "warning");
@@ -36,18 +46,20 @@ export default function InvestorsTableClient({ investors: initialInvestors }: { 
   const router = useRouter();
   const [investors, setInvestors] = useState(initialInvestors);
   const [search, setSearch] = useState("");
+  const [accountTypeFilter, setAccountTypeFilter] = useState<"ALL" | AccountType>("ALL");
   const [target, setTarget] = useState<Investor | null>(null);
   const [confirmText, setConfirmText] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const filtered = investors.filter((inv) => {
     const q = search.toLowerCase();
-    return (
+    const matchesSearch =
       (inv.fullName?.toLowerCase().includes(q) ?? false) ||
       inv.email.toLowerCase().includes(q) ||
       (inv.phone?.toLowerCase().includes(q) ?? false) ||
-      (inv.nationalId?.toLowerCase().includes(q) ?? false)
-    );
+      (inv.nationalId?.toLowerCase().includes(q) ?? false);
+    const matchesAccountType = accountTypeFilter === "ALL" || inv.accountType === accountTypeFilter;
+    return matchesSearch && matchesAccountType;
   });
 
   const closeDialog = () => {
@@ -72,15 +84,28 @@ export default function InvestorsTableClient({ investors: initialInvestors }: { 
 
   return (
     <>
-      {/* Search */}
-      <div className="relative w-full sm:max-w-xs mb-4">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search name, email, phone, ID…"
-          className="pl-9"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      {/* Search & Filter */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search name, email, phone, ID…"
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <Select value={accountTypeFilter} onValueChange={(v) => setAccountTypeFilter(v as "ALL" | AccountType)}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Account type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All account types</SelectItem>
+            <SelectItem value="INDIVIDUAL">Individual</SelectItem>
+            <SelectItem value="TEAM">Team</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="overflow-x-auto">
@@ -92,6 +117,7 @@ export default function InvestorsTableClient({ investors: initialInvestors }: { 
               <TableHead>Join Date</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>National ID</TableHead>
+              <TableHead className="text-center">Account Type</TableHead>
               <TableHead className="text-center">Onboarding Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -104,6 +130,11 @@ export default function InvestorsTableClient({ investors: initialInvestors }: { 
                 <TableCell className="whitespace-nowrap">{format(new Date(investor.createdAt), "dd MMM, yyyy")}</TableCell>
                 <TableCell>{investor.phone || "N/A"}</TableCell>
                 <TableCell>{investor.nationalId || "N/A"}</TableCell>
+                <TableCell className="text-center">
+                  <Badge variant={investor.accountType === "TEAM" ? "default" : "outline"}>
+                    {investor.accountType === "TEAM" ? "Team" : "Individual"}
+                  </Badge>
+                </TableCell>
                 <TableCell className="text-center">
                   <Badge variant={getKycStatusVariant(investor.onboardingCompleted)}>
                     {investor.onboardingCompleted ? "Completed" : "Pending"}
@@ -123,7 +154,7 @@ export default function InvestorsTableClient({ investors: initialInvestors }: { 
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
                   {investors.length === 0 ? "No investors yet." : "No investors match that search."}
                 </TableCell>
               </TableRow>

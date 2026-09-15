@@ -25,9 +25,11 @@ export default function HeroSection() {
           </h1>
 
           <p className="text-base sm:text-lg text-white/90">
-            Ludeva offers a professionally managed Money Market Fund, designed
-            to preserve your capital while generating competitive returns.
-            Start your wealth creation journey with a partner you can trust.
+            Ludeva Plc is a trusted investment partner providing accessible
+            wealth-management solutions across equities, government
+            securities and fixed-income savings. We help clients diversify
+            portfolios, preserve capital, and optimize returns through
+            tailored investment solutions aligned with their financial goals.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mt-6">

@@ -27,6 +27,7 @@ export default async function InvestorsPage() {
               phone: inv.phone,
               nationalId: inv.nationalId,
               onboardingCompleted: inv.onboardingCompleted,
+              accountType: inv.accountType,
             }))}
           />
         </CardContent>
