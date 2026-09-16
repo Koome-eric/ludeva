@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { phoneLookupVariants } from "@/lib/phone";
 
 const SHEETS_API_SECRET = process.env.SHEETS_API_SECRET || "ludeva-sheets-secret-2025";
 
@@ -18,9 +19,17 @@ export async function GET(req: NextRequest) {
   const dbUser = await prisma.user.findUnique({ where: { clerkId: userId } });
   if (!dbUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  // Match by email (the unique identifier used in the sheet)
+  // Match by email first (the identifier the sheet is keyed on); fall back
+  // to phone so a member whose sheet row has a different or missing email
+  // (e.g. they signed up by phone only) still sees their own reports.
+  const phoneVariants = phoneLookupVariants(dbUser.phone);
   const reports = await (prisma as any).memberReport.findMany({
-    where: { memberEmail: dbUser.email },
+    where: {
+      OR: [
+        { memberEmail: dbUser.email },
+        ...(phoneVariants.length ? [{ memberPhone: { in: phoneVariants } }] : []),
+      ],
+    },
     orderBy: { uploadedAt: "desc" },
   });
 
@@ -56,6 +65,7 @@ export async function POST(req: NextRequest) {
   for (const row of rows) {
     const {
       memberEmail,
+      memberPhone,
       accountNo,
       memberName,
       date,
@@ -69,27 +79,34 @@ export async function POST(req: NextRequest) {
       periodLabel,
     } = row;
 
-    if (!memberEmail) {
-      results.push({ error: "memberEmail required", row });
+    if (!memberEmail && !memberPhone) {
+      results.push({ error: "memberEmail or memberPhone required", row });
       continue;
     }
 
-    // Upsert: match by email + date + accountNo so re-pushing a row updates rather than duplicates
-    const where = {
-      // MongoDB doesn't support compound unique in this way without @@unique
-      // So we use findFirst + upsert pattern
-    };
+    const cleanEmail = memberEmail ? memberEmail.toLowerCase().trim() : null;
+    const cleanPhone = memberPhone ? String(memberPhone).trim() : null;
 
-    const existing = await (prisma as any).memberReport.findFirst({
-      where: {
-        memberEmail: memberEmail.toLowerCase().trim(),
-        date: date || null,
-        accountNo: accountNo || null,
-      },
-    });
+    // Upsert: match by email + date + accountNo so re-pushing a row updates
+    // rather than duplicates. When the row has no email (or it doesn't match
+    // anything yet, e.g. a phone-only sign-up), fall back to matching on
+    // phone instead — phoneLookupVariants covers a couple of the ways the
+    // same number might have been stored on a previous push.
+    const existing = cleanEmail
+      ? await (prisma as any).memberReport.findFirst({
+          where: { memberEmail: cleanEmail, date: date || null, accountNo: accountNo || null },
+        })
+      : await (prisma as any).memberReport.findFirst({
+          where: {
+            memberPhone: { in: phoneLookupVariants(cleanPhone) },
+            date: date || null,
+            accountNo: accountNo || null,
+          },
+        });
 
     const data = {
-      memberEmail: memberEmail.toLowerCase().trim(),
+      memberEmail: cleanEmail,
+      memberPhone: cleanPhone,
       accountNo: accountNo?.trim() || null,
       memberName: memberName?.trim() || null,
       date: date?.trim() || null,
@@ -113,7 +130,7 @@ export async function POST(req: NextRequest) {
       record = await (prisma as any).memberReport.create({ data });
     }
 
-    results.push({ success: true, id: record.id, email: memberEmail });
+    results.push({ success: true, id: record.id, email: memberEmail || null, phone: cleanPhone });
   }
 
   return NextResponse.json({ processed: results.length, results });

@@ -180,7 +180,7 @@ export default function TeamsSection() {
 
           <p className="text-muted-foreground mt-4 text-center">
             Payout values are based on a 10-member group over a 10-month cycle.
-            First cycle contributions are invested in the Ludeva MMF earning
+            First cycle contributions are invested in the MMF earning
             approximately 9%–13% annually.
           </p>
         </Container>
@@ -201,7 +201,7 @@ export default function TeamsSection() {
                   (Collateral Phase)
                 </h3>
                 <p className="text-muted-foreground">
-                  Contributions are invested in the Ludeva MMF account, earning
+                  Contributions are invested in the MMF account, earning
                   9%–13% annually. This serves as collateral and risk protection.
                 </p>
               </CardContent>

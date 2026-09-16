@@ -496,7 +496,8 @@ model MemberReport {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   
   // Identifies which member this row belongs to
-  memberEmail String
+  memberEmail String?
+  memberPhone String?
   accountNo   String?  // e.g. LA0061
   memberName  String?
   

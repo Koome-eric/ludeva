@@ -42,7 +42,7 @@ export default function MmfSection() {
   return (
     <>
       <PageHero
-        title="The Ludeva Money Market Fund"
+        title="The Money Market Fund"
         description="A smart, stable, and secure foundation for your investment portfolio."
         imageSrc="/images/hero-mmf.png"
       />
@@ -54,7 +54,7 @@ export default function MmfSection() {
             <div>
               <h3 className="text-2xl font-bold mb-4">Start Investing Today</h3>
               <p className="text-muted-foreground mb-6">
-                The Ludeva MMF is designed for capital preservation and steady growth, making it an ideal choice for your savings.
+                The MMF is designed for capital preservation and steady growth, making it an ideal choice for your savings.
               </p>
               <Button
                 asChild
@@ -82,7 +82,7 @@ export default function MmfSection() {
         <Container>
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold font-headline">
-              Key Features of the Ludeva MMF
+              Key Features of the MMF
             </h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -107,7 +107,7 @@ export default function MmfSection() {
             <div>
               <h2 className="text-3xl font-bold font-headline mb-4">Who is it for?</h2>
               <p className="text-muted-foreground mb-6">
-                The Ludeva MMF is designed for a wide range of investors seeking stability and growth.
+                The MMF is designed for a wide range of investors seeking stability and growth.
               </p>
               <ul className="space-y-4">
                 {targetInvestors.map((investor) => (

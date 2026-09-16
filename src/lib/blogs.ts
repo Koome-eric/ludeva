@@ -33,7 +33,7 @@ export const blogs: Blog[] = [
       <h2>Why Most People Never Invest</h2>
       <p>The three most common barriers we hear from new members are: "I don't have enough money," "I don't understand it," and "I'm afraid to lose what I have." All three are solvable problems. Let's address each.</p>
 
-      <p><strong>The minimum myth.</strong> Many Kenyans assume investing requires large sums. Ludeva's Money Market Fund (MMF) accepts investments from as little as KES 1,000. This is not a promotional tier — it's the actual entry point, with the same returns as larger investors.</p>
+      <p><strong>The minimum myth.</strong> Many Kenyans assume investing requires large sums. Our Money Market Fund (MMF) accepts investments from as little as KES 1,000. This is not a promotional tier — it's the actual entry point, with the same returns as larger investors.</p>
 
       <p><strong>The complexity myth.</strong> Investing does not require financial training. A Money Market Fund, for example, works like a high-yield savings account — you deposit, your money earns interest daily, and you can withdraw at any time. Ludeva handles the asset management behind the scenes.</p>
 
@@ -43,12 +43,12 @@ export const blogs: Blog[] = [
       <p>Getting started takes under ten minutes:</p>
       <ol>
         <li><strong>Complete onboarding.</strong> Create your account and submit your KYC documents. Ludeva verifies your identity to comply with CBK regulations and protect your investment.</li>
-        <li><strong>Choose your first product.</strong> For most beginners, the Ludeva MMF is the ideal starting point — low risk, daily interest accrual, and full liquidity.</li>
+        <li><strong>Choose your first product.</strong> For most beginners, the MMF is the ideal starting point — low risk, daily interest accrual, and full liquidity.</li>
         <li><strong>Fund your investment.</strong> Deposit via M-Pesa or bank transfer. Your money begins earning from day one.</li>
       </ol>
 
       <h2>Understanding What You're Buying</h2>
-      <p>When you invest in the Ludeva MMF, you're buying units of a fund. The fund pools money from all investors and deploys it into a basket of short-term debt instruments. The returns — currently between 9% and 13% annually — are distributed to unit holders daily and compounded monthly.</p>
+      <p>When you invest in the MMF, you're buying units of a fund. The fund pools money from all investors and deploys it into a basket of short-term debt instruments. The returns — currently between 9% and 13% annually — are distributed to unit holders daily and compounded monthly.</p>
 
       <p>To put that in perspective: a KES 100,000 investment at 11% annual return earns approximately KES 11,000 per year, or roughly KES 917 per month — without you doing anything after the initial deposit.</p>
 
@@ -88,7 +88,7 @@ export const blogs: Blog[] = [
       <p>Consider a KES 500,000 investment over three years:</p>
       <ul>
         <li><strong>Standard bank savings account (4% p.a.):</strong> Grows to approximately KES 562,432</li>
-        <li><strong>Ludeva MMF (11% p.a.):</strong> Grows to approximately KES 685,058</li>
+        <li><strong>MMF (11% p.a.):</strong> Grows to approximately KES 685,058</li>
       </ul>
       <p>That's a KES 122,626 difference on the same initial capital. The only change is where you placed the money.</p>
 
@@ -169,7 +169,7 @@ export const blogs: Blog[] = [
       <p>Traditional chamas suffer from several structural weaknesses: defaulting members can collapse the group, idle funds earn no interest while waiting for rotation, record-keeping disputes are common, and geographic limitations mean members must be physically proximate. These are not small problems — they've caused the collapse of countless well-intentioned groups.</p>
 
       <h2>How Teams Global Solves It</h2>
-      <p>The core innovation: every member's first-cycle contributions are invested in the Ludeva MMF rather than sitting idle. This means your money earns 9–13% annually during the collateral phase, not zero. When a member defaults, their MMF balance covers the shortfall automatically — no confrontation, no collapsed cycle.</p>
+      <p>The core innovation: every member's first-cycle contributions are invested in the MMF rather than sitting idle. This means your money earns 9–13% annually during the collateral phase, not zero. When a member defaults, their MMF balance covers the shortfall automatically — no confrontation, no collapsed cycle.</p>
 
       <p>Thirteen tiers from KES 1,000 to KES 200,000 monthly accommodate a vast range of income levels. A Nyota tier member and a Platinum tier member operate identically within their respective groups — same structure, same rules, same protection.</p>
 
