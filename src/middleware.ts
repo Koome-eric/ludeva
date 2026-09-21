@@ -47,23 +47,40 @@ export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
 
   if (!userId) {
-    // No Clerk session. For /admin/* routes, a super-admin-created admin
-    // may still have a valid custom admin-session cookie (issued at
-    // /admin/login — see src/lib/admin-auth.ts) — check that before
-    // bouncing to Clerk's sign-in, since these admins never sign in
-    // through Clerk at all.
-    if (isAdminRoute(req)) {
-      const token = req.cookies.get(ADMIN_SESSION_COOKIE_NAME)?.value;
-      const session = token ? await verifyAdminSessionToken(token) : null;
+    // No Clerk session. A super-admin-created admin may still have a
+    // valid custom admin-session cookie (issued at /admin/login — see
+    // src/lib/admin-auth.ts), since these admins never sign in through
+    // Clerk at all. Checked for EVERY request here — not just /admin/*
+    // page loads — because the admin dashboard's own data calls
+    // (/api/admin/*, /api/member-reports/*, etc.) need the exact same
+    // pass-through: those route handlers already know how to authenticate
+    // an admin-session cookie via requireAdmin()/requireAdminApi() (see
+    // src/lib/auth-guard.ts), so middleware just needs to stop redirecting
+    // them away before they ever get there. Previously this check only
+    // ran for paths matching isAdminRoute (/admin/(.*)), which never
+    // matches an /api/... path — so every such fetch from an
+    // admin-session-cookie admin fell through to the "not public, no
+    // Clerk session" branch below and got redirected to /sign-in's HTML,
+    // which is why those fetches failed to parse as JSON.
+    const token = req.cookies.get(ADMIN_SESSION_COOKIE_NAME)?.value;
+    const session = token ? await verifyAdminSessionToken(token) : null;
 
-      if (session) {
-        return NextResponse.next();
+    if (session) {
+      return NextResponse.next();
+    }
+
+    if (!isPublicRoute(req)) {
+      // An API call with no session at all gets a plain JSON 401 instead
+      // of being redirected to an HTML page — redirecting an API request
+      // is what produced "Unexpected token '<'" errors in the browser
+      // console, since fetch() follows the redirect and tries to parse
+      // the resulting sign-in page as JSON.
+      if (req.nextUrl.pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
       }
-
-      if (!isPublicRoute(req)) {
+      if (isAdminRoute(req)) {
         return NextResponse.redirect(new URL("/admin/login", req.url));
       }
-    } else if (!isPublicRoute(req)) {
       return NextResponse.redirect(new URL("/sign-in", req.url));
     }
   }

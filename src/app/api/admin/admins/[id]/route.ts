@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdminApi } from "@/lib/auth-guard";
+import { requireAdminApi } from "@/lib/auth-guard";
 import { hashAdminPassword } from "@/lib/admin-auth";
 
 // ─────────────────────────────────────────────
@@ -8,14 +8,17 @@ import { hashAdminPassword } from "@/lib/admin-auth";
 //                                  password, or activate/deactivate them
 // DELETE /api/admin/admins/[id] — permanently remove an admin account
 //
-// Restricted to SUPER_ADMIN_CLERK_IDS.
+// Open to any authenticated admin — same admin panel for everyone, no
+// super-admin-only section. (The two hardcoded super admins aren't
+// AdminAccount rows at all, so there's nothing here for anyone, including
+// the super admins themselves, to edit or delete about them.)
 // ─────────────────────────────────────────────
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error } = await requireSuperAdminApi();
+  const { error } = await requireAdminApi();
   if (error) return error;
 
   const { id } = await params;
@@ -89,7 +92,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error } = await requireSuperAdminApi();
+  const { error } = await requireAdminApi();
   if (error) return error;
 
   const { id } = await params;

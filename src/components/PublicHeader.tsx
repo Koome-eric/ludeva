@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, ChevronDown, ChevronUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { ThemeToggle } from './ThemeToggle';
 import menuData from '@/lib/menu-data';
 
@@ -127,6 +127,10 @@ export default function PublicHeader() {
             </SheetTrigger>
 
             <SheetContent side="left" className="w-64 p-4">
+              <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+              <SheetDescription className="sr-only">
+                Browse pages and account links for Ludeva.
+              </SheetDescription>
               <nav className="flex flex-col gap-2 mt-2">
                 {menuData.map((item) =>
                   item.submenu ? (

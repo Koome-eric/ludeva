@@ -1,23 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdminApi, SUPER_ADMIN_CLERK_IDS } from "@/lib/auth-guard";
+import { requireAdminApi, SUPER_ADMIN_CLERK_IDS } from "@/lib/auth-guard";
 import { hashAdminPassword } from "@/lib/admin-auth";
 
 // ─────────────────────────────────────────────
 // GET  /api/admin/admins      — list all admins: the hardcoded Clerk super
-//                                admins plus every super-admin-created
+//                                admins plus every admin-created
 //                                AdminAccount
 // POST /api/admin/admins      — create a new admin account (email + password)
 //
-// Restricted to SUPER_ADMIN_CLERK_IDS. The two hardcoded super admins
-// (middleware.ts / auth-guard.ts) aren't AdminAccount rows — they're
-// surfaced here by reading their linked `User` rows and flagged with
-// isSuperAdmin so the UI can hide edit/delete (those routes only know how
-// to mutate AdminAccount rows, not the hardcoded Clerk IDs).
+// Any authenticated admin — the two hardcoded super admins, or a regular
+// admin created via this same panel — can view and manage the admin list.
+// Every admin gets the same admin panel; there's no super-admin-only
+// section here anymore. The two hardcoded Clerk super admins still aren't
+// AdminAccount rows — they're surfaced by reading their linked `User` rows
+// and flagged with isSuperAdmin so the UI can show them as not editable
+// (edit/delete routes below only know how to mutate AdminAccount rows).
 // ─────────────────────────────────────────────
 
 export async function GET() {
-  const { error } = await requireSuperAdminApi();
+  const { error } = await requireAdminApi();
   if (error) return error;
 
   const [superAdminUsers, admins] = await Promise.all([
@@ -55,7 +57,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { clerkId, error } = await requireSuperAdminApi();
+  const { user, error } = await requireAdminApi();
   if (error) return error;
 
   const body = await req.json().catch(() => null);
@@ -116,7 +118,12 @@ export async function POST(req: NextRequest) {
         email,
         passwordHash,
         fullName,
-        createdByClerkId: clerkId!,
+        // Whoever created this admin — a real Clerk ID for one of the two
+        // hardcoded super admins, or the creating admin's own synthetic
+        // `admin_account_<id>` clerkId if a regular admin invited them.
+        // `user` here is the full linked User row from requireAdminApi(),
+        // so `.clerkId` holds the right value either way.
+        createdByClerkId: user!.clerkId,
         linkedUserId: linkedUser.id,
       },
     });

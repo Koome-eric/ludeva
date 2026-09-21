@@ -47,7 +47,7 @@ interface AdminAccount {
   isSuperAdmin?: boolean;
 }
 
-export function AdminUsersClient({ isSuperAdmin }: { isSuperAdmin: boolean }) {
+export function AdminUsersClient() {
   const [admins, setAdmins] = useState<AdminAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
@@ -62,11 +62,7 @@ export function AdminUsersClient({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     try {
       const res = await fetch("/api/admin/admins");
       if (!res.ok) {
-        setListError(
-          res.status === 403
-            ? "Only super admins can view and manage admin accounts."
-            : "Failed to load admins."
-        );
+        setListError("Failed to load admins.");
         setAdmins([]);
         return;
       }
@@ -79,12 +75,8 @@ export function AdminUsersClient({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   };
 
   useEffect(() => {
-    if (isSuperAdmin) {
-      loadAdmins();
-    } else {
-      setLoading(false);
-    }
-  }, [isSuperAdmin]);
+    loadAdmins();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -101,99 +93,88 @@ export function AdminUsersClient({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           </div>
         </div>
 
-        {isSuperAdmin && (
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> New Admin
-          </Button>
-        )}
+        <Button onClick={() => setCreateOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> New Admin
+        </Button>
       </div>
 
-      {!isSuperAdmin ? (
-        <Card>
-          <CardContent className="p-10 text-center text-muted-foreground">
-            Only the platform's super admins can create, edit, or delete
-            admin accounts.
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="rounded-2xl shadow-sm">
-          <CardContent className="p-0 overflow-x-auto">
-            {loading ? (
-              <p className="p-10 text-center text-muted-foreground">
-                Loading admins...
-              </p>
-            ) : listError ? (
-              <p className="p-10 text-center text-muted-foreground">{listError}</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last login</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {admins.map((admin) => (
-                    <TableRow key={admin.id}>
-                      <TableCell className="font-medium">
-                        {admin.fullName}
-                        {admin.isSuperAdmin && (
-                          <Badge variant="outline" className="ml-2 align-middle">
-                            Super Admin
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>{admin.email}</TableCell>
-                      <TableCell>
-                        <Badge className={admin.isActive ? "bg-green-600" : "bg-red-600"}>
-                          {admin.isActive ? "Active" : "Inactive"}
+      <Card className="rounded-2xl shadow-sm">
+        <CardContent className="p-0 overflow-x-auto">
+          {loading ? (
+            <p className="p-10 text-center text-muted-foreground">
+              Loading admins...
+            </p>
+          ) : listError ? (
+            <p className="p-10 text-center text-muted-foreground">{listError}</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last login</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {admins.map((admin) => (
+                  <TableRow key={admin.id}>
+                    <TableCell className="font-medium">
+                      {admin.fullName}
+                      {admin.isSuperAdmin && (
+                        <Badge variant="outline" className="ml-2 align-middle">
+                          Super Admin
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {admin.isSuperAdmin
-                          ? "—"
-                          : admin.lastLoginAt
-                          ? new Date(admin.lastLoginAt).toLocaleString()
-                          : "Never"}
-                      </TableCell>
-                      <TableCell className="text-right space-x-2">
-                        {admin.isSuperAdmin ? (
-                          <span className="text-xs text-muted-foreground">Not editable</span>
-                        ) : (
-                          <>
-                            <Button size="sm" variant="outline" onClick={() => setEditing(admin)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600 hover:text-red-700"
-                              onClick={() => setDeleting(admin)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                      )}
+                    </TableCell>
+                    <TableCell>{admin.email}</TableCell>
+                    <TableCell>
+                      <Badge className={admin.isActive ? "bg-green-600" : "bg-red-600"}>
+                        {admin.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {admin.isSuperAdmin
+                        ? "—"
+                        : admin.lastLoginAt
+                        ? new Date(admin.lastLoginAt).toLocaleString()
+                        : "Never"}
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      {admin.isSuperAdmin ? (
+                        <span className="text-xs text-muted-foreground">Not editable</span>
+                      ) : (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => setEditing(admin)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => setDeleting(admin)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
 
-                  {admins.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="p-10 text-center text-muted-foreground">
-                        No admin accounts yet. Create one to get started.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      )}
+                {admins.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="p-10 text-center text-muted-foreground">
+                      No admin accounts yet. Create one to get started.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       <CreateAdminDialog
         open={createOpen}
