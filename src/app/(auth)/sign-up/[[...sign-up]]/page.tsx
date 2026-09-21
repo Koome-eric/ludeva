@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { SignUp } from "@clerk/nextjs";
+import { AuthShell } from "@/components/AuthShell";
 import { PostSignupRedirect } from "@/components/PostSignupRedirect";
 
 /**
@@ -21,20 +22,30 @@ import { PostSignupRedirect } from "@/components/PostSignupRedirect";
  */
 export default function Page() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-background">
-      <SignUp 
+    <AuthShell
+      subtitle="Create your Ludeva account"
+      footer={
+        <>
+          Were you given an admin login?{" "}
+          <Link href="/admin/login" className="font-medium text-primary underline underline-offset-4">
+            Sign in here
+          </Link>{" "}
+          instead of signing up.
+        </>
+      }
+    >
+      <SignUp
         path="/sign-up"
         // No static redirect - PostSignupRedirect handles it
         fallbackRedirectUrl="/onboarding/investment"
+        appearance={{
+          elements: {
+            rootBox: "w-full",
+            card: "w-full shadow-xl border border-border/60 rounded-2xl",
+          },
+        }}
       />
-      <p className="text-sm text-muted-foreground">
-        Were you given an admin login?{" "}
-        <Link href="/admin/login" className="font-medium underline underline-offset-4">
-          Sign in here
-        </Link>{" "}
-        instead of signing up.
-      </p>
       <PostSignupRedirect />
-    </div>
+    </AuthShell>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
+import { AuthShell } from "@/components/AuthShell";
 import { PostSignupRedirect } from "@/components/PostSignupRedirect";
 
 /**
@@ -20,15 +21,26 @@ import { PostSignupRedirect } from "@/components/PostSignupRedirect";
  */
 export default function Page() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-      <SignIn />
-      <p className="text-sm text-muted-foreground">
-        Signing in as an admin?{" "}
-        <Link href="/admin/login" className="font-medium underline underline-offset-4">
-          Sign in here
-        </Link>
-      </p>
+    <AuthShell
+      subtitle="Sign in to your Ludeva account"
+      footer={
+        <>
+          Signing in as an admin?{" "}
+          <Link href="/admin/login" className="font-medium text-primary underline underline-offset-4">
+            Sign in here
+          </Link>
+        </>
+      }
+    >
+      <SignIn
+        appearance={{
+          elements: {
+            rootBox: "w-full",
+            card: "w-full shadow-xl border border-border/60 rounded-2xl",
+          },
+        }}
+      />
       <PostSignupRedirect />
-    </div>
+    </AuthShell>
   );
 }

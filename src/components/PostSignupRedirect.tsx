@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
+import { Loader2 } from 'lucide-react';
 
 export function PostSignupRedirect() {
   const { user, isLoaded } = useUser();
@@ -58,8 +59,11 @@ export function PostSignupRedirect() {
 
   if (!isLoaded || checking) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p>Setting up your account…</p>
+      <div className="fixed inset-0 z-50 flex min-h-[100dvh] items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="text-sm">Setting up your account…</p>
+        </div>
       </div>
     );
   }

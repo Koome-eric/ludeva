@@ -53,10 +53,17 @@ export default function RootLayout({
           signInFallbackRedirectUrl="/member/dashboard"
           signUpFallbackRedirectUrl="/onboarding/investment"
           appearance={{
+            variables: {
+              colorPrimary: "hsl(220, 85%, 55%)",
+              borderRadius: "0.75rem",
+            },
             elements: {
               formButtonPrimary:
-                "bg-primary hover:bg-primary/90 text-primary-foreground",
+                "bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm",
               card: "shadow-xl",
+              headerTitle: "font-headline",
+              footerActionLink: "text-primary hover:text-primary/90",
+              formFieldInput: "focus:ring-2 focus:ring-primary/30",
             },
           }}
         >
