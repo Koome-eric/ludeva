@@ -68,6 +68,21 @@ export async function completeOnboarding(
 
   const d = parsedData.data;
 
+  // Super-admin-created admin accounts (email + password, no Clerk account
+  // — see src/app/api/admin/admins/route.ts) live under a different email
+  // than any Clerk user. If someone reaches this member-onboarding flow
+  // with that same email, they signed in/up on the wrong page (the main
+  // /sign-in, not /admin/login) — stop here with a clear message instead
+  // of failing later on the email's unique-constraint when we try to save.
+  const conflictingAdminAccount = await prisma.adminAccount.findUnique({
+    where: { email: d.email },
+  });
+  if (conflictingAdminAccount) {
+    throw new Error(
+      'This email is registered as an admin account, not a member account. Please sign out and sign in at /admin/login instead.'
+    );
+  }
+
   let user = await prisma.user.findUnique({
     where: { clerkId: clerkUser.id },
   });

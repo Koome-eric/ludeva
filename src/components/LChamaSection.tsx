@@ -9,6 +9,10 @@ import {
   Globe,
   TrendingUp,
   CalendarCheck,
+  Banknote,
+  HandCoins,
+  LineChart,
+  Clock,
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import Container from "@/components/ui/Container";
@@ -69,6 +73,29 @@ const TARGET_AUDIENCE = [
   "Social Groups – Table banking groups, families, SMEs, and community savings groups.",
   "Emerging Market Savers – Individuals with irregular income needing disciplined saving and investment.",
   "Financial Investors – High-value individuals attracted to 9–13% MMF returns and pooled capital.",
+];
+
+const DIASPORA_BENEFITS = [
+  {
+    icon: Banknote,
+    title: "Multi-Currency Global Gateway & Auto-FX",
+    body: "Fund your chama with the payment rails you already use — ACH/Wire in the USA, SEPA in Europe, Instant Pay/Cards in the UAE and Australia, or M-Pesa/Airtel Money in Africa. Real-time mid-market FX shows exactly what your USD, EUR, AED, AUD, or GBP converts to in the group's base currency, and every contribution reconciles automatically into one clean group balance — no more end-of-month treasurer headaches.",
+  },
+  {
+    icon: HandCoins,
+    title: "Cross-Border \"Cheap Loan\" & Guarantee Matrix",
+    body: "Diaspora members or their local proxies and families can apply for low-interest development or emergency loans. Because a chama can span continents, a digital Guarantee Lock lets designated members in different time zones sign off and lock a portion of their savings as collateral with a single tap, before repayment flows back through multi-currency or local mobile money and bank options.",
+  },
+  {
+    icon: LineChart,
+    title: "Global Investment Portfolio Tracker",
+    body: "Direct plug-ins into high-yield local investment vehicles — Kenyan Money Market Funds, Treasury Bonds, and vetted real estate — with a live dashboard for portfolio growth, dividend distributions, and each member's share ownership. Visible 24/7, wherever in the world you're checking in from.",
+  },
+  {
+    icon: Clock,
+    title: "Async Governance & Time-Zone-Friendly Voting",
+    body: "A chama spanning Sydney, Dubai, London, and New York can't all be online at once. Admins set a voting window — say, 48 hours — for loan approvals or investment moves, so members review documents, ask questions in threaded comments, and cast their vote whenever they wake up.",
+  },
 ];
 
 const VALUE_PROPS = [
@@ -441,6 +468,52 @@ export default function LChamaSection({ hasAccount = false }: { hasAccount?: boo
               <li key={aud}>{aud}</li>
             ))}
           </ul>
+        </Container>
+      </section>
+
+      {/* ── DIASPORA BENEFITS ── */}
+      <section className="bg-background py-16 md:py-24">
+        <Container>
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-medium mb-4">
+              <Globe className="h-4 w-4" /> Built for the Diaspora
+            </div>
+            <h2 className="text-3xl font-bold font-headline mb-4">
+              Run your chama from anywhere in the world
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Whether your members are in Dallas, Dubai, London, or Nairobi, L Chama keeps
+              everyone's contributions, loans, and votes on one shared, time-zone-friendly
+              dashboard — no more chasing spreadsheets across group chats.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {DIASPORA_BENEFITS.map((b) => (
+              <Card
+                key={b.title}
+                className="rounded-2xl border border-border/50 bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+              >
+                <CardContent className="p-6">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/90 to-primary text-primary-foreground shadow-lg">
+                    <b.icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">{b.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{b.body}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-10 max-w-3xl mx-auto rounded-2xl border border-border/50 bg-card p-6 text-center shadow-sm">
+            <p className="text-muted-foreground">
+              Built on multi-jurisdictional compliance — global data protection and
+              anti-money-laundering standards — so cross-border members can contribute,
+              borrow, and vote with confidence, cutting administrative overhead by up to{" "}
+              <span className="font-semibold text-foreground">80%</span> compared to
+              running a chama over chat groups and spreadsheets.
+            </p>
+          </div>
         </Container>
       </section>
 

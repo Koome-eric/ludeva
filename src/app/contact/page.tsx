@@ -82,12 +82,12 @@ export default function ContactPage() {
                 <div>
                   <h3 className="flex items-center gap-3 text-xl font-semibold">
                     <Phone className="h-5 w-5 text-primary" />
-                    Diaspora Investment
+                    Diaspora Team Leads
                   </h3>
 
                   <div className="mt-2 flex flex-col gap-1 text-muted-foreground">
                     <p>+44 7944 618740</p>
-                    <p>0716 747 445</p>
+                    <p>+1 (919) 986-8786</p>
                   </div>
                 </div>
 
@@ -100,7 +100,7 @@ export default function ContactPage() {
                   <p className="mt-2 text-muted-foreground">
                     Ludeva Public Ltd.
                     <br />
-                    P.O Box 596-4043
+                    P.O Box 596-40300
                     <br />
                     Homabay, Kenya
                   </p>

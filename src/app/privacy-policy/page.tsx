@@ -248,8 +248,8 @@ export default function PrivacyPolicyPage() {
                 <div className="text-muted-foreground space-y-1">
                   <p>Email: info@ludevaplc.co.ke</p>
                   <p>Customer Support: 0732 722 101 / 0712 940 012</p>
-                  <p>Diaspora Investment: +44 7944 618740 / 0716 747 445</p>
-                  <p>Office Address: Ludeva Public Ltd., P.O Box 596-4043, Homabay, Kenya</p>
+                  <p>Diaspora Team Leads: +44 7944 618740 / +1 (919) 986-8786</p>
+                  <p>Office Address: Ludeva Public Ltd., P.O Box 596-40300, Homabay, Kenya</p>
                 </div>
               </div>
             </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from "next/link";
 import { SignUp } from "@clerk/nextjs";
 import { PostSignupRedirect } from "@/components/PostSignupRedirect";
 
@@ -20,12 +21,19 @@ import { PostSignupRedirect } from "@/components/PostSignupRedirect";
  */
 export default function Page() {
   return (
-    <div className="flex justify-center items-center min-h-screen bg-background">
+    <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-background">
       <SignUp 
         path="/sign-up"
         // No static redirect - PostSignupRedirect handles it
         fallbackRedirectUrl="/onboarding/investment"
       />
+      <p className="text-sm text-muted-foreground">
+        Were you given an admin login?{" "}
+        <Link href="/admin/login" className="font-medium underline underline-offset-4">
+          Sign in here
+        </Link>{" "}
+        instead of signing up.
+      </p>
       <PostSignupRedirect />
     </div>
   );

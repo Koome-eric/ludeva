@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -115,6 +116,13 @@ export default function AdminLoginPage() {
               )}
             </Button>
           </form>
+
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Not an admin?{" "}
+            <Link href="/sign-in" className="font-medium underline underline-offset-4">
+              Member sign-in
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>
