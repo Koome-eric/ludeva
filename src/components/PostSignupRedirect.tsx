@@ -16,7 +16,20 @@ export function PostSignupRedirect() {
   ];
 
   useEffect(() => {
-    if (!isLoaded || !user) return;
+    if (!isLoaded) return;
+
+    // No signed-in user yet (an anonymous visitor just viewing /sign-in or
+    // /sign-up) - there is nothing to check or redirect, so stop "checking"
+    // immediately instead of leaving it true forever. Leaving it true was
+    // the actual bug: the render below shows a full-screen overlay while
+    // checking is true, which was permanently covering the Clerk sign-in
+    // form for every anonymous visitor since this effect used to return
+    // early (skipping setChecking(false) entirely) whenever there was no
+    // user, rather than only skipping the redirect logic itself.
+    if (!user) {
+      setChecking(false);
+      return;
+    }
 
     const redirect = async () => {
       try {
@@ -57,7 +70,11 @@ export function PostSignupRedirect() {
     redirect();
   }, [isLoaded, user, router]);
 
-  if (!isLoaded || checking) {
+  // Only ever show the overlay while there is a signed-in user whose
+  // redirect target we are actively resolving - never merely because
+  // Clerk itself hasn't finished loading yet, and never for an anonymous
+  // visitor, so the sign-in/sign-up form is always visible immediately.
+  if (isLoaded && user && checking) {
     return (
       <div className="fixed inset-0 z-50 flex min-h-[100dvh] items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
