@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { memberKey } from "@/lib/member-identity";
 import { summarizeMemberReports } from "@/lib/member-reports";
 
 const SHEETS_API_SECRET = process.env.SHEETS_API_SECRET || "ludeva-sheets-secret-2025";
@@ -20,11 +21,14 @@ export async function GET(req: NextRequest) {
       orderBy: { uploadedAt: "desc" },
     });
 
-    // Group by member email
+    // Group by member — email, else phone (phone-only rows used to all
+    // collapse into one bogus "null" member).
     const byMember: Record<string, typeof reports> = {};
     for (const row of reports) {
-      if (!byMember[row.memberEmail]) byMember[row.memberEmail] = [];
-      byMember[row.memberEmail].push(row);
+      const key = memberKey(row);
+      if (!key) continue;
+      if (!byMember[key]) byMember[key] = [];
+      byMember[key].push(row);
     }
 
     const investments = Object.entries(byMember).map(([email, rows]) => {
@@ -39,7 +43,8 @@ export async function GET(req: NextRequest) {
 
       return {
         id: email,
-        memberEmail: email,
+        memberEmail: email, // email, or the phone number for phone-only members
+        memberPhone: (rows.find((r: any) => r.memberPhone) as any)?.memberPhone ?? null,
         memberName: rows.find((r: any) => r.memberName)?.memberName ?? null,
         accounts,
         periodLabel,

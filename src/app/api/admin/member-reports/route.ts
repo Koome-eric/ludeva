@@ -6,9 +6,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { phoneLookupVariants } from "@/lib/phone";
 
 interface ReportRowInput {
-  memberEmail: string;
+  memberEmail?: string;
+  memberPhone?: string;
   accountNo?: string;
   memberName?: string;
   date?: string;
@@ -24,7 +26,9 @@ interface ReportRowInput {
 
 function normalizeRow(row: ReportRowInput) {
   return {
-    memberEmail: row.memberEmail.toLowerCase().trim(),
+    memberEmail: row.memberEmail?.toLowerCase().trim() || null,
+    // Stored in one canonical form (0712…) so 0712…, +254712… and 254712… are one member.
+    memberPhone: phoneLookupVariants(row.memberPhone)[0] || null,
     accountNo: row.accountNo?.trim() || null,
     memberName: row.memberName?.trim() || null,
     date: row.date?.trim() || null,
@@ -50,8 +54,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (!body.memberEmail) {
-    return NextResponse.json({ error: "memberEmail is required" }, { status: 400 });
+  if (!body.memberEmail?.trim() && !body.memberPhone?.trim()) {
+    return NextResponse.json({ error: "memberEmail or memberPhone is required" }, { status: 400 });
   }
   if (!body.principal && !body.closingBal) {
     return NextResponse.json(
@@ -81,8 +85,8 @@ export async function PATCH(req: NextRequest) {
   if (!body.id) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
   }
-  if (!body.memberEmail) {
-    return NextResponse.json({ error: "memberEmail is required" }, { status: 400 });
+  if (!body.memberEmail?.trim() && !body.memberPhone?.trim()) {
+    return NextResponse.json({ error: "memberEmail or memberPhone is required" }, { status: 400 });
   }
 
   const data = normalizeRow(body);

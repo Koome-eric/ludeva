@@ -69,7 +69,7 @@ export async function GET() {
       .filter((r: any) => parseReportAmount(r.principal) !== null && parseReportAmount(r.principal)! > 0)
       .map((r: any) => ({
         id: r.id,
-        member: r.memberName || r.memberEmail,
+        member: r.memberName || r.memberEmail || r.memberPhone,
         account: r.accountNo || "—",
         amount: parseReportAmount(r.principal) ?? 0,
         date: r.date || r.uploadedAt.toISOString().slice(0, 10),
@@ -79,7 +79,7 @@ export async function GET() {
       .filter((r: any) => parseReportAmount(r.roi) !== null && parseReportAmount(r.roi)! !== 0)
       .map((r: any) => ({
         id: r.id,
-        member: r.memberName || r.memberEmail,
+        member: r.memberName || r.memberEmail || r.memberPhone,
         account: r.accountNo || "—",
         amount: parseReportAmount(r.roi) ?? 0,
         date: r.date || r.uploadedAt.toISOString().slice(0, 10),
@@ -89,7 +89,7 @@ export async function GET() {
       .filter((r: any) => parseReportAmount(r.withdrawal) !== null && parseReportAmount(r.withdrawal)! > 0)
       .map((r: any) => ({
         id: r.id,
-        member: r.memberName || r.memberEmail,
+        member: r.memberName || r.memberEmail || r.memberPhone,
         account: r.accountNo || "—",
         amount: parseReportAmount(r.withdrawal) ?? 0,
         date: r.date || r.uploadedAt.toISOString().slice(0, 10),

@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
 }
 
 // ─────────────────────────────────────────────────
-// DELETE — Admin can wipe a member's reports by email
+// DELETE — Admin can wipe a member's reports by email (or phone)
 // ─────────────────────────────────────────────────
 export async function DELETE(req: NextRequest) {
   const authHeader = req.headers.get("x-sheets-secret");
@@ -147,10 +147,13 @@ export async function DELETE(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const email = searchParams.get("email");
-  if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });
+  const phone = searchParams.get("phone");
+  if (!email && !phone) return NextResponse.json({ error: "email or phone required" }, { status: 400 });
 
   const result = await (prisma as any).memberReport.deleteMany({
-    where: { memberEmail: email.toLowerCase().trim() },
+    where: email
+      ? { memberEmail: email.toLowerCase().trim() }
+      : { memberPhone: { in: phoneLookupVariants(phone) } },
   });
 
   return NextResponse.json({ deleted: result.count });

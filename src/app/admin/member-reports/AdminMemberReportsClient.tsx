@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { memberKey } from "@/lib/member-identity";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ function parseAmount(value?: string | null): number {
 interface ReportRow {
   id: string;
   memberEmail: string;
+  memberPhone?: string;
   accountNo?: string;
   memberName?: string;
   date?: string;
@@ -68,6 +70,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({
     memberEmail: "",
+    memberPhone: "",
     accountNo: "",
     periodLabel: "",
     date: "",
@@ -84,6 +87,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
   const [saving, setSaving] = useState(false);
   const [editForm, setEditForm] = useState({
     memberEmail: "",
+    memberPhone: "",
     accountNo: "",
     periodLabel: "",
     date: "",
@@ -110,6 +114,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
   const resetForm = () =>
     setForm({
       memberEmail: "",
+      memberPhone: "",
       accountNo: "",
       periodLabel: "",
       date: "",
@@ -122,8 +127,8 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
     });
 
   const submitAddRow = async () => {
-    if (!form.memberEmail.trim()) {
-      toast({ variant: "destructive", title: "Member email is required" });
+    if (!form.memberEmail.trim() && !form.memberPhone.trim()) {
+      toast({ variant: "destructive", title: "Enter the member's email or phone number" });
       return;
     }
     if (!form.principal.trim() && !form.closingBal.trim()) {
@@ -143,7 +148,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
         throw new Error(errData.error || "Failed to add investment entry");
       }
 
-      toast({ title: "Investment entry added", description: `Recorded for ${form.memberEmail}` });
+      toast({ title: "Investment entry added", description: `Recorded for ${form.memberEmail || form.memberPhone}` });
       setAddOpen(false);
       resetForm();
       await refresh();
@@ -158,6 +163,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
     setEditingId(row.id);
     setEditForm({
       memberEmail: row.memberEmail || "",
+      memberPhone: row.memberPhone || "",
       accountNo: row.accountNo || "",
       periodLabel: row.periodLabel || "",
       date: row.date || "",
@@ -176,8 +182,8 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
 
   const submitEditRow = async () => {
     if (!editingId) return;
-    if (!editForm.memberEmail.trim()) {
-      toast({ variant: "destructive", title: "Member email is required" });
+    if (!editForm.memberEmail.trim() && !editForm.memberPhone.trim()) {
+      toast({ variant: "destructive", title: "Enter the member's email or phone number" });
       return;
     }
 
@@ -209,7 +215,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
     if (!confirm(`Delete ALL report rows for ${email}? This cannot be undone.`)) return;
     setDeleting(email);
     try {
-      const res = await fetch(`/api/member-reports?email=${encodeURIComponent(email)}`, {
+      const res = await fetch(`/api/member-reports?${email.includes("@") ? "email" : "phone"}=${encodeURIComponent(email)}`, {
         method: "DELETE",
         headers: { "x-sheets-secret": SHEETS_SECRET },
       });
@@ -230,7 +236,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
 
   const filteredEmails = Object.keys(memberSummary).filter(email =>
     email.toLowerCase().includes(search.toLowerCase()) ||
-    reports.find(r => r.memberEmail === email && r.memberName?.toLowerCase().includes(search.toLowerCase()))
+    reports.find(r => memberKey(r) === email && r.memberName?.toLowerCase().includes(search.toLowerCase()))
   );
 
   const totalRows = reports.length;
@@ -275,7 +281,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
                 <Plus className="h-4 w-4 mr-2" /> Add Investment Entry
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add Investment Entry</DialogTitle>
                 <DialogDescription>
@@ -286,14 +292,31 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
 
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="memberEmail">Member Email *</Label>
-                  <Input
-                    id="memberEmail"
-                    type="email"
-                    placeholder="member@example.com"
-                    value={form.memberEmail}
-                    onChange={(e) => updateField("memberEmail", e.target.value)}
-                  />
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Identify the member by <span className="font-medium">email or phone number</span> — one is enough.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="memberEmail">Member Email</Label>
+                      <Input
+                        id="memberEmail"
+                        type="email"
+                        placeholder="member@example.com"
+                        value={form.memberEmail}
+                        onChange={(e) => updateField("memberEmail", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="memberPhone">Member Phone</Label>
+                      <Input
+                        id="memberPhone"
+                        type="tel"
+                        placeholder="e.g. 0712345678"
+                        value={form.memberPhone}
+                        onChange={(e) => updateField("memberPhone", e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -443,7 +466,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
       {/* Search */}
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Search by email or name…"
+        <Input className="pl-9" placeholder="Search by email, phone or name…"
           value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
@@ -457,7 +480,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
         <div className="space-y-3">
           {filteredEmails.map(email => {
             const summary = memberSummary[email];
-            const memberRows = reports.filter(r => r.memberEmail === email);
+            const memberRows = reports.filter(r => memberKey(r) === email);
             const memberName = memberRows.find(r => r.memberName)?.memberName;
             const isExpanded = expandedEmail === email;
 
@@ -549,13 +572,29 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
 
           <div className="space-y-3">
             <div>
-              <Label htmlFor="edit-memberEmail">Member Email *</Label>
-              <Input
-                id="edit-memberEmail"
-                type="email"
-                value={editForm.memberEmail}
-                onChange={(e) => updateEditField("memberEmail", e.target.value)}
-              />
+              <p className="text-xs text-muted-foreground mb-2">
+                Identify the member by <span className="font-medium">email or phone number</span> — one is enough.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="edit-memberEmail">Member Email</Label>
+                  <Input
+                    id="edit-memberEmail"
+                    type="email"
+                    value={editForm.memberEmail}
+                    onChange={(e) => updateEditField("memberEmail", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-memberPhone">Member Phone</Label>
+                  <Input
+                    id="edit-memberPhone"
+                    type="tel"
+                    value={editForm.memberPhone}
+                    onChange={(e) => updateEditField("memberPhone", e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

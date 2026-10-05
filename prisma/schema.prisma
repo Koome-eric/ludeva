@@ -535,7 +535,9 @@ model MemberReport {
 model SavingsEntry {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  memberEmail String
+  // Identifier: email first, phone as the fallback (a row needs at least one).
+  memberEmail String?
+  memberPhone String?
   accountNo   String?
   memberName  String?
 

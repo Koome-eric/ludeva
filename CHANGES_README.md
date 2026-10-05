@@ -50,3 +50,17 @@ the same phone-matching fix over to `/api/savings/route.ts` and
   for L-CHAMA's Team/TeamMembership model, which this app doesn't have —
   that part of the earlier delivery stands as-is for L-CHAMA and isn't
   touched here.
+
+
+## Phone number as a second member identifier (alongside email)
+
+A row in MemberReport / SavingsEntry now needs an email OR a phone number. Email is matched first, phone second (any of 07…, +254…, 254… forms — see `src/lib/phone.ts`).
+
+- `src/lib/member-identity.ts` (new): `memberRowsWhere` (email-or-phone filter), `memberKey` (admin grouping key), `samePhone`.
+- **Member side:** `/member/reports`, `/member/savings`, `/member/dashboard`, `/member/investments` (via `getMemberReportSummary`) and `GET /api/savings` now find a member's rows by email or phone. (`GET /api/member-reports` already did.)
+- **Savings webhook** (`POST /api/savings`): accepts `memberPhone`; upserts on phone + date + accountNo when the row has no email. `DELETE` accepts `?phone=`.
+- **Schema:** `SavingsEntry.memberPhone` added, `memberEmail` now optional. Run `npx prisma db push`.
+- **Admin:** add/edit forms (Member Reports, Savings, Investments) have a Member Phone field and accept email OR phone; the admin API routes validate the same. Members with no email are grouped by phone — previously all phone-only rows collapsed into one "null" member in the Investments list and AUM member count.
+- **Apps Script:** `scripts/savings-push.gs` now reads a `memberPhone` column, sends it, and only marks a row ✅ Pushed on an HTTP 2xx. `scripts/mmf-push.gs` already had phone support.
+
+**Admin "Add / Edit Investment Entry" dialog:** Member Email and Member Phone sit side by side with a "email or phone — one is enough" hint; saving requires either. Phone is stored in canonical local form (0712…) by the admin routes so different spellings of one number group as one member.

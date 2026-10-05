@@ -14,7 +14,7 @@ export default async function MemberDashboardPage() {
   // MemberReport is the source of truth for investment totals. If a member
   // has no report rows uploaded yet, their investment is zero — regardless
   // of any initialInvestment/payment records on file.
-  const { rows: reportRows, summary } = await getMemberReportSummary(user.email)
+  const { rows: reportRows, summary } = await getMemberReportSummary({ email: user.email, phone: user.phone })
 
   const totalInvested = summary.totalPrincipal
   const totalRoi = summary.totalRoi

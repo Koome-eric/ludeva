@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { memberKey } from "@/lib/member-identity";
 
 export async function GET() {
   await requireAdmin();
@@ -11,7 +12,8 @@ export async function GET() {
 
   const memberSummary: Record<string, { count: number; accounts: string[]; lastPush: string }> = {};
   for (const r of reports) {
-    const e = r.memberEmail;
+    const e = memberKey(r);
+    if (!e) continue;
     if (!memberSummary[e]) memberSummary[e] = { count: 0, accounts: [], lastPush: r.uploadedAt };
     memberSummary[e].count++;
     if (r.accountNo && !memberSummary[e].accounts.includes(r.accountNo)) {

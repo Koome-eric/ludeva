@@ -8,9 +8,12 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { memberRowsWhere, memberKey, type MemberIdentity } from "@/lib/member-identity";
 
 export interface MemberReportRow {
   id: string;
+  memberEmail?: string | null;
+  memberPhone?: string | null;
   date?: string | null;
   principal?: string | null;
   rate?: string | null;
@@ -155,7 +158,7 @@ export interface PlatformAumSummary {
   totalWithdrawals: number;
   /** Net balance across the platform = totalAUM + totalRoi − totalWithdrawals. */
   netAUM: number;
-  /** Count of distinct members (by email) with at least one report row. */
+  /** Count of distinct members (by email, else phone) with at least one report row. */
   totalMembers: number;
   /** AUM deposited within rows uploaded since `since` (uses uploadedAt, since the free-text `date` column isn't reliably parseable). */
   aumSince: number;
@@ -188,7 +191,8 @@ export async function getPlatformAumSummary(since?: Date): Promise<PlatformAumSu
     }
     if (roi !== null) totalRoi += roi;
     if (withdrawal !== null) totalWithdrawals += withdrawal;
-    if (row.memberEmail) members.add(row.memberEmail);
+    const key = memberKey(row);
+    if (key) members.add(key);
   }
 
   return { totalAUM, totalRoi, totalWithdrawals, netAUM: totalAUM + totalRoi - totalWithdrawals, totalMembers: members.size, aumSince };
@@ -198,12 +202,15 @@ export async function getPlatformAumSummary(since?: Date): Promise<PlatformAumSu
  * Fetches a member's MemberReport rows (newest upload first) and returns
  * both the raw rows and the derived investment summary.
  */
-export async function getMemberReportSummary(memberEmail: string): Promise<{
+export async function getMemberReportSummary(member: string | MemberIdentity): Promise<{
   rows: MemberReportRow[];
   summary: MemberInvestmentSummary;
 }> {
+  // Accepts a bare email (legacy callers) or { email, phone } — rows are
+  // matched on email first, phone second.
+  const who: MemberIdentity = typeof member === "string" ? { email: member } : member;
   const rows = await (prisma as any).memberReport.findMany({
-    where: { memberEmail },
+    where: memberRowsWhere(who),
     orderBy: { uploadedAt: "desc" },
   });
 

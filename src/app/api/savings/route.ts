@@ -9,6 +9,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { phoneLookupVariants } from "@/lib/phone";
+import { memberRowsWhere } from "@/lib/member-identity";
 
 const SHEETS_API_SECRET = process.env.SAVINGS_SHEETS_API_SECRET || process.env.SHEETS_API_SECRET || "ludeva-sheets-secret-2025";
 
@@ -23,7 +25,8 @@ export async function GET(req: NextRequest) {
   if (!dbUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   const entries = await (prisma as any).savingsEntry.findMany({
-    where: { memberEmail: dbUser.email },
+    // email first, phone as the fallback identifier
+    where: memberRowsWhere({ email: dbUser.email, phone: dbUser.phone }),
     orderBy: { uploadedAt: "desc" },
   });
 
@@ -58,6 +61,7 @@ export async function POST(req: NextRequest) {
   for (const row of rows) {
     const {
       memberEmail,
+      memberPhone,
       accountNo,
       memberName,
       date,
@@ -71,22 +75,30 @@ export async function POST(req: NextRequest) {
       notes,
     } = row;
 
-    if (!memberEmail) {
-      results.push({ error: "memberEmail required", row });
+    if (!memberEmail && !memberPhone) {
+      results.push({ error: "memberEmail or memberPhone required", row });
       continue;
     }
 
-    // Upsert: match by email + date + accountNo so re-pushing a row updates rather than duplicates
+    const cleanEmail = memberEmail ? String(memberEmail).toLowerCase().trim() : null;
+    const cleanPhone = memberPhone ? String(memberPhone).trim() : null;
+
+    // Upsert: match by email + date + accountNo so re-pushing a row updates
+    // rather than duplicates. A row with no email matches on phone instead
+    // (phoneLookupVariants covers 07…, +254… and 254… forms of one number).
     const existing = await (prisma as any).savingsEntry.findFirst({
-      where: {
-        memberEmail: memberEmail.toLowerCase().trim(),
-        date: date || null,
-        accountNo: accountNo || null,
-      },
+      where: cleanEmail
+        ? { memberEmail: cleanEmail, date: date || null, accountNo: accountNo || null }
+        : {
+            memberPhone: { in: phoneLookupVariants(cleanPhone) },
+            date: date || null,
+            accountNo: accountNo || null,
+          },
     });
 
     const data = {
-      memberEmail: memberEmail.toLowerCase().trim(),
+      memberEmail: cleanEmail,
+      memberPhone: cleanPhone,
       accountNo: accountNo?.toString()?.trim() || null,
       memberName: memberName?.toString()?.trim() || null,
       date: date?.toString()?.trim() || null,
@@ -110,7 +122,7 @@ export async function POST(req: NextRequest) {
       record = await (prisma as any).savingsEntry.create({ data });
     }
 
-    results.push({ success: true, id: record.id, email: memberEmail });
+    results.push({ success: true, id: record.id, email: cleanEmail, phone: cleanPhone });
   }
 
   return NextResponse.json({ processed: results.length, results });
@@ -127,10 +139,13 @@ export async function DELETE(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const email = searchParams.get("email");
-  if (!email) return NextResponse.json({ error: "email required" }, { status: 400 });
+  const phone = searchParams.get("phone");
+  if (!email && !phone) return NextResponse.json({ error: "email or phone required" }, { status: 400 });
 
   const result = await (prisma as any).savingsEntry.deleteMany({
-    where: { memberEmail: email.toLowerCase().trim() },
+    where: email
+      ? { memberEmail: email.toLowerCase().trim() }
+      : { memberPhone: { in: phoneLookupVariants(phone) } },
   });
 
   return NextResponse.json({ deleted: result.count });

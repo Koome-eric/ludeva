@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { memberKey } from "@/lib/member-identity";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +42,7 @@ type MemberInvestment = {
 type ReportRow = {
   id: string;
   memberEmail: string;
+  memberPhone?: string;
   accountNo?: string;
   memberName?: string;
   date?: string;
@@ -57,6 +59,7 @@ type ReportRow = {
 
 const emptyRecordForm = {
   memberEmail: "",
+  memberPhone: "",
   accountNo: "",
   periodLabel: "",
   date: "",
@@ -127,7 +130,7 @@ export default function InvestmentsPage() {
   }, []);
 
   const manageRows = useMemo(
-    () => (manageEmail ? rawReports.filter((r) => r.memberEmail === manageEmail) : []),
+    () => (manageEmail ? rawReports.filter((r) => memberKey(r) === manageEmail) : []),
     [manageEmail, rawReports]
   );
 
@@ -158,6 +161,7 @@ export default function InvestmentsPage() {
     setEditingId(row.id);
     setEditForm({
       memberEmail: row.memberEmail || "",
+      memberPhone: row.memberPhone || "",
       accountNo: row.accountNo || "",
       periodLabel: row.periodLabel || "",
       date: row.date || "",
@@ -474,13 +478,17 @@ export default function InvestmentsPage() {
 
           <div className="space-y-3">
             <div>
-              <Label htmlFor="inv-edit-memberEmail">Member Email *</Label>
+              <Label htmlFor="inv-edit-memberEmail">Member Email</Label>
               <Input
                 id="inv-edit-memberEmail"
                 type="email"
                 value={editForm.memberEmail}
                 onChange={(e) => updateEditField("memberEmail", e.target.value)}
               />
+            </div>
+            <div>
+              <Label htmlFor="inv-edit-memberPhone">Member Phone <span className="text-muted-foreground font-normal">(used if no email)</span></Label>
+              <Input id="inv-edit-memberPhone" type="tel" placeholder="0712345678" value={editForm.memberPhone} onChange={(e) => updateEditField("memberPhone", e.target.value)} />
             </div>
 
             <div className="grid grid-cols-2 gap-3">

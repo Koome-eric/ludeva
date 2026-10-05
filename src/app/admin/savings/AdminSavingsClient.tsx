@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { memberKey } from "@/lib/member-identity";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ function parseAmount(value?: string | null): number {
 interface SavingsRow {
   id: string;
   memberEmail: string;
+  memberPhone?: string;
   accountNo?: string;
   memberName?: string;
   date?: string;
@@ -59,6 +61,7 @@ const SHEETS_SECRET = process.env.NEXT_PUBLIC_SHEETS_API_SECRET || "ludeva-sheet
 
 const EMPTY_FORM = {
   memberEmail: "",
+  memberPhone: "",
   accountNo: "",
   periodLabel: "",
   date: "",
@@ -102,8 +105,8 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
   const resetForm = () => setForm({ ...EMPTY_FORM });
 
   const submitAddRow = async () => {
-    if (!form.memberEmail.trim()) {
-      toast({ variant: "destructive", title: "Member email is required" });
+    if (!form.memberEmail.trim() && !form.memberPhone.trim()) {
+      toast({ variant: "destructive", title: "Enter the member's email or phone number" });
       return;
     }
     if (!form.openingBalance.trim() && !form.closingBalance.trim()) {
@@ -123,7 +126,7 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
         throw new Error(errData.error || "Failed to add savings entry");
       }
 
-      toast({ title: "Savings entry added", description: `Recorded for ${form.memberEmail}` });
+      toast({ title: "Savings entry added", description: `Recorded for ${form.memberEmail || form.memberPhone}` });
       setAddOpen(false);
       resetForm();
       await refresh();
@@ -138,6 +141,7 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
     setEditingId(row.id);
     setEditForm({
       memberEmail: row.memberEmail || "",
+      memberPhone: row.memberPhone || "",
       accountNo: row.accountNo || "",
       periodLabel: row.periodLabel || "",
       date: row.date || "",
@@ -157,8 +161,8 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
 
   const submitEditRow = async () => {
     if (!editingId) return;
-    if (!editForm.memberEmail.trim()) {
-      toast({ variant: "destructive", title: "Member email is required" });
+    if (!editForm.memberEmail.trim() && !editForm.memberPhone.trim()) {
+      toast({ variant: "destructive", title: "Enter the member's email or phone number" });
       return;
     }
 
@@ -190,7 +194,7 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
     if (!confirm(`Delete ALL savings entries for ${email}? This cannot be undone.`)) return;
     setDeleting(email);
     try {
-      const res = await fetch(`/api/savings?email=${encodeURIComponent(email)}`, {
+      const res = await fetch(`/api/savings?${email.includes("@") ? "email" : "phone"}=${encodeURIComponent(email)}`, {
         method: "DELETE",
         headers: { "x-sheets-secret": SHEETS_SECRET },
       });
@@ -223,7 +227,7 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
 
   const filteredEmails = Object.keys(memberSummary).filter(email =>
     email.toLowerCase().includes(search.toLowerCase()) ||
-    entries.find(r => r.memberEmail === email && r.memberName?.toLowerCase().includes(search.toLowerCase()))
+    entries.find(r => memberKey(r) === email && r.memberName?.toLowerCase().includes(search.toLowerCase()))
   );
 
   const totalRows = entries.length;
@@ -239,9 +243,9 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
       totalDeposits += parseAmount(r.deposit);
       totalInterest += parseAmount(r.interestEarned);
       totalWithdrawals += parseAmount(r.withdrawal);
-      const prev = latestByMember.get(r.memberEmail);
+      const prev = latestByMember.get(memberKey(r));
       if (!prev || new Date(r.uploadedAt) > new Date(prev.uploadedAt)) {
-        latestByMember.set(r.memberEmail, r);
+        latestByMember.set(memberKey(r), r);
       }
     }
     for (const r of latestByMember.values()) {
@@ -283,7 +287,7 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
 
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="memberEmail">Member Email *</Label>
+                  <Label htmlFor="memberEmail">Member Email</Label>
                   <Input
                     id="memberEmail"
                     type="email"
@@ -292,6 +296,10 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
                     onChange={(e) => updateField("memberEmail", e.target.value)}
                   />
                 </div>
+<div>
+<Label htmlFor="memberPhone">Member Phone <span className="text-muted-foreground font-normal">(used if no email)</span></Label>
+<Input id="memberPhone" type="tel" placeholder="0712345678" value={form.memberPhone} onChange={(e) => updateField("memberPhone", e.target.value)} />
+</div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -452,7 +460,7 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
       {/* Search */}
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Search by email or name…"
+        <Input className="pl-9" placeholder="Search by email, phone or name…"
           value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
@@ -466,7 +474,7 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
         <div className="space-y-3">
           {filteredEmails.map(email => {
             const summary = memberSummary[email];
-            const memberRows = entries.filter(r => r.memberEmail === email);
+            const memberRows = entries.filter(r => memberKey(r) === email);
             const memberName = memberRows.find(r => r.memberName)?.memberName;
             const isExpanded = expandedEmail === email;
 
@@ -562,7 +570,7 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
 
           <div className="space-y-3">
             <div>
-              <Label htmlFor="edit-memberEmail">Member Email *</Label>
+              <Label htmlFor="edit-memberEmail">Member Email</Label>
               <Input
                 id="edit-memberEmail"
                 type="email"
@@ -570,6 +578,10 @@ export default function AdminSavingsClient({ entries: initialEntries, memberSumm
                 onChange={(e) => updateEditField("memberEmail", e.target.value)}
               />
             </div>
+<div>
+<Label htmlFor="edit-memberPhone">Member Phone <span className="text-muted-foreground font-normal">(used if no email)</span></Label>
+<Input id="edit-memberPhone" type="tel" placeholder="0712345678" value={editForm.memberPhone} onChange={(e) => updateEditField("memberPhone", e.target.value)} />
+</div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>

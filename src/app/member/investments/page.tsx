@@ -51,7 +51,7 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
   if (!user) redirect("/sign-in");
   assertKycApproved(user);
 
-  const { rows } = await getMemberReportSummary(user.email);
+  const { rows } = await getMemberReportSummary({ email: user.email, phone: user.phone });
 
   // Build display rows: only rows that carry an actual amount (closing
   // balance or principal) count as "an investment entry" — quarter/label
