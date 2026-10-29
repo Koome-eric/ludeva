@@ -64,6 +64,9 @@ export default function RootLayout({
               headerTitle: "font-headline",
               footerActionLink: "text-primary hover:text-primary/90",
               formFieldInput: "focus:ring-2 focus:ring-primary/30",
+              footer: {
+                display: "none",
+              },
             },
           }}
         >

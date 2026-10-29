@@ -25,7 +25,12 @@ export default function Page() {
       subtitle="Sign in to your Ludeva account"
       footer={
         <>
-          Signing in as an admin?{" "}
+          Don&apos;t have an account?{" "}
+          <Link href="/sign-up" className="font-medium text-primary underline underline-offset-4">
+            Sign up
+          </Link>
+          <span className="mx-2">·</span>
+          Admin?{" "}
           <Link href="/admin/login" className="font-medium text-primary underline underline-offset-4">
             Sign in here
           </Link>
