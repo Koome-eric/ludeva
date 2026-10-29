@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
 import { AuthShell } from "@/components/AuthShell";
 import { PostSignupRedirect } from "@/components/PostSignupRedirect";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 
 /**
  * Sign-In Page
@@ -22,7 +23,8 @@ import { PostSignupRedirect } from "@/components/PostSignupRedirect";
 export default function Page() {
   return (
     <AuthShell
-      subtitle="Sign in to your Ludeva account"
+      headline="Welcome back to your portfolio."
+      subline="Sign in to view your investments, deposits and statements."
       footer={
         <>
           Don&apos;t have an account?{" "}
@@ -37,14 +39,7 @@ export default function Page() {
         </>
       }
     >
-      <SignIn
-        appearance={{
-          elements: {
-            rootBox: "w-full",
-            card: "w-full shadow-xl border border-border/60 rounded-2xl",
-          },
-        }}
-      />
+      <SignIn appearance={clerkAppearance} />
       <PostSignupRedirect />
     </AuthShell>
   );

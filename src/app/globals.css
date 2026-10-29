@@ -101,3 +101,18 @@ body {
   scrollbar-gutter: stable;
 }
 }
+
+@layer utilities {
+  /* Deep navy brand panel with a soft blue/violet glow — used for the left
+     side of the sign-in / sign-up screens. Fixed in both themes so
+     white-on-navy contrast never depends on the theme toggle. Uses the
+     existing --primary and --accent (violet) tokens, so nothing new to
+     maintain. */
+  .bg-brand-dark {
+    background-color: hsl(224 71% 4%);
+    background-image:
+      radial-gradient(circle at 85% 0%, hsl(var(--primary) / 0.35), transparent 50%),
+      radial-gradient(circle at 0% 100%, hsl(var(--accent) / 0.22), transparent 45%);
+    color: hsl(210 40% 98%);
+  }
+}

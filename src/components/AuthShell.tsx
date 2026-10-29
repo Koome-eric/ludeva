@@ -1,76 +1,110 @@
-'use client';
-
 import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { Check } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
-/**
- * Shared shell for the Clerk /sign-in and /sign-up pages — centers the
- * widget in a premium fintech layout (soft gradient backdrop, brand logo,
- * a constrained card width) and stays correctly centered/scrollable on
- * every screen size, including small phones:
- *  - `min-h-[100dvh]` instead of `min-h-screen` so mobile browser chrome
- *    (address bar showing/hiding) doesn't shift or clip the widget.
- *  - `env(safe-area-inset-*)` padding so it clears notches/home-bar areas.
- *  - the gradient blobs are `-z-10` and clipped by `overflow-hidden` on
- *    the outer wrapper, so they can never cause horizontal scroll.
- *  - the Clerk widget itself is told to fill its container (`w-full`) via
- *    the `appearance` prop on <SignIn/>/<SignUp/> rather than a fixed
- *    width, so it naturally reflows instead of overflowing on narrow
- *    screens.
- */
-export function AuthShell({
-  subtitle,
-  footer,
-  children,
-}: {
-  subtitle: string;
-  footer: ReactNode;
+type Props = {
+  /** What this screen is for, in the brand panel's voice. */
+  headline: string;
+  subline: string;
+  /** Optional line under the form (cross-links, admin sign-in pointer). */
+  footer?: ReactNode;
   children: ReactNode;
-}) {
-  return (
-    <div
-      className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-background px-4 py-10 sm:px-6"
-      style={{
-        paddingTop: 'max(2.5rem, env(safe-area-inset-top))',
-        paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom))',
-      }}
-    >
-      {/* Decorative brand gradient backdrop — purely visual, never affects layout/scroll */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-[-12%] h-[22rem] w-[22rem] -translate-x-1/2 rounded-full bg-primary/25 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
-        <div className="absolute bottom-[-15%] right-[-10%] h-[16rem] w-[16rem] rounded-full bg-primary/10 blur-3xl sm:h-[20rem] sm:w-[20rem]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--foreground)/0.06)_1px,transparent_0)] [background-size:22px_22px]" />
-      </div>
+};
 
-      <div className="flex w-full max-w-md flex-col items-center">
-        <Link href="/" className="mb-6 flex items-center">
-          <Image
-            src="/images/logo_light.png"
-            alt="Ludeva"
-            width={148}
-            height={42}
-            className="block h-9 w-auto object-contain dark:hidden"
-            priority
-          />
+const PROMISES = [
+  'Professionally managed Money Market Fund investments',
+  'Strong governance and disciplined risk management',
+  'Your investments, deposits and withdrawals in one dashboard',
+];
+
+// Shared frame for sign-in and sign-up. The left panel carries the Ludeva
+// identity; the right panel holds the Clerk form. On phones the panel
+// collapses to a compact brand bar so the form stays above the fold.
+//
+// Layout notes:
+//  - `min-h-[100dvh]` (not `min-h-screen`) so mobile browser chrome showing /
+//    hiding doesn't clip the form.
+//  - safe-area insets keep content clear of notches and home bars.
+//  - the artwork is absolutely positioned inside an `overflow-hidden` panel,
+//    so it can never cause horizontal scroll.
+export function AuthShell({ headline, subline, footer, children }: Props) {
+  return (
+    <div className="grid min-h-[100dvh] bg-background lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)]">
+      <aside
+        className="relative flex flex-col justify-between gap-10 overflow-hidden bg-brand-dark px-6 py-6 lg:px-12 lg:py-12"
+        style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
+      >
+        <Link href="/" aria-label="Ludeva home" className="relative z-10 inline-flex w-fit">
           <Image
             src="/images/logo_dark.png"
-            alt="Ludeva"
+            alt="Ludeva — Building Wealth Together"
             width={148}
-            height={42}
-            className="hidden h-9 w-auto object-contain dark:block"
+            height={57}
             priority
+            className="h-10 w-auto lg:h-12"
           />
         </Link>
 
-        <p className="mb-6 text-center text-sm text-muted-foreground">{subtitle}</p>
+        <div className="relative z-10 hidden max-w-md lg:block">
+          <h1 className="font-headline text-balance text-4xl font-bold leading-[1.1] tracking-tight xl:text-5xl">
+            {headline}
+          </h1>
+          <p className="mt-4 text-lg text-white/75">{subline}</p>
+          <ul className="mt-8 space-y-3">
+            {PROMISES.map((p) => (
+              <li key={p} className="flex items-start gap-3 text-sm text-white/85">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                {p}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-        {/* w-full so the Clerk card (told to be w-full via its own
-            appearance prop) is centered and never wider than this shell */}
-        <div className="flex w-full justify-center">{children}</div>
+        <Image
+          src="/images/art-auth.svg"
+          alt=""
+          aria-hidden="true"
+          width={640}
+          height={620}
+          className="pointer-events-none absolute -bottom-24 -right-24 hidden w-[34rem] max-w-none opacity-60 xl:block"
+        />
 
-        <div className="mt-6 text-center text-sm text-muted-foreground">{footer}</div>
-      </div>
+        <p className="relative z-10 hidden text-sm text-white/60 lg:block">
+          © {new Date().getFullYear()} Ludeva Plc, Kenya. Building wealth together.
+        </p>
+      </aside>
+
+      <main
+        className="relative flex flex-col items-center justify-center px-4 py-10 sm:px-8"
+        style={{ paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom))' }}
+      >
+        <div className="absolute right-4 top-4 flex items-center gap-2">
+          <ThemeToggle />
+        </div>
+
+        <div className="flex w-full max-w-md flex-col items-center gap-4">
+          <div className="mb-2 text-center lg:hidden">
+            <h1 className="font-headline text-balance text-2xl font-bold tracking-tight">{headline}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{subline}</p>
+          </div>
+
+          {children}
+
+          {footer && <div className="text-center text-sm text-muted-foreground">{footer}</div>}
+
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            <Link href="/privacy-policy" className="underline underline-offset-4 hover:text-foreground">
+              Privacy policy
+            </Link>
+            {' · '}
+            <Link href="/contact" className="underline underline-offset-4 hover:text-foreground">
+              Need help?
+            </Link>
+          </p>
+        </div>
+      </main>
     </div>
   );
 }

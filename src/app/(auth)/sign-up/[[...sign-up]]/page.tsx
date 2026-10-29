@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SignUp } from "@clerk/nextjs";
 import { AuthShell } from "@/components/AuthShell";
 import { PostSignupRedirect } from "@/components/PostSignupRedirect";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 
 /**
  * Sign-Up Page
@@ -23,7 +24,8 @@ import { PostSignupRedirect } from "@/components/PostSignupRedirect";
 export default function Page() {
   return (
     <AuthShell
-      subtitle="Create your Ludeva account"
+      headline="Start building your wealth."
+      subline="Create your Ludeva account, then complete a short onboarding to begin investing."
       footer={
         <>
           Already have an account?{" "}
@@ -42,12 +44,7 @@ export default function Page() {
         path="/sign-up"
         // No static redirect - PostSignupRedirect handles it
         fallbackRedirectUrl="/onboarding/investment"
-        appearance={{
-          elements: {
-            rootBox: "w-full",
-            card: "w-full shadow-xl border border-border/60 rounded-2xl",
-          },
-        }}
+        appearance={clerkAppearance}
       />
       <PostSignupRedirect />
     </AuthShell>
