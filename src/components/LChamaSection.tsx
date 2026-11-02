@@ -72,7 +72,7 @@ const TARGET_AUDIENCE = [
   "Diaspora Communities – Individuals sending or receiving money globally who want a secure way to invest back home.",
   "Social Groups – Table banking groups, families, SMEs, and community savings groups.",
   "Emerging Market Savers – Individuals with irregular income needing disciplined saving and investment.",
-  "Financial Investors – High-value individuals attracted to 9–13% MMF returns and pooled capital.",
+  "Financial Investors – High-value individuals attracted to 12% p.a. Shares Account returns and pooled capital.",
 ];
 
 const DIASPORA_BENEFITS = [
@@ -89,7 +89,7 @@ const DIASPORA_BENEFITS = [
   {
     icon: LineChart,
     title: "Global Investment Portfolio Tracker",
-    body: "Direct plug-ins into high-yield local investment vehicles — Kenyan Money Market Funds, Treasury Bonds, and vetted real estate — with a live dashboard for portfolio growth, dividend distributions, and each member's share ownership. Visible 24/7, wherever in the world you're checking in from.",
+    body: "Direct plug-ins into high-yield local investment vehicles — Kenyan equities, Treasury Bonds, and vetted real estate — with a live dashboard for portfolio growth, dividend distributions, and each member's share ownership. Visible 24/7, wherever in the world you're checking in from.",
   },
   {
     icon: Clock,
@@ -155,7 +155,7 @@ export default function LChamaSection({ hasAccount = false }: { hasAccount?: boo
       <PageHero
         title="L Chama"
         description="Invest as one. Grow as many. A chama is a group of people who save and invest together — L Chama brings that tradition onto Ludeva, with everyone contributing on their own terms under one shared dashboard."
-        imageSrc="/images/hero-mmf.png"
+        imageSrc="/images/hero-banner.png"
       />
 
       {/* ── WHAT L CHAMA IS ── */}
@@ -166,8 +166,7 @@ export default function LChamaSection({ hasAccount = false }: { hasAccount?: boo
           </h2>
           <p className="text-muted-foreground max-w-3xl mx-auto text-center mb-6">
             L Chama is Ludeva&rsquo;s modern take on the traditional savings group.
-            It combines structured savings, investment through a Money Market Fund
-            (MMF), and a collateralized payout system to provide both security and
+            It combines structured savings, investment through the Shares Account, and a collateralized payout system to provide both security and
             growth for every member — individually verified before they join the
             circle.
           </p>
@@ -292,8 +291,8 @@ export default function LChamaSection({ hasAccount = false }: { hasAccount?: boo
 
           <p className="text-muted-foreground mt-4 text-center">
             Payout values are based on a 10-member group over a 10-month cycle.
-            First cycle contributions are invested in the MMF earning
-            approximately 9%–13% annually.
+            First cycle contributions are invested in the Shares Account earning
+            approximately 12% annually.
           </p>
         </Container>
       </section>
@@ -385,8 +384,8 @@ export default function LChamaSection({ hasAccount = false }: { hasAccount?: boo
                   <Shield className="h-5 w-5 text-primary" /> First Cycle (Collateral Phase)
                 </h3>
                 <p className="text-muted-foreground">
-                  Contributions are invested in the MMF account, earning
-                  9%–13% annually. This serves as collateral and risk protection.
+                  Contributions are invested in the Shares Account, earning
+                  approximately 12% annually. This serves as collateral and risk protection.
                 </p>
               </CardContent>
             </Card>
@@ -422,7 +421,7 @@ export default function LChamaSection({ hasAccount = false }: { hasAccount?: boo
                   <Globe className="h-5 w-5 text-primary" /> Risk Management
                 </h3>
                 <p className="text-muted-foreground">
-                  If a member defaults, their MMF collateral is used to cover the
+                  If a member defaults, their Shares Account collateral is used to cover the
                   payout. The member is removed and must reinvest to rejoin.
                 </p>
               </CardContent>

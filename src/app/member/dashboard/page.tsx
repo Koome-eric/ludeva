@@ -128,7 +128,7 @@ export default async function MemberDashboardPage() {
               Continue Growing Your Wealth
             </h3>
             <p className="text-sm text-muted-foreground">
-              Add funds into your Money Market investment securely.
+              Add funds into your investment securely.
             </p>
           </div>
 

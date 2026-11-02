@@ -1,6 +1,6 @@
-# Ludeva MMF Web Application
+# Ludeva Web Application
 
-This is a Next.js project for the Ludeva Money Market Fund (MMF) web application, focused on providing accessible, secure, and professionally managed investments in Kenya.
+This is a Next.js project for the Ludeva web application, focused on providing accessible, secure, and professionally managed investments in Kenya through the Shares Account, Savings Account and Junior Account.
 
 ## Getting Started
 

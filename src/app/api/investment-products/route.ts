@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       data: {
         name: body.name,
         category: body.category, // ProductCategory enum
-        type: body.type,         // FundType enum: MMF | STOCK | BOND | SAVINGS | JUNIOR
+        type: body.type,         // FundType enum: STOCK | BOND | SAVINGS | JUNIOR
         roi: Number(body.roi) || 0,
         roiMax: body.roiMax !== undefined && body.roiMax !== "" ? Number(body.roiMax) : null,
         duration: Number(body.duration) || 30,

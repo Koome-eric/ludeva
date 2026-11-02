@@ -6,9 +6,9 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: "MMF | Accessible, Secure & Smart Investments in Kenya",
+  title: "Ludeva | Accessible, Secure & Smart Investments in Kenya",
   description:
-    "Ludeva offers accessible, secure, and professionally managed Money Market Fund (MMF) investments in Kenya.",
+    "Ludeva offers accessible, secure, and professionally managed Shares Account investments in Kenya.",
   icons: {
     icon: "/images/logo-light.svg",
     shortcut: "/images/logo-light.svg",

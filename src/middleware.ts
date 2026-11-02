@@ -13,7 +13,6 @@ const isPublicRoute = createRouteMatcher([
   "/about/blog",
   "/about/blog/:id*",
   "/about/directors",
-  "/mmf",
   "/gallery",
   "/services/documents",
   "/services/music",

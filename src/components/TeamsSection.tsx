@@ -52,7 +52,7 @@ export default function TeamsSection() {
     "Diaspora Communities – Individuals sending or receiving money globally who want a secure way to invest back home.",
     "Chamas & Social Groups – Table banking groups, families, SMEs, and community savings groups.",
     "Emerging Market Savers – Individuals with irregular income needing disciplined saving and investment.",
-    "Financial Investors – High-value individuals attracted to 9–13% MMF returns and pooled capital.",
+    "Financial Investors – High-value individuals attracted to 12% p.a. Shares Account returns and pooled capital.",
   ];
 
   return (
@@ -60,7 +60,7 @@ export default function TeamsSection() {
       <PageHero
         title="Ludeva Teams Global"
         description="A capital-raising, savings, and investment platform transforming traditional chamas into a secure global financial system."
-        imageSrc="/images/hero-mmf.png"
+        imageSrc="/images/hero-banner.png"
       />
 
       {/* What Teams Global Is */}
@@ -72,8 +72,8 @@ export default function TeamsSection() {
           <p className="text-muted-foreground max-w-3xl mx-auto text-center mb-6">
             Ludeva Teams Global is a modern financial platform designed by
             Ludeva Plc to digitize and enhance traditional savings groups
-            (chamas). It combines structured savings, investment through a Money
-            Market Fund (MMF), and a collateralized payout system to provide both
+            (chamas). It combines structured savings, investment through the Shares
+            Account, and a collateralized payout system to provide both
             security and growth.
           </p>
           <p className="text-muted-foreground max-w-3xl mx-auto text-center">
@@ -180,8 +180,8 @@ export default function TeamsSection() {
 
           <p className="text-muted-foreground mt-4 text-center">
             Payout values are based on a 10-member group over a 10-month cycle.
-            First cycle contributions are invested in the MMF earning
-            approximately 9%–13% annually.
+            First cycle contributions are invested in the Shares Account earning
+            approximately 12% annually.
           </p>
         </Container>
       </section>
@@ -201,8 +201,8 @@ export default function TeamsSection() {
                   (Collateral Phase)
                 </h3>
                 <p className="text-muted-foreground">
-                  Contributions are invested in the MMF account, earning
-                  9%–13% annually. This serves as collateral and risk protection.
+                  Contributions are invested in the Shares Account, earning
+                  approximately 12% annually. This serves as collateral and risk protection.
                 </p>
               </CardContent>
             </Card>
@@ -240,7 +240,7 @@ export default function TeamsSection() {
                   <Globe className="h-5 w-5 text-primary" /> Risk Management
                 </h3>
                 <p className="text-muted-foreground">
-                  If a member defaults, their MMF collateral is used to cover the
+                  If a member defaults, their Shares Account collateral is used to cover the
                   payout. The member is removed and must reinvest to rejoin.
                 </p>
               </CardContent>

@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Landmark, PiggyBank, Baby, ArrowRight } from "lucide-react";
 
-// Money Market Fund and Fixed Deposit were retired — see
+// Fixed Deposit and Bonds were retired — see
 // scripts/update-shares-and-retire-products.ts. Keeping this list to the
 // currently-offered accounts only.
 const accounts = [

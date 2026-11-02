@@ -9,7 +9,7 @@ export default async function InvestmentProductsPage() {
   const mappedProducts = products.map((p) => ({
     id: p.id,
     name: p.name,
-    category: p.category ?? "MMF",
+    category: p.category ?? "EQUITY",
     roi: p.roi,
     duration: p.duration,
     minAmount: p.minAmount ?? 0,

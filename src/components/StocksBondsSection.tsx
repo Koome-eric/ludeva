@@ -17,7 +17,7 @@ const valuePropositions = [
   {
     title: "Portfolio Diversification",
     description:
-      "Diversify beyond Money Market Funds with equities and fixed-income assets that react differently to market conditions.",
+      "Diversify beyond savings with equities and fixed-income assets that react differently to market conditions.",
     icon: BarChart3,
   },
   {
@@ -55,7 +55,7 @@ export default function StocksBondsSection() {
               <p className="text-muted-foreground mb-6">
                 The Ludeva Stocks portfolio provides investors access to
                 high-growth investment opportunities beyond traditional
-                savings and money market funds.
+                savings accounts.
                 <br />
                 <br />
                 Our equities-focused approach helps investors pursue higher
@@ -153,7 +153,7 @@ export default function StocksBondsSection() {
 
               <p className="text-muted-foreground mt-2">
                 Investments in stocks and bonds carry higher risks compared to
-                money market funds. Market conditions may cause fluctuations in
+                savings accounts. Market conditions may cause fluctuations in
                 investment value, and returns are not guaranteed. Investors are
                 encouraged to consider their financial objectives, risk
                 tolerance, and investment horizon before investing.
@@ -167,15 +167,15 @@ export default function StocksBondsSection() {
       <section className="py-16 md:py-24">
         <Container>
           <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold font-headline">MMF vs Stocks</h2>
+                <h2 className="text-3xl font-bold font-headline">Savings Account vs Shares Account</h2>
           </div>
 
           {(() => {
             const rows = [
-              { feature: "Risk Level", mmf: "Low", stocks: "High" },
-              { feature: "Expected Returns", mmf: "Stable / Moderate", stocks: "High / Variable" },
-              { feature: "Investment Horizon", mmf: "Short – Medium Term", stocks: "Long Term" },
-              { feature: "Asset Types", mmf: "Treasury Bills & Short-Term Debt", stocks: "Equities & Corporate Bonds" },
+              { feature: "Risk Level", savings: "Low", stocks: "High" },
+              { feature: "Expected Returns", savings: "Stable / Moderate", stocks: "High / Variable" },
+              { feature: "Investment Horizon", savings: "Flexible, no lock-in", stocks: "Long Term" },
+              { feature: "Asset Types", savings: "Easy-access deposits", stocks: "Equities & Corporate Bonds" },
             ];
 
             return (
@@ -192,8 +192,8 @@ export default function StocksBondsSection() {
                       </p>
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center justify-between gap-3">
-                          <span className="text-muted-foreground">Money Market Fund</span>
-                          <span className="font-medium text-right">{row.mmf}</span>
+                          <span className="text-muted-foreground">Savings Account</span>
+                          <span className="font-medium text-right">{row.savings}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
                           <span className="text-muted-foreground">Stocks & Bonds</span>
@@ -210,8 +210,8 @@ export default function StocksBondsSection() {
                     <thead className="bg-muted">
                       <tr>
                         <th className="p-4">Feature</th>
-                        <th className="p-4">Money Market Fund</th>
-                        <th className="p-4">Stocks</th>
+                        <th className="p-4">Savings Account</th>
+                        <th className="p-4">Shares Account</th>
                       </tr>
                     </thead>
 
@@ -219,7 +219,7 @@ export default function StocksBondsSection() {
                       {rows.map((row) => (
                         <tr key={row.feature} className="border-t">
                           <td className="p-4 font-medium">{row.feature}</td>
-                          <td className="p-4">{row.mmf}</td>
+                          <td className="p-4">{row.savings}</td>
                           <td className="p-4">{row.stocks}</td>
                         </tr>
                       ))}

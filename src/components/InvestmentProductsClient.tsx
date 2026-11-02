@@ -11,13 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { RealtimeListener } from "@/components/realtime-listener";
-import { TrendingUp, Landmark, Sprout, Layers, Plus, Edit2, PiggyBank, Baby } from "lucide-react";
+import { Landmark, Sprout, Layers, Plus, Edit2, PiggyBank, Baby } from "lucide-react";
 
 interface Product {
   id: string;
   name: string;
-  category: "MONEY_MARKET" | "EQUITY" | "FIXED_INCOME" | "SAVINGS" | "JUNIOR";
-  type: "MMF" | "STOCK" | "BOND" | "SAVINGS" | "JUNIOR";
+  category: "EQUITY" | "FIXED_INCOME" | "SAVINGS" | "JUNIOR";
+  type: "STOCK" | "BOND" | "SAVINGS" | "JUNIOR";
   roi: number;
   roiMax?: number | null;
   duration: number;
@@ -36,8 +36,8 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
 
   const [formProduct, setFormProduct] = useState({
     name: "",
-    category: "MONEY_MARKET" as "MONEY_MARKET" | "EQUITY" | "FIXED_INCOME" | "SAVINGS" | "JUNIOR",
-    type: "MMF" as "MMF" | "STOCK" | "BOND" | "SAVINGS" | "JUNIOR",
+    category: "EQUITY" as "EQUITY" | "FIXED_INCOME" | "SAVINGS" | "JUNIOR",
+    type: "STOCK" as "STOCK" | "BOND" | "SAVINGS" | "JUNIOR",
     roi: "0",
     roiMax: "",
     duration: "30",
@@ -51,7 +51,6 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
   // ---------- Icons ----------
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case "MONEY_MARKET": return <TrendingUp className="h-5 w-5" />;
       case "EQUITY": return <Landmark className="h-5 w-5" />;
       case "FIXED_INCOME": return <Sprout className="h-5 w-5" />;
       case "SAVINGS": return <PiggyBank className="h-5 w-5" />;
@@ -67,8 +66,8 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
     setEditingProduct(null);
     setFormProduct({
       name: "",
-      category: "MONEY_MARKET",
-      type: "MMF",
+      category: "EQUITY",
+      type: "STOCK",
       roi: "0",
       roiMax: "",
       duration: "30",
@@ -246,10 +245,9 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
                 value={formProduct.category}
                 onChange={e => setFormProduct({
                   ...formProduct,
-                  category: e.target.value as "MONEY_MARKET" | "EQUITY" | "FIXED_INCOME" | "SAVINGS" | "JUNIOR"
+                  category: e.target.value as "EQUITY" | "FIXED_INCOME" | "SAVINGS" | "JUNIOR"
                 })}
               >
-                <option value="MONEY_MARKET">Money Market</option>
                 <option value="EQUITY">Shares (Stocks)</option>
                 <option value="SAVINGS">Savings</option>
                 <option value="JUNIOR">Junior Account</option>
@@ -261,10 +259,9 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
                 value={formProduct.type}
                 onChange={e => setFormProduct({
                   ...formProduct,
-                  type: e.target.value as "MMF" | "STOCK" | "SAVINGS" | "JUNIOR"
+                  type: e.target.value as "STOCK" | "SAVINGS" | "JUNIOR"
                 })}
               >
-                <option value="MMF">MMF</option>
                 <option value="STOCK">Stock (Shares Account)</option>
                 <option value="SAVINGS">Savings</option>
                 <option value="JUNIOR">Junior</option>

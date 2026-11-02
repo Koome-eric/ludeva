@@ -86,7 +86,7 @@ Sign In → Check JWT → onboardingCompleted=false → Onboarding Form
 |-------|--------|-----------|-------------------|
 | `/` | ✅ | | |
 | `/sign-up`, `/sign-in` | ✅ | | |
-| `/about`, `/contact`, `/mmf` | ✅ | | |
+| `/about`, `/contact`, `/stocks-bonds` | ✅ | | |
 | `/onboarding/investment` | | ✅ | ❌ (only if NOT onboarded) |
 | `/member/*` | | ✅ | ✅ |
 | `/member/dashboard` | | ✅ | ✅ |

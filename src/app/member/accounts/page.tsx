@@ -43,7 +43,7 @@ export default async function MemberAccountsPage() {
       <div>
         <h1 className="text-2xl md:text-3xl font-semibold">Accounts</h1>
         <p className="text-muted-foreground mt-1">
-          Your Ludeva Shares, Savings, and Junior accounts — separate from your main MMF investment.
+          Your Ludeva Shares, Savings, and Junior accounts — separate from your main investment.
         </p>
       </div>
       <AccountsClient data={data} />

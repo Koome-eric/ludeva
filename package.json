@@ -1,9 +1,9 @@
 {
-  "name": "ludeva-mmf-app",
+  "name": "ludeva-app",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A production-ready Money Market Fund (MMF) web application for Ludeva Public Ltd.",
+  "description": "A production-ready investments web application for Ludeva Public Ltd.",
   "scripts": {
     "dev": "next dev -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",

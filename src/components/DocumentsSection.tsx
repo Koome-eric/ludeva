@@ -78,7 +78,7 @@ export default function DocumentsSection() {
       <PageHero
         title="Investor Documents & Compliance"
         description="Transparency, regulatory compliance, and full disclosure at Ludeva."
-        imageSrc="/images/hero-mmf.png"
+        imageSrc="/images/hero-banner.png"
       />
 
       <section className="py-20 md:py-28">

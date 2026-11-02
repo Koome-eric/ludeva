@@ -163,7 +163,7 @@ POST /api/auth/check-user
 if (!userId && !isPublicRoute) → redirect to /sign-in
 
 // 2. Public routes (accessible without login)
-/, /about, /mmf, /contact, /sign-in, /sign-up
+/, /about, /stocks-bonds, /contact, /sign-in, /sign-up
 
 // 3. Admin routes (only for admins)
 /admin/* → only if role = ADMIN

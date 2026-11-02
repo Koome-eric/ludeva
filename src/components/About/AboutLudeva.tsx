@@ -72,9 +72,9 @@ export default function AboutLudeva() {
             — a structured group savings initiative that promotes financial
             discipline and passive income generation — and the{" "}
             <span className="text-brand-gold font-semibold">
-              Money Market Fund
+              Shares Account
             </span>
-            , offering stable annual returns of 14% gross p.a. Our goal is to
+            , offering annual returns of 12% p.a. Our goal is to
             make investing not only possible but practical for all Kenyans.
           </p>
         </motion.div>

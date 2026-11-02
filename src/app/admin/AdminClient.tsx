@@ -1,0 +1,3091 @@
+'use client';
+
+import { useMemo, useState, useTransition } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { UserButton } from '@clerk/nextjs';
+import {
+  LayoutDashboard,
+  Building2,
+  HeartHandshake,
+  PiggyBank,
+  FileSpreadsheet,
+  LogOut,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Plus,
+  Pencil,
+  Power,
+  Trash2,
+  UploadCloud,
+  ChevronRight,
+  Home,
+  Wallet,
+  Baby,
+  Smartphone,
+  CreditCard,
+  FileText,
+  Image as ImageIcon,
+  Users,
+  ShieldCheck,
+  Coins,
+  Crown,
+  Network,
+  Copy,
+  Download,
+  Link2,
+} from 'lucide-react';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarTrigger,
+  SidebarInset,
+} from '@/components/ui/sidebar';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { useToast } from '@/hooks/use-toast';
+import { formatKES } from '@/lib/chama-levels';
+import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { StatCard } from '@/components/admin/StatCard';
+import { MiniBarChart } from '@/components/admin/MiniBarChart';
+import { SearchBox, FilterPill } from '@/components/admin/SectionToolbar';
+import {
+  approveOrganisation,
+  rejectOrganisation,
+  setTeamLudevaMembership,
+  deleteOrganisation,
+  verifyCampaign,
+  unverifyCampaign,
+  createInvestmentProduct,
+  updateInvestmentProduct,
+  toggleInvestmentProductActive,
+  deleteInvestmentProduct,
+  syncMemberReportsCsv,
+  deleteMemberReport,
+  syncSavingsCsv,
+  createSavingsEntry,
+  updateSavingsEntry,
+  deleteSavingsEntry,
+  deleteSavingsEntries,
+  rematchSavingsEntries,
+  findSavingsDuplicates,
+  deleteSavingsDuplicates,
+  type SavingsDuplicateGroup,
+  logoutAdmin,
+  resolvePayment,
+  decideJuniorApplication,
+  decideLudevaMembership,
+  createAdminAccount,
+  updateAdminAccount,
+  updateAdminPermissions,
+  deleteAdminAccount,
+} from './actions';
+
+/* ────────────────────────────────────────────────────────────── */
+/*                              TYPES                              */
+/* ────────────────────────────────────────────────────────────── */
+
+type TeamMemberRow = {
+  id: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  idNumber: string | null;
+  gender: string | null;
+  country: string | null;
+  region: string | null;
+  isSecretary: boolean;
+  isTreasurer: boolean;
+  joinedAt: string;
+  permissions: {
+    canInvite: boolean;
+    canManagePermissions: boolean;
+    canRemoveMembers: boolean;
+    canApproveLoans: boolean;
+    canInvestPooled: boolean;
+    canViewPooledFunds: boolean;
+    canManageReports: boolean;
+    canWithdraw: boolean;
+    canManageSubTeams: boolean;
+  };
+};
+
+type TeamRow = {
+  id: string;
+  name: string;
+  ownerName: string;
+  ownerEmail: string | null;
+  ownerPhone: string | null;
+  ownerIdNumber: string | null;
+  ownerGender: string | null;
+  ownerCountry: string | null;
+  ownerRegion: string | null;
+  ownerJoinedAt: string;
+  secretaryName: string | null;
+  treasurerName: string | null;
+  levelName: string | null;
+  businessRegNumber: string | null;
+  numberOfMembers: number | null;
+  totalDirectors: number | null;
+  physicalAddress: string | null;
+  additionalComments: string | null;
+  approvalStatus: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
+  submittedAt: string;
+  rejectionReason: string | null;
+  isDiaspora: boolean;
+  isLudevaMember: boolean;
+  objectives: string[];
+  membersRunningSME: number | null;
+  membersEmployed: number | null;
+  hasLastRespectCover: boolean;
+  lastRespectContribution: number | null;
+  members: TeamMemberRow[];
+  subTeams: SubTeamRow[];
+};
+
+type SubTeamRow = {
+  id: string;
+  name: string;
+  leaderName: string;
+  members: { id: string; fullName: string }[];
+};
+
+type CampaignRow = {
+  id: string;
+  title: string;
+  creatorName: string;
+  category: string;
+  targetAmount: number;
+  raisedAmount: number;
+  verified: boolean;
+  status: 'ACTIVE' | 'CLOSED';
+  createdAt: string;
+};
+
+type ProductType = 'STOCK' | 'BOND' | 'FIXED_DEPOSIT' | 'SAVINGS' | 'JUNIOR';
+
+type ProductRow = {
+  id: string;
+  name: string;
+  type: ProductType;
+  description: string | null;
+  roi: number;
+  roiMax: number | null;
+  duration: number;
+  minAmount: number;
+  maxAmount: number | null;
+  isActive: boolean;
+};
+
+type ReportRow = {
+  id: string;
+  teamName: string | null;
+  memberEmail: string;
+  memberName: string | null;
+  date: string | null;
+  principal: string | null;
+  rate: string | null;
+  roi: string | null;
+  withdrawal: string | null;
+  closingBal: string | null;
+  periodLabel: string | null;
+  uploadedAt: string;
+};
+
+type SavingsRow = {
+  id: string;
+  teamName: string | null;
+  memberEmail: string;
+  memberName: string | null;
+  accountNo: string | null;
+  date: string | null;
+  openingBalance: string | null;
+  deposit: string | null;
+  payout: string | null;
+  closingBalance: string | null;
+  periodLabel: string | null;
+  notes: string | null;
+  uploadedAt: string;
+};
+
+type PaymentRow = {
+  id: string;
+  memberName: string;
+  productName: string;
+  channel: 'MPESA' | 'VISA_CARD';
+  amount: number;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
+  phone: string | null;
+  note: string | null;
+  createdAt: string;
+};
+
+type JuniorApplicationRow = {
+  id: string;
+  childFullName: string;
+  childDateOfBirth: string | null;
+  guardianName: string;
+  guardianIdNumber: string;
+  guardianPhone: string;
+  guardianKraPin: string;
+  birthCertUrl: string;
+  childPhotoUrl: string;
+  status: 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+  reviewNotes: string | null;
+  createdAt: string;
+};
+
+type LudevaMemberRow = {
+  id: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  ludevaMemberNumber: string | null;
+  ludevaMembershipStatus: 'NONE' | 'PENDING' | 'VERIFIED' | 'REJECTED';
+  ludevaMembershipDecidedAt: string | null;
+  ludevaMembershipRejectionReason: string | null;
+};
+
+type AdminRow = {
+  id: string;
+  email: string;
+  fullName: string | null;
+  createdAt: string;
+  canManageOrganisations: boolean;
+  canManageCampaigns: boolean;
+  canManageProducts: boolean;
+  canManageMemberReports: boolean;
+  canManageSavings: boolean;
+  canManagePayments: boolean;
+  canManageJuniorAccounts: boolean;
+  canManageLudevaMembers: boolean;
+  canManageAdmins: boolean;
+};
+
+// Mirrors ADMIN_PERMISSION_KEYS in src/app/admin/actions.ts — kept as a
+// separate list here (with display labels) since a 'use server' file can
+// only export async functions.
+type AdminPermissionKey =
+  | 'canManageOrganisations'
+  | 'canManageCampaigns'
+  | 'canManageProducts'
+  | 'canManageMemberReports'
+  | 'canManageSavings'
+  | 'canManagePayments'
+  | 'canManageJuniorAccounts'
+  | 'canManageLudevaMembers'
+  | 'canManageAdmins';
+
+const ADMIN_PERMISSIONS: { key: AdminPermissionKey; label: string }[] = [
+  { key: 'canManageOrganisations', label: 'Organisations' },
+  { key: 'canManageCampaigns', label: 'Campaigns' },
+  { key: 'canManageProducts', label: 'Investment products' },
+  { key: 'canManageMemberReports', label: 'Member reports' },
+  { key: 'canManageSavings', label: 'Savings' },
+  { key: 'canManagePayments', label: 'Payments' },
+  { key: 'canManageJuniorAccounts', label: 'Junior accounts' },
+  { key: 'canManageLudevaMembers', label: 'Ludeva membership' },
+];
+
+// Kept separate from ADMIN_PERMISSIONS above (rather than just appended)
+// as a visual/behavioral reminder everywhere it's used: this one lets an
+// admin see/invite/delete OTHER admins, so — unlike the operational
+// sections — only the actual super admin can grant, revoke, or even see
+// this toggle. It's never offered in a delegated admin's own create form.
+const ADMIN_MANAGER_PERMISSION: { key: AdminPermissionKey; label: string } = {
+  key: 'canManageAdmins',
+  label: 'Manage other admins',
+};
+
+type Stats = {
+  totalUsers: number;
+  totalPooledFunds: number;
+  orgs: { total: number; pending: number; approved: number; rejected: number };
+  campaigns: {
+    total: number;
+    unverified: number;
+    verified: number;
+    active: number;
+    totalRaised: number;
+    totalTarget: number;
+  };
+  products: { total: number; active: number; inactive: number };
+  subTeams: { total: number };
+  reports: { total: number; matched: number };
+  savings: { total: number; matched: number };
+  payments: { total: number; pending: number };
+  juniorApplications: { total: number; pending: number };
+  ludevaMembers: { total: number; pending: number };
+  monthlyOrgSubmissions: { label: string; value: number }[];
+};
+
+type Section = 'overview' | 'organisations' | 'campaigns' | 'products' | 'reports' | 'savings' | 'payments' | 'junior' | 'ludeva-members' | 'admins';
+
+const TYPE_LABEL: Record<ProductType, string> = {
+  STOCK: 'Shares Account',
+  BOND: 'Fixed Income Account',
+  FIXED_DEPOSIT: 'Fixed Deposit',
+  SAVINGS: 'Savings Account',
+  JUNIOR: 'Ludeva Junior Account',
+};
+
+const OBJECTIVE_LABELS: Record<string, string> = {
+  BUY_ASSETS: 'Saving to buy assets',
+  GET_A_LOAN: 'Saving to get a loan',
+  GET_INTEREST: 'Saving to get interest',
+  SCHOOL_FEES: 'Saving for school fees',
+  DECEMBER_HOLIDAY: 'Saving for December holiday',
+};
+
+const STATUS_VARIANT: Record<TeamRow['approvalStatus'], 'default' | 'secondary' | 'destructive'> = {
+  PENDING_APPROVAL: 'secondary',
+  APPROVED: 'default',
+  REJECTED: 'destructive',
+};
+
+/* ────────────────────────────────────────────────────────────── */
+/*                          NAV CONFIGURATION                      */
+/* ────────────────────────────────────────────────────────────── */
+
+function useNavItems(stats: Stats, isSuperAdmin: boolean, canManageAdmins: boolean) {
+  const items = [
+    { id: 'overview' as Section, label: 'Overview', icon: LayoutDashboard, badge: 0 },
+    { id: 'organisations' as Section, label: 'Organisations', icon: Building2, badge: stats.orgs.pending },
+    { id: 'campaigns' as Section, label: 'Campaigns', icon: HeartHandshake, badge: stats.campaigns.unverified },
+    { id: 'products' as Section, label: 'Investment Products', icon: PiggyBank, badge: 0 },
+    { id: 'payments' as Section, label: 'Payments', icon: Wallet, badge: stats.payments.pending },
+    { id: 'junior' as Section, label: 'Junior Accounts', icon: Baby, badge: stats.juniorApplications.pending },
+    { id: 'ludeva-members' as Section, label: 'Ludeva Members', icon: ShieldCheck, badge: stats.ludevaMembers.pending },
+    { id: 'reports' as Section, label: 'Member Reports', icon: FileSpreadsheet, badge: 0 },
+    { id: 'savings' as Section, label: 'Savings Accounts', icon: Coins, badge: 0 },
+  ];
+  // Visible to the super admin and to any admin granted canManageAdmins
+  // (see/invite/delete other admins) — the section itself then hides
+  // editing controls for anyone who isn't the actual super admin.
+  if (isSuperAdmin || canManageAdmins) {
+    items.push({ id: 'admins' as Section, label: 'Admins', icon: Users, badge: 0 });
+  }
+  return items;
+}
+
+const SECTION_META: Record<Section, { title: string; description: string }> = {
+  overview: { title: 'Overview', description: 'A snapshot of L-Chama right now.' },
+  organisations: { title: 'Organisations', description: 'Review chamas awaiting approval.' },
+  campaigns: { title: 'Campaigns', description: 'Verify fundraising campaigns.' },
+  products: { title: 'Investment Products', description: 'Manage the catalog chamas invest their pooled fund into.' },
+  payments: { title: 'Payments', description: 'M-Pesa and Visa card requests from member accounts, awaiting confirmation.' },
+  junior: { title: 'Junior Accounts', description: "Review Ludeva Junior Account applications and their KYC documents." },
+  'ludeva-members': { title: 'Ludeva Members', description: 'Confirm claimed Ludeva Plc membership numbers.' },
+  reports: { title: 'Member Reports', description: 'Sync and review performance data from Google Sheets.' },
+  savings: { title: 'Savings Accounts', description: 'Sync, correct, or manually add running-balance Savings entries.' },
+  admins: { title: 'Admins', description: 'Create, edit and remove the admins who can sign in to this panel.' },
+};
+
+/* ────────────────────────────────────────────────────────────── */
+/*                          ROOT COMPONENT                         */
+/* ────────────────────────────────────────────────────────────── */
+
+export function AdminClient({
+  teams,
+  campaigns,
+  products,
+  reports,
+  savingsEntries,
+  payments,
+  juniorApplications,
+  ludevaMembers,
+  stats,
+  authMethod,
+  admins,
+  isSuperAdmin,
+  canManageAdmins,
+  currentAdminEmail,
+}: {
+  teams: TeamRow[];
+  campaigns: CampaignRow[];
+  products: ProductRow[];
+  reports: ReportRow[];
+  savingsEntries: SavingsRow[];
+  payments: PaymentRow[];
+  juniorApplications: JuniorApplicationRow[];
+  ludevaMembers: LudevaMemberRow[];
+  stats: Stats;
+  authMethod: 'clerk' | 'password';
+  admins: AdminRow[];
+  isSuperAdmin: boolean;
+  canManageAdmins: boolean;
+  currentAdminEmail: string | null;
+}) {
+  const [section, setSection] = useState<Section>('overview');
+  const navItems = useNavItems(stats, isSuperAdmin, canManageAdmins);
+  const router = useRouter();
+  const [loggingOut, startLogout] = useTransition();
+
+  const handleSignOut = () => {
+    startLogout(async () => {
+      await logoutAdmin();
+      router.refresh();
+    });
+  };
+
+  return (
+    <>
+      <Sidebar variant="inset" collapsible="icon">
+        <SidebarHeader>
+          <Link href="/panel" className="flex items-center gap-2.5 px-1 py-1">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <ShieldMark />
+            </div>
+            <div className="whitespace-nowrap group-data-[collapsible=icon]:hidden">
+              <span className="font-headline text-base font-bold leading-none">L-CHAMA</span>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Admin</p>
+            </div>
+          </Link>
+        </SidebarHeader>
+
+        <SidebarContent className="flex flex-col justify-between">
+          <SidebarMenu>
+            {navItems.map((item) => {
+              const active = section === item.id;
+              return (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    isActive={active}
+                    tooltip={item.label}
+                    onClick={() => setSection(item.id)}
+                    className={cn(
+                      'w-full rounded-xl transition-colors',
+                      active && 'bg-primary/10 text-primary shadow-sm font-medium'
+                    )}
+                  >
+                    <item.icon className={cn('h-4 w-4 shrink-0', active && 'text-primary')} />
+                    <span className="flex-1 truncate text-left">{item.label}</span>
+                    {item.badge > 0 && (
+                      <span
+                        className={cn(
+                          'ml-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold group-data-[collapsible=icon]:hidden',
+                          active ? 'bg-primary text-primary-foreground' : 'bg-destructive/10 text-destructive'
+                        )}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Back to L-Chama" className="rounded-xl text-muted-foreground">
+                <Link href="/panel" className="flex items-center gap-3">
+                  <Home className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Back to site</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            {authMethod === 'password' && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={handleSignOut}
+                  disabled={loggingOut}
+                  tooltip="Sign out"
+                  className="rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <LogOut className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{loggingOut ? 'Signing out…' : 'Sign out'}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+          </SidebarMenu>
+        </SidebarContent>
+      </Sidebar>
+
+      <SidebarInset>
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur sm:px-6">
+          <SidebarTrigger className="md:hidden" />
+          <div className="min-w-0">
+            <h1 className="truncate font-headline text-lg font-semibold sm:text-xl">{SECTION_META[section].title}</h1>
+            <p className="hidden truncate text-xs text-muted-foreground sm:block">{SECTION_META[section].description}</p>
+          </div>
+          <div className="ml-auto flex items-center gap-3">
+            <ThemeToggle />
+            {(() => {
+              const totalNeedsReview =
+                stats.orgs.pending + stats.campaigns.unverified + stats.payments.pending + stats.juniorApplications.pending + stats.ludevaMembers.pending;
+              if (totalNeedsReview === 0) return null;
+              const target: Section =
+                stats.orgs.pending > 0
+                  ? 'organisations'
+                  : stats.campaigns.unverified > 0
+                    ? 'campaigns'
+                    : stats.payments.pending > 0
+                      ? 'payments'
+                      : stats.juniorApplications.pending > 0
+                        ? 'junior'
+                        : 'ludeva-members';
+              return (
+                <button
+                  onClick={() => setSection(target)}
+                  className="hidden items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-xs font-semibold text-gold sm:inline-flex"
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                  {totalNeedsReview} need review
+                </button>
+              );
+            })()}
+            {authMethod === 'clerk' ? (
+              <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: 'h-9 w-9 rounded-lg' } }} />
+            ) : (
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
+                A
+              </div>
+            )}
+          </div>
+        </header>
+
+        <main className="flex-1 bg-muted/40">
+          <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+            {section === 'overview' && (
+              <OverviewSection stats={stats} teams={teams} campaigns={campaigns} onNavigate={setSection} />
+            )}
+            {section === 'organisations' && <OrganisationsAdminSection teams={teams} />}
+            {section === 'campaigns' && <CampaignsAdminSection campaigns={campaigns} />}
+            {section === 'products' && <ProductsAdminSection products={products} />}
+            {section === 'payments' && <PaymentsAdminSection payments={payments} />}
+            {section === 'junior' && <JuniorAdminSection applications={juniorApplications} />}
+            {section === 'ludeva-members' && <LudevaMembersAdminSection members={ludevaMembers} />}
+            {section === 'reports' && <MemberReportsAdminSection reports={reports} />}
+            {section === 'savings' && <SavingsAdminSection entries={savingsEntries} />}
+            {section === 'admins' && (isSuperAdmin || canManageAdmins) && (
+              <AdminsAdminSection admins={admins} currentAdminEmail={currentAdminEmail} isSuperAdmin={isSuperAdmin} />
+            )}
+          </div>
+        </main>
+      </SidebarInset>
+    </>
+  );
+}
+
+function ShieldMark() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" strokeWidth={2}>
+      <path
+        d="M12 2.5 4 5.75V11c0 5.05 3.4 8.86 8 10.5 4.6-1.64 8-5.45 8-10.5V5.75L12 2.5Z"
+        stroke="currentColor"
+        strokeLinejoin="round"
+      />
+      <path d="m8.5 12 2.4 2.4L15.5 9.6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────── */
+/*                              OVERVIEW                            */
+/* ────────────────────────────────────────────────────────────── */
+
+function OverviewSection({
+  stats,
+  teams,
+  campaigns,
+  onNavigate,
+}: {
+  stats: Stats;
+  teams: TeamRow[];
+  campaigns: CampaignRow[];
+  onNavigate: (s: Section) => void;
+}) {
+  const pendingTeams = teams.filter((t) => t.approvalStatus === 'PENDING_APPROVAL').slice(0, 4);
+  const unverifiedCampaigns = campaigns.filter((c) => !c.verified).slice(0, 4);
+
+  const recentActivity = useMemo(() => {
+    const teamEvents = teams.slice(0, 6).map((t) => ({
+      id: `team-${t.id}`,
+      title: t.name,
+      subtitle: `Organisation submitted by ${t.ownerName}`,
+      date: t.submittedAt,
+      icon: Building2,
+      status: t.approvalStatus,
+    }));
+    const campaignEvents = campaigns.slice(0, 6).map((c) => ({
+      id: `campaign-${c.id}`,
+      title: c.title,
+      subtitle: `Campaign by ${c.creatorName} · ${c.category}`,
+      date: c.createdAt,
+      icon: HeartHandshake,
+      status: c.verified ? 'APPROVED' : 'PENDING_APPROVAL',
+    }));
+    return [...teamEvents, ...campaignEvents]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 6);
+  }, [teams, campaigns]);
+
+  return (
+    <div className="space-y-6">
+      {/* Hero ledger strip */}
+      <div className="relative overflow-hidden rounded-3xl bg-ledger p-6 shadow-lg sm:p-8">
+        <div className="pointer-events-none absolute inset-0 bg-fintech-mesh" />
+        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Total pooled funds</p>
+            <p className="mt-2 font-figures text-3xl font-bold text-white sm:text-4xl">
+              {formatKES(Math.round(stats.totalPooledFunds))}
+            </p>
+            <p className="mt-2 text-sm text-white/60">Across every chama loan account on the platform.</p>
+          </div>
+          <div className="flex flex-wrap gap-6 sm:gap-10">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-white/50">Users</p>
+              <p className="font-figures text-xl font-bold text-white">{stats.totalUsers.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-white/50">Organisations</p>
+              <p className="font-figures text-xl font-bold text-white">{stats.orgs.total.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-white/50">Sub-chamas</p>
+              <p className="font-figures text-xl font-bold text-white">{stats.subTeams.total.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-white/50">Campaigns raised</p>
+              <p className="font-figures text-xl font-bold text-white">{formatKES(stats.campaigns.totalRaised)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stat grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Pending organisations"
+          value={stats.orgs.pending}
+          icon={Clock}
+          tone="gold"
+          hint="Awaiting your review"
+        />
+        <StatCard
+          label="Approved organisations"
+          value={stats.orgs.approved}
+          icon={CheckCircle2}
+          tone="chama"
+          hint={`${stats.orgs.rejected} rejected all-time`}
+        />
+        <StatCard
+          label="Unverified campaigns"
+          value={stats.campaigns.unverified}
+          icon={HeartHandshake}
+          tone="destructive"
+          hint={`${stats.campaigns.active} currently active`}
+        />
+        <StatCard
+          label="Active investment products"
+          value={stats.products.active}
+          icon={PiggyBank}
+          tone="primary"
+          hint={`${stats.products.inactive} inactive`}
+        />
+      </div>
+
+      {/* Chart + attention panel */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base">Organisation submissions</CardTitle>
+            <CardDescription>New chamas submitted for approval, last 6 months</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MiniBarChart data={stats.monthlyOrgSubmissions} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Needs attention</CardTitle>
+              <CardDescription>Quick jumps to pending items</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {pendingTeams.length === 0 && unverifiedCampaigns.length === 0 && (
+              <p className="py-6 text-center text-sm text-muted-foreground">All caught up. Nothing waiting on you.</p>
+            )}
+            {pendingTeams.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => onNavigate('organisations')}
+                className="flex w-full items-center gap-3 rounded-xl border border-border/60 p-3 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gold/15 text-gold">
+                  <Building2 className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{t.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">Organisation · needs review</p>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </button>
+            ))}
+            {unverifiedCampaigns.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => onNavigate('campaigns')}
+                className="flex w-full items-center gap-3 rounded-xl border border-border/60 p-3 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                  <HeartHandshake className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{c.title}</p>
+                  <p className="truncate text-xs text-muted-foreground">Campaign · unverified</p>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </button>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Recent activity</CardTitle>
+          <CardDescription>Latest organisations and campaigns submitted to the platform</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-1">
+          {recentActivity.map((item) => (
+            <div key={item.id} className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-muted/60">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <item.icon className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{item.title}</p>
+                <p className="truncate text-xs text-muted-foreground">{item.subtitle}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <Badge variant={item.status === 'PENDING_APPROVAL' ? 'secondary' : item.status === 'REJECTED' ? 'destructive' : 'default'}>
+                  {item.status === 'PENDING_APPROVAL' ? 'Pending' : item.status === 'REJECTED' ? 'Rejected' : 'Approved'}
+                </Badge>
+                <span className="hidden text-xs text-muted-foreground sm:inline">
+                  {new Date(item.date).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
+                </span>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────── */
+/*                           ORGANISATIONS                          */
+/* ────────────────────────────────────────────────────────────── */
+
+type OrgFilter = 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'ALL';
+
+const PERMISSION_LABELS: Record<keyof TeamMemberRow['permissions'], string> = {
+  canInvite: 'Invite members',
+  canManagePermissions: 'Manage permissions',
+  canRemoveMembers: 'Remove members',
+  canApproveLoans: 'Approve loans',
+  canInvestPooled: 'Invest pooled funds',
+  canViewPooledFunds: 'View pooled funds',
+  canManageReports: 'Manage reports',
+  canWithdraw: 'Withdraw',
+  canManageSubTeams: 'Manage sub-chamas',
+};
+
+function MembersDialog({ team, onOpenChange }: { team: TeamRow | null; onOpenChange: (open: boolean) => void }) {
+  return (
+    <Dialog open={!!team} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+        {team && (
+          <>
+            <DialogHeader>
+              <DialogTitle>{team.name} — members</DialogTitle>
+              <DialogDescription>
+                Everyone with access to this chama: the team leader who created it, plus every member who accepted an invite.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <Badge className="bg-primary text-primary-foreground">Team Leader</Badge>
+                  <span className="text-xs text-muted-foreground">Created this chama · has every permission</span>
+                </div>
+                <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
+                  <div><dt className="text-xs text-muted-foreground">Full name</dt><dd className="font-medium">{team.ownerName}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Email</dt><dd className="font-medium">{team.ownerEmail || '—'}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Phone</dt><dd className="font-medium">{team.ownerPhone || '—'}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">ID / Passport No.</dt><dd className="font-medium">{team.ownerIdNumber || '—'}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Gender</dt><dd className="font-medium">{team.ownerGender || '—'}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Location</dt><dd className="font-medium">{[team.ownerRegion, team.ownerCountry].filter(Boolean).join(', ') || '—'}</dd></div>
+                  <div className="sm:col-span-2"><dt className="text-xs text-muted-foreground">Account created</dt><dd className="font-medium">{new Date(team.ownerJoinedAt).toLocaleString()}</dd></div>
+                </dl>
+              </div>
+
+              <div>
+                <p className="mb-2 text-sm font-medium">
+                  Invited members ({team.members.length})
+                </p>
+                {team.members.length === 0 ? (
+                  <p className="rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">
+                    No one has accepted an invite to this chama yet — it's just the team leader for now.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {team.members.map((m) => {
+                      const grantedPermissions = (Object.keys(m.permissions) as (keyof TeamMemberRow['permissions'])[]).filter(
+                        (k) => m.permissions[k]
+                      );
+                      return (
+                        <div key={m.id} className="rounded-xl border border-border/60 p-4">
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
+                            <span className="font-medium">{m.fullName}</span>
+                            {m.isSecretary && <Badge variant="secondary">Secretary signatory</Badge>}
+                            {m.isTreasurer && <Badge variant="secondary">Treasurer signatory</Badge>}
+                          </div>
+                          <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
+                            <div><dt className="text-xs text-muted-foreground">Email</dt><dd>{m.email || '—'}</dd></div>
+                            <div><dt className="text-xs text-muted-foreground">Phone</dt><dd>{m.phone || '—'}</dd></div>
+                            <div><dt className="text-xs text-muted-foreground">ID / Passport No.</dt><dd>{m.idNumber || '—'}</dd></div>
+                            <div><dt className="text-xs text-muted-foreground">Gender</dt><dd>{m.gender || '—'}</dd></div>
+                            <div className="sm:col-span-2"><dt className="text-xs text-muted-foreground">Location</dt><dd>{[m.region, m.country].filter(Boolean).join(', ') || '—'}</dd></div>
+                            <div className="sm:col-span-2"><dt className="text-xs text-muted-foreground">Joined chama</dt><dd>{new Date(m.joinedAt).toLocaleString()}</dd></div>
+                          </dl>
+                          <div className="mt-3 border-t border-border/60 pt-3">
+                            <p className="mb-1 text-xs text-muted-foreground">Permissions</p>
+                            {grantedPermissions.length === 0 ? (
+                              <p className="text-xs text-muted-foreground">No extra permissions granted — can only view the chama.</p>
+                            ) : (
+                              <div className="flex flex-wrap gap-1.5">
+                                {grantedPermissions.map((k) => (
+                                  <Badge key={k} variant="outline" className="text-xs font-normal">{PERMISSION_LABELS[k]}</Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <p className="mb-2 text-sm font-medium">
+                  Sub-chamas ({team.subTeams.length})
+                </p>
+                {team.subTeams.length === 0 ? (
+                  <p className="rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">
+                    This chama hasn't split into any sub-chamas yet.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {team.subTeams.map((st) => (
+                      <div key={st.id} className="rounded-xl border border-border/60 p-4">
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <span className="font-medium">{st.name}</span>
+                          <Badge variant="outline" className="gap-1 text-xs font-normal">
+                            <Crown className="h-3 w-3" /> {st.leaderName}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {st.members.length} member{st.members.length === 1 ? '' : 's'}
+                          </span>
+                        </div>
+                        {st.members.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {st.members.map((m) => (
+                              <Badge key={m.id} variant="secondary" className="text-xs font-normal">
+                                {m.fullName}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function OrganisationsAdminSection({ teams }: { teams: TeamRow[] }) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [reasonById, setReasonById] = useState<Record<string, string>>({});
+  const [filter, setFilter] = useState<OrgFilter>('PENDING_APPROVAL');
+  const [query, setQuery] = useState('');
+  const [rejectTarget, setRejectTarget] = useState<TeamRow | null>(null);
+  const [membersTarget, setMembersTarget] = useState<TeamRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TeamRow | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+  const counts = {
+    PENDING_APPROVAL: teams.filter((t) => t.approvalStatus === 'PENDING_APPROVAL').length,
+    APPROVED: teams.filter((t) => t.approvalStatus === 'APPROVED').length,
+    REJECTED: teams.filter((t) => t.approvalStatus === 'REJECTED').length,
+    ALL: teams.length,
+  };
+
+  const filtered = teams.filter((t) => {
+    if (filter !== 'ALL' && t.approvalStatus !== filter) return false;
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return t.name.toLowerCase().includes(q) || t.ownerName.toLowerCase().includes(q) || (t.ownerEmail ?? '').toLowerCase().includes(q);
+  });
+
+  const handleApprove = (id: string) => {
+    startTransition(async () => {
+      try {
+        await approveOrganisation(id);
+        toast({ title: 'Organisation approved' });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleReject = (id: string) => {
+    startTransition(async () => {
+      try {
+        await rejectOrganisation(id, reasonById[id]);
+        toast({ title: 'Organisation rejected' });
+        setRejectTarget(null);
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleToggleLudevaMember = (id: string, value: boolean) => {
+    startTransition(async () => {
+      try {
+        await setTeamLudevaMembership(id, value);
+        toast({ title: value ? 'Marked as Ludeva member chama' : 'Unmarked as Ludeva member chama' });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    startTransition(async () => {
+      try {
+        await deleteOrganisation(id);
+        toast({ title: 'Organisation deleted', description: 'The chama, its members and its financial records have been permanently removed.' });
+        setDeleteTarget(null);
+        setDeleteConfirmText('');
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Could not delete organisation', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          <FilterPill active={filter === 'PENDING_APPROVAL'} onClick={() => setFilter('PENDING_APPROVAL')}>
+            Pending ({counts.PENDING_APPROVAL})
+          </FilterPill>
+          <FilterPill active={filter === 'APPROVED'} onClick={() => setFilter('APPROVED')}>
+            Approved ({counts.APPROVED})
+          </FilterPill>
+          <FilterPill active={filter === 'REJECTED'} onClick={() => setFilter('REJECTED')}>
+            Rejected ({counts.REJECTED})
+          </FilterPill>
+          <FilterPill active={filter === 'ALL'} onClick={() => setFilter('ALL')}>
+            All ({counts.ALL})
+          </FilterPill>
+        </div>
+        <SearchBox value={query} onChange={setQuery} placeholder="Search organisations…" />
+      </div>
+
+      {filtered.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            No organisations match this view.
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-4">
+        {filtered.map((t) => (
+          <Card key={t.id} className="overflow-hidden">
+            <CardHeader className="pb-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">
+                    {t.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+                      {t.name}
+                      {t.isDiaspora && <Badge variant="secondary">Diaspora Chama</Badge>}
+                      {t.isLudevaMember && <Badge className="bg-primary text-primary-foreground">Ludeva Member</Badge>}
+                      {t.subTeams.length > 0 && (
+                        <Badge variant="outline" className="gap-1 text-xs font-normal">
+                          <Network className="h-3 w-3" /> {t.subTeams.length} sub-chama{t.subTeams.length === 1 ? '' : 's'}
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    <CardDescription>
+                      {t.ownerName} {t.ownerEmail ? `· ${t.ownerEmail}` : ''} {t.ownerPhone ? `· ${t.ownerPhone}` : ''}
+                    </CardDescription>
+                  </div>
+                </div>
+                <Badge variant={STATUS_VARIANT[t.approvalStatus]}>
+                  {t.approvalStatus === 'PENDING_APPROVAL' ? 'Pending' : t.approvalStatus === 'APPROVED' ? 'Approved' : 'Rejected'}
+                </Badge>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-3 gap-1.5"
+                onClick={() => setMembersTarget(t)}
+              >
+                <Users className="h-4 w-4" /> View members ({1 + t.members.length})
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-3 ml-2 gap-1.5 text-destructive hover:text-destructive"
+                onClick={() => { setDeleteTarget(t); setDeleteConfirmText(''); }}
+              >
+                <Trash2 className="h-4 w-4" /> Delete organisation
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-xl bg-muted/40 p-4 text-sm sm:grid-cols-4">
+                <div><dt className="text-xs text-muted-foreground">Level</dt><dd className="font-medium">{t.levelName || '—'}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Registration No.</dt><dd className="font-medium">{t.businessRegNumber || '—'}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Members</dt><dd className="font-medium">{t.numberOfMembers ?? '—'}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Directors</dt><dd className="font-medium">{t.totalDirectors ?? '—'}</dd></div>
+              </dl>
+
+              <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                <div className="sm:col-span-2"><dt className="text-muted-foreground">Address</dt><dd>{t.physicalAddress || '—'}</dd></div>
+                <div className="sm:col-span-2">
+                  <dt className="text-muted-foreground">Chama Objectives</dt>
+                  <dd>{t.objectives.length > 0 ? t.objectives.map((o) => OBJECTIVE_LABELS[o] || o).join(', ') : '—'}</dd>
+                </div>
+                <div><dt className="text-muted-foreground">Members Running SMEs</dt><dd>{t.membersRunningSME ?? '—'}</dd></div>
+                <div><dt className="text-muted-foreground">Members Employed</dt><dd>{t.membersEmployed ?? '—'}</dd></div>
+                <div className="sm:col-span-2">
+                  <dt className="text-muted-foreground">Last Respect Cover</dt>
+                  <dd>
+                    {t.hasLastRespectCover
+                      ? `Enabled · KES ${t.lastRespectContribution?.toLocaleString() ?? '—'} per member`
+                      : 'Not enabled'}
+                  </dd>
+                </div>
+                {t.additionalComments && (
+                  <div className="sm:col-span-2"><dt className="text-muted-foreground">Comments</dt><dd>{t.additionalComments}</dd></div>
+                )}
+                {t.approvalStatus === 'REJECTED' && t.rejectionReason && (
+                  <div className="sm:col-span-2 rounded-lg bg-destructive/5 p-3">
+                    <dt className="text-xs font-medium text-destructive">Rejection reason</dt>
+                    <dd className="text-destructive/90">{t.rejectionReason}</dd>
+                  </div>
+                )}
+              </dl>
+
+              <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-4">
+                <div>
+                  <p className="text-sm font-medium">Ludeva Plc member chama</p>
+                  <p className="text-xs text-muted-foreground">
+                    Member chamas withdraw by email (no in-app flow, no fee) instead of the standard 2.5% in-app withdrawal fee.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant={t.isLudevaMember ? 'default' : 'outline'}
+                  disabled={isPending}
+                  onClick={() => handleToggleLudevaMember(t.id, !t.isLudevaMember)}
+                >
+                  {t.isLudevaMember ? 'Member — click to unset' : 'Mark as Ludeva member'}
+                </Button>
+              </div>
+
+              {t.approvalStatus === 'PENDING_APPROVAL' && (
+                <div className="flex flex-wrap gap-2 border-t border-border/60 pt-4">
+                  <Button size="sm" onClick={() => handleApprove(t.id)} disabled={isPending} className="gap-1.5">
+                    <CheckCircle2 className="h-4 w-4" /> Approve
+                  </Button>
+                  <Dialog open={rejectTarget?.id === t.id} onOpenChange={(open) => !open && setRejectTarget(null)}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="outline" onClick={() => setRejectTarget(t)} className="gap-1.5 text-destructive hover:text-destructive">
+                        <XCircle className="h-4 w-4" /> Reject
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Reject {t.name}?</DialogTitle>
+                        <DialogDescription>Optionally tell the team leader why. This is visible to them.</DialogDescription>
+                      </DialogHeader>
+                      <Textarea
+                        placeholder="Rejection reason (optional)"
+                        value={reasonById[t.id] ?? ''}
+                        onChange={(e) => setReasonById((p) => ({ ...p, [t.id]: e.target.value }))}
+                      />
+                      <DialogFooter>
+                        <Button variant="destructive" onClick={() => handleReject(t.id)} disabled={isPending}>
+                          {isPending ? 'Rejecting…' : 'Confirm rejection'}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <MembersDialog team={membersTarget} onOpenChange={(open) => !open && setMembersTarget(null)} />
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteConfirmText(''); } }}>
+        <DialogContent>
+          {deleteTarget && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-destructive">Delete {deleteTarget.name}?</DialogTitle>
+                <DialogDescription>This permanently removes, and cannot be undone:</DialogDescription>
+              </DialogHeader>
+              <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                <li>The chama itself and its organisation details</li>
+                <li>Its team leader ({deleteTarget.ownerName}) and all {deleteTarget.members.length} member{deleteTarget.members.length === 1 ? '' : 's'}' attachment to it — their L-CHAMA accounts stay intact and are free to join or create another chama</li>
+                <li>Its loan account balance, every loan request, guarantee and repayment</li>
+                <li>Its pooled investments</li>
+                <li>Its Last Respect Cover fund and claims (if enabled)</li>
+                <li>Every pending invite and withdrawal request on it</li>
+              </ul>
+              <p className="text-sm text-muted-foreground">
+                Past deposit payments and any uploaded performance reports are kept for record-keeping, just unlinked from this chama.
+              </p>
+              <div className="space-y-1.5 pt-2">
+                <Label htmlFor="delete-confirm-text">
+                  Type <span className="font-semibold text-foreground">{deleteTarget.name}</span> to confirm
+                </Label>
+                <Input
+                  id="delete-confirm-text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  autoComplete="off"
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="destructive"
+                  disabled={isPending || deleteConfirmText !== deleteTarget.name}
+                  onClick={() => handleDelete(deleteTarget.id)}
+                >
+                  {isPending ? 'Deleting…' : 'Permanently delete'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────── */
+/*                              CAMPAIGNS                           */
+/* ────────────────────────────────────────────────────────────── */
+
+type CampaignFilter = 'ALL' | 'UNVERIFIED' | 'VERIFIED' | 'CLOSED';
+
+function CampaignsAdminSection({ campaigns }: { campaigns: CampaignRow[] }) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [filter, setFilter] = useState<CampaignFilter>('ALL');
+  const [query, setQuery] = useState('');
+
+  const handleVerify = (id: string) => {
+    startTransition(async () => {
+      try {
+        await verifyCampaign(id);
+        toast({ title: 'Campaign verified' });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleUnverify = (id: string) => {
+    startTransition(async () => {
+      try {
+        await unverifyCampaign(id);
+        toast({ title: 'Verification removed' });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const filtered = campaigns.filter((c) => {
+    if (filter === 'UNVERIFIED' && c.verified) return false;
+    if (filter === 'VERIFIED' && !c.verified) return false;
+    if (filter === 'CLOSED' && c.status !== 'CLOSED') return false;
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return c.title.toLowerCase().includes(q) || c.creatorName.toLowerCase().includes(q) || c.category.toLowerCase().includes(q);
+  });
+
+  if (campaigns.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-sm text-muted-foreground">No campaigns yet.</CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          <FilterPill active={filter === 'ALL'} onClick={() => setFilter('ALL')}>All ({campaigns.length})</FilterPill>
+          <FilterPill active={filter === 'UNVERIFIED'} onClick={() => setFilter('UNVERIFIED')}>
+            Unverified ({campaigns.filter((c) => !c.verified).length})
+          </FilterPill>
+          <FilterPill active={filter === 'VERIFIED'} onClick={() => setFilter('VERIFIED')}>
+            Verified ({campaigns.filter((c) => c.verified).length})
+          </FilterPill>
+          <FilterPill active={filter === 'CLOSED'} onClick={() => setFilter('CLOSED')}>
+            Closed ({campaigns.filter((c) => c.status === 'CLOSED').length})
+          </FilterPill>
+        </div>
+        <SearchBox value={query} onChange={setQuery} placeholder="Search campaigns…" />
+      </div>
+
+      <Card className="overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Campaign</TableHead>
+              <TableHead className="hidden md:table-cell">Category</TableHead>
+              <TableHead>Progress</TableHead>
+              <TableHead className="hidden sm:table-cell">Status</TableHead>
+              <TableHead className="text-right">Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.map((c) => (
+              <TableRow key={c.id}>
+                <TableCell className="max-w-[220px]">
+                  <p className="truncate font-medium">{c.title}</p>
+                  <p className="truncate text-xs text-muted-foreground">by {c.creatorName}</p>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <Badge variant="outline">{c.category}</Badge>
+                </TableCell>
+                <TableCell className="min-w-[160px]">
+                  <p className="font-figures text-xs font-medium">
+                    {formatKES(c.raisedAmount)} <span className="text-muted-foreground">/ {formatKES(c.targetAmount)}</span>
+                  </p>
+                  <ProgressBar value={c.raisedAmount} max={c.targetAmount} className="mt-1.5" />
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <div className="flex flex-wrap gap-1.5">
+                    {c.status === 'CLOSED' && <Badge variant="destructive">Closed</Badge>}
+                    {c.verified ? <Badge>Verified</Badge> : <Badge variant="secondary">Unverified</Badge>}
+                  </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  {c.verified ? (
+                    <Button size="sm" variant="outline" onClick={() => handleUnverify(c.id)} disabled={isPending}>
+                      Unverify
+                    </Button>
+                  ) : (
+                    <Button size="sm" onClick={() => handleVerify(c.id)} disabled={isPending}>
+                      Verify
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        {filtered.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No campaigns match this view.</p>}
+      </Card>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────── */
+/*                        INVESTMENT PRODUCTS                       */
+/* ────────────────────────────────────────────────────────────── */
+
+const EMPTY_PRODUCT_FORM = {
+  name: '',
+  type: 'STOCK' as ProductType,
+  description: '',
+  roi: '',
+  roiMax: '',
+  duration: '',
+  minAmount: '',
+  maxAmount: '',
+};
+
+const PRODUCT_TONE: Record<ProductType, string> = {
+  STOCK: 'bg-gold/15 text-gold',
+  BOND: 'bg-chama/10 text-chama',
+  FIXED_DEPOSIT: 'bg-destructive/10 text-destructive',
+  SAVINGS: 'bg-primary/10 text-primary',
+  JUNIOR: 'bg-chama/10 text-chama',
+};
+
+function ProductsAdminSection({ products }: { products: ProductRow[] }) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editing, setEditing] = useState<ProductRow | null>(null);
+  const [form, setForm] = useState(EMPTY_PRODUCT_FORM);
+
+  const openCreate = () => {
+    setForm(EMPTY_PRODUCT_FORM);
+    setCreateOpen(true);
+  };
+
+  const openEdit = (p: ProductRow) => {
+    setEditing(p);
+    setForm({
+      name: p.name,
+      type: p.type,
+      description: p.description ?? '',
+      roi: String(p.roi),
+      roiMax: p.roiMax != null ? String(p.roiMax) : '',
+      duration: String(p.duration),
+      minAmount: String(p.minAmount),
+      maxAmount: p.maxAmount != null ? String(p.maxAmount) : '',
+    });
+  };
+
+  const buildInput = () => ({
+    name: form.name,
+    type: form.type,
+    description: form.description || undefined,
+    roi: Number(form.roi),
+    roiMax: form.roiMax ? Number(form.roiMax) : null,
+    duration: Number(form.duration),
+    minAmount: Number(form.minAmount),
+    maxAmount: form.maxAmount ? Number(form.maxAmount) : null,
+  });
+
+  const handleCreate = () => {
+    startTransition(async () => {
+      try {
+        await createInvestmentProduct(buildInput());
+        toast({ title: 'Product created' });
+        setCreateOpen(false);
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleUpdate = () => {
+    if (!editing) return;
+    startTransition(async () => {
+      try {
+        await updateInvestmentProduct(editing.id, buildInput());
+        toast({ title: 'Product updated' });
+        setEditing(null);
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleToggle = (id: string) => {
+    startTransition(async () => {
+      try {
+        await toggleInvestmentProductActive(id);
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleDelete = (p: ProductRow) => {
+    if (!confirm(`Permanently delete "${p.name}"? This can't be undone.`)) return;
+    startTransition(async () => {
+      try {
+        await deleteInvestmentProduct(p.id);
+        toast({ title: 'Product deleted' });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: "Couldn't delete product", description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const formFields = (
+    <div className="space-y-3">
+      <div>
+        <Label htmlFor="p-name">Name</Label>
+        <Input id="p-name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+      </div>
+      <div>
+        <Label>Type</Label>
+        <Select value={form.type} onValueChange={(v: ProductType) => setForm((f) => ({ ...f, type: v }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {(Object.keys(TYPE_LABEL) as ProductType[]).map((t) => (
+              <SelectItem key={t} value={t}>{TYPE_LABEL[t]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="p-desc">Description</Label>
+        <Textarea id="p-desc" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label htmlFor="p-roi">ROI % p.a. (min, or fixed rate)</Label>
+          <Input id="p-roi" type="number" value={form.roi} onChange={(e) => setForm((f) => ({ ...f, roi: e.target.value }))} />
+        </div>
+        <div>
+          <Label htmlFor="p-roiMax">ROI % p.a. max (optional, for a rate range)</Label>
+          <Input id="p-roiMax" type="number" value={form.roiMax} onChange={(e) => setForm((f) => ({ ...f, roiMax: e.target.value }))} />
+        </div>
+        <div>
+          <Label htmlFor="p-duration">Term (months)</Label>
+          <Input id="p-duration" type="number" value={form.duration} onChange={(e) => setForm((f) => ({ ...f, duration: e.target.value }))} />
+        </div>
+        <div>
+          <Label htmlFor="p-min">Min Amount (KES)</Label>
+          <Input id="p-min" type="number" value={form.minAmount} onChange={(e) => setForm((f) => ({ ...f, minAmount: e.target.value }))} />
+        </div>
+        <div>
+          <Label htmlFor="p-max">Max Amount (KES, optional)</Label>
+          <Input id="p-max" type="number" value={form.maxAmount} onChange={(e) => setForm((f) => ({ ...f, maxAmount: e.target.value }))} />
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">
+          The product catalog chamas invest their pooled fund into from /invest.
+        </p>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" onClick={openCreate} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Add Product
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>New Investment Product</DialogTitle></DialogHeader>
+            {formFields}
+            <DialogFooter>
+              <Button onClick={handleCreate} disabled={isPending}>{isPending ? 'Creating…' : 'Create'}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {products.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">No products yet.</CardContent>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {products.map((p) => (
+          <Card key={p.id} className="flex flex-col">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', PRODUCT_TONE[p.type])}>
+                  <PiggyBank className="h-5 w-5" />
+                </div>
+                <Badge variant={p.isActive ? 'default' : 'secondary'}>{p.isActive ? 'Active' : 'Inactive'}</Badge>
+              </div>
+              <CardTitle className="text-base">{p.name}</CardTitle>
+              <CardDescription>{TYPE_LABEL[p.type]}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-1 flex-col justify-between gap-4">
+              <div className="space-y-2 rounded-xl bg-muted/40 p-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Return</span>
+                  <span className="font-figures font-semibold text-chama">
+                    {p.roiMax ? `${p.roi}–${p.roiMax}` : p.roi}% p.a.
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Term</span>
+                  <span className="font-figures font-medium">{p.duration} mo</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Range</span>
+                  <span className="font-figures font-medium">
+                    {formatKES(p.minAmount)}{p.maxAmount ? ` – ${formatKES(p.maxAmount)}` : '+'}
+                  </span>
+                </div>
+              </div>
+              {p.description && <p className="line-clamp-2 text-xs text-muted-foreground">{p.description}</p>}
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="flex-1 gap-1.5" onClick={() => openEdit(p)}>
+                  <Pencil className="h-3.5 w-3.5" /> Edit
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1 gap-1.5" onClick={() => handleToggle(p.id)} disabled={isPending}>
+                  <Power className="h-3.5 w-3.5" /> {p.isActive ? 'Deactivate' : 'Activate'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 text-destructive hover:text-destructive"
+                  onClick={() => handleDelete(p)}
+                  disabled={isPending}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit {editing?.name}</DialogTitle></DialogHeader>
+          {formFields}
+          <DialogFooter>
+            <Button onClick={handleUpdate} disabled={isPending}>{isPending ? 'Saving…' : 'Save'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────── */
+/*                               ADMINS                              */
+/* ────────────────────────────────────────────────────────────── */
+
+const EMPTY_ADMIN_FORM = {
+  email: '',
+  password: '',
+  fullName: '',
+  permissions: {
+    ...ADMIN_PERMISSIONS.reduce((acc, p) => ({ ...acc, [p.key]: true }), {} as Record<string, boolean>),
+    [ADMIN_MANAGER_PERMISSION.key]: false,
+  },
+};
+
+function AdminsAdminSection({
+  admins,
+  currentAdminEmail,
+  isSuperAdmin,
+}: {
+  admins: AdminRow[];
+  currentAdminEmail: string | null;
+  isSuperAdmin: boolean;
+}) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editing, setEditing] = useState<AdminRow | null>(null);
+  const [form, setForm] = useState(EMPTY_ADMIN_FORM);
+
+  const openCreate = () => {
+    setForm(EMPTY_ADMIN_FORM);
+    setCreateOpen(true);
+  };
+
+  const openEdit = (a: AdminRow) => {
+    setEditing(a);
+    setForm({
+      email: a.email,
+      password: '',
+      fullName: a.fullName ?? '',
+      permissions: {
+        ...ADMIN_PERMISSIONS.reduce((acc, p) => ({ ...acc, [p.key]: a[p.key] }), {} as Record<string, boolean>),
+        [ADMIN_MANAGER_PERMISSION.key]: a[ADMIN_MANAGER_PERMISSION.key],
+      },
+    });
+  };
+
+  const handleCreate = () => {
+    startTransition(async () => {
+      try {
+        await createAdminAccount({
+          email: form.email,
+          password: form.password,
+          fullName: form.fullName || undefined,
+          permissions: form.permissions,
+        });
+        toast({ title: 'Admin created', description: `${form.email} can now sign in to /admin.` });
+        setCreateOpen(false);
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleUpdate = () => {
+    if (!editing) return;
+    startTransition(async () => {
+      try {
+        await updateAdminAccount(editing.id, {
+          email: form.email,
+          password: form.password || undefined,
+          fullName: form.fullName || undefined,
+          permissions: form.permissions,
+        });
+        toast({ title: 'Admin updated' });
+        setEditing(null);
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  // Quick per-section toggle straight from the table — lets the super admin
+  // grant/revoke one area for an already-created admin without opening the
+  // full edit dialog.
+  const handleToggle = (a: AdminRow, key: (typeof ADMIN_PERMISSIONS)[number]['key']) => {
+    startTransition(async () => {
+      try {
+        await updateAdminPermissions(a.id, { [key]: !a[key] });
+        toast({ title: 'Permissions updated' });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleDelete = (a: AdminRow) => {
+    if (!confirm(`Remove admin access for ${a.email}? They will no longer be able to sign in.`)) return;
+    startTransition(async () => {
+      try {
+        await deleteAdminAccount(a.id);
+        toast({ title: 'Admin removed' });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const formFields = (
+    <div className="space-y-3">
+      <div>
+        <Label htmlFor="a-email">Email</Label>
+        <Input
+          id="a-email"
+          type="email"
+          value={form.email}
+          onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+        />
+      </div>
+      <div>
+        <Label htmlFor="a-name">Full name (optional)</Label>
+        <Input
+          id="a-name"
+          value={form.fullName}
+          onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
+        />
+      </div>
+      <div>
+        <Label htmlFor="a-password">{editing ? 'New password (leave blank to keep current)' : 'Password'}</Label>
+        <Input
+          id="a-password"
+          type="password"
+          autoComplete="new-password"
+          value={form.password}
+          onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+        />
+        <p className="mt-1 text-xs text-muted-foreground">At least 8 characters.</p>
+      </div>
+      <div>
+        <Label>Access</Label>
+        <p className="mb-2 text-xs text-muted-foreground">
+          Sections this admin can manage in this panel. Editable any time, including after creation.
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {ADMIN_PERMISSIONS.map((p) => (
+            <label key={p.key} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-input"
+                checked={form.permissions[p.key]}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, permissions: { ...f.permissions, [p.key]: e.target.checked } }))
+                }
+              />
+              {p.label}
+            </label>
+          ))}
+        </div>
+      </div>
+      {isSuperAdmin && (
+        <div>
+          <Label>Admin management</Label>
+          <p className="mb-2 text-xs text-muted-foreground">
+            Lets this admin see, invite, and delete other admins (never the super admin, and they still can't edit
+            an admin's details or permissions — that stays with you).
+          </p>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-input"
+              checked={form.permissions[ADMIN_MANAGER_PERMISSION.key]}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  permissions: { ...f.permissions, [ADMIN_MANAGER_PERMISSION.key]: e.target.checked },
+                }))
+              }
+            />
+            {ADMIN_MANAGER_PERMISSION.label}
+          </label>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">
+          Admins you create sign in at /admin with the email and password set here.
+        </p>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" onClick={openCreate} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Add Admin
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>New Admin</DialogTitle>
+              <DialogDescription>They'll be able to sign in to this panel with these credentials.</DialogDescription>
+            </DialogHeader>
+            {formFields}
+            <DialogFooter>
+              <Button onClick={handleCreate} disabled={isPending}>{isPending ? 'Creating…' : 'Create'}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <ShieldCheck className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Super admin</CardTitle>
+              <CardDescription>
+                {isSuperAdmin
+                  ? `${currentAdminEmail ?? 'Signed in via Clerk'} — always has full access and can't be edited or removed here.`
+                  : "The super admin always has full access and isn't listed below — it can't be edited or removed."}
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {admins.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            No other admins yet. Add one to let them sign in to this panel.
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Access</TableHead>
+                  <TableHead>Added</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {admins.map((a) => (
+                  <TableRow key={a.id}>
+                    <TableCell className="font-medium">{a.fullName || '—'}</TableCell>
+                    <TableCell className="text-muted-foreground">{a.email}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1 max-w-xs">
+                        {ADMIN_PERMISSIONS.map((p) =>
+                          isSuperAdmin ? (
+                            <button
+                              key={p.key}
+                              type="button"
+                              disabled={isPending}
+                              onClick={() => handleToggle(a, p.key)}
+                              title={a[p.key] ? `Revoke ${p.label}` : `Grant ${p.label}`}
+                              className={`rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                                a[p.key]
+                                  ? 'border-primary/30 bg-primary/10 text-primary'
+                                  : 'border-input text-muted-foreground hover:bg-muted'
+                              }`}
+                            >
+                              {p.label}
+                            </button>
+                          ) : a[p.key] ? (
+                            <span
+                              key={p.key}
+                              className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-primary"
+                            >
+                              {p.label}
+                            </span>
+                          ) : null
+                        )}
+                        {a[ADMIN_MANAGER_PERMISSION.key] && (
+                          <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700">
+                            {ADMIN_MANAGER_PERMISSION.label}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(a.createdAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        {isSuperAdmin && (
+                          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => openEdit(a)}>
+                            <Pencil className="h-3.5 w-3.5" /> Edit
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5 text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(a)}
+                          disabled={isPending}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit {editing?.email}</DialogTitle>
+          </DialogHeader>
+          {formFields}
+          <DialogFooter>
+            <Button onClick={handleUpdate} disabled={isPending}>{isPending ? 'Saving…' : 'Save'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────── */
+/*                           MEMBER REPORTS                         */
+/* ────────────────────────────────────────────────────────────── */
+
+function MemberReportsAdminSection({ reports }: { reports: ReportRow[] }) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [csv, setCsv] = useState('');
+  const [query, setQuery] = useState('');
+
+  const handleSync = () => {
+    startTransition(async () => {
+      try {
+        const res = await syncMemberReportsCsv(csv);
+        toast({
+          title: 'Synced',
+          description: `Imported ${res.imported} row${res.imported === 1 ? '' : 's'} (${res.matched} matched to a chama).`,
+        });
+        setCsv('');
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    if (!confirm('Delete this report row?')) return;
+    startTransition(async () => {
+      try {
+        await deleteMemberReport(id);
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const filtered = reports.filter((r) => {
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return (
+      (r.memberName ?? '').toLowerCase().includes(q) ||
+      r.memberEmail.toLowerCase().includes(q) ||
+      (r.teamName ?? '').toLowerCase().includes(q)
+    );
+  });
+
+  return (
+    <div className="space-y-6">
+      <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.04] to-transparent">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <UploadCloud className="h-5 w-5" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Sync from Google Sheets</CardTitle>
+              <CardDescription>
+                Paste a CSV export (header row required: <code>email,name,date,principal,rate,roi,withdrawal,closingBalance,period,notes</code>).
+                For automatic syncing, point a Google Sheets Apps Script trigger at <code>/api/member-reports/sync</code> instead — same
+                column names, sent as JSON.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Textarea
+            rows={6}
+            placeholder="email,name,date,principal,rate,roi,withdrawal,closingBalance,period,notes"
+            value={csv}
+            onChange={(e) => setCsv(e.target.value)}
+            className="font-figures"
+          />
+          <Button onClick={handleSync} disabled={isPending || !csv.trim()} className="gap-1.5">
+            <UploadCloud className="h-4 w-4" /> {isPending ? 'Syncing…' : 'Sync Rows'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="font-headline text-lg font-semibold">Recent Rows ({reports.length})</h2>
+          <SearchBox value={query} onChange={setQuery} placeholder="Search member, chama, email…" />
+        </div>
+
+        {reports.length === 0 ? (
+          <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">No member reports synced yet.</CardContent></Card>
+        ) : (
+          <Card className="overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Member</TableHead>
+                  <TableHead className="hidden sm:table-cell">Chama</TableHead>
+                  <TableHead className="hidden md:table-cell">Period</TableHead>
+                  <TableHead>Principal</TableHead>
+                  <TableHead className="hidden lg:table-cell">ROI</TableHead>
+                  <TableHead>Closing Bal.</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="max-w-[180px]">
+                      <p className="truncate font-medium">{r.memberName || r.memberEmail}</p>
+                      <p className="truncate text-xs text-muted-foreground">{r.memberEmail}</p>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {r.teamName ? r.teamName : <span className="text-xs text-muted-foreground">Unmatched</span>}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                      {r.periodLabel || r.date || '—'}
+                    </TableCell>
+                    <TableCell className="font-figures text-sm">{r.principal || '—'}</TableCell>
+                    <TableCell className="hidden lg:table-cell font-figures text-sm">{r.roi || '—'}</TableCell>
+                    <TableCell className="font-figures text-sm">{r.closingBal || '—'}</TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(r.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {filtered.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No rows match your search.</p>}
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────── */
+/*                        SAVINGS ACCOUNTS                          */
+/* ────────────────────────────────────────────────────────────── */
+
+const SAVINGS_FORM_FIELDS: { key: keyof SavingsEntryForm; label: string; placeholder?: string }[] = [
+  { key: 'memberEmail', label: 'Member email', placeholder: 'member@example.com' },
+  { key: 'memberName', label: 'Member name' },
+  { key: 'accountNo', label: 'Account no.', placeholder: 'SAV-0012' },
+  { key: 'date', label: 'Date', placeholder: '2026-08-01' },
+  { key: 'openingBalance', label: 'Opening balance' },
+  { key: 'deposit', label: 'Deposit' },
+  { key: 'payout', label: 'Payout' },
+  { key: 'closingBalance', label: 'Closing balance' },
+  { key: 'periodLabel', label: 'Period', placeholder: 'Aug 2026' },
+  { key: 'notes', label: 'Notes' },
+];
+
+type SavingsEntryForm = {
+  memberEmail: string;
+  memberName: string;
+  accountNo: string;
+  date: string;
+  openingBalance: string;
+  deposit: string;
+  payout: string;
+  closingBalance: string;
+  periodLabel: string;
+  notes: string;
+};
+
+const EMPTY_SAVINGS_FORM: SavingsEntryForm = {
+  memberEmail: '',
+  memberName: '',
+  accountNo: '',
+  date: '',
+  openingBalance: '',
+  deposit: '',
+  payout: '',
+  closingBalance: '',
+  periodLabel: '',
+  notes: '',
+};
+
+function rowToForm(r: SavingsRow): SavingsEntryForm {
+  return {
+    memberEmail: r.memberEmail,
+    memberName: r.memberName ?? '',
+    accountNo: r.accountNo ?? '',
+    date: r.date ?? '',
+    openingBalance: r.openingBalance ?? '',
+    deposit: r.deposit ?? '',
+    payout: r.payout ?? '',
+    closingBalance: r.closingBalance ?? '',
+    periodLabel: r.periodLabel ?? '',
+    notes: r.notes ?? '',
+  };
+}
+
+
+function SavingsDuplicatesCard() {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [result, setResult] = useState<{ total: number; groups: SavingsDuplicateGroup[] } | null>(null);
+  const [match, setMatch] = useState<'name' | 'identity'>('name');
+  const [keep, setKeep] = useState<'oldest' | 'newest'>('oldest');
+  const selectCls = 'h-9 rounded-md border border-input bg-background px-2 text-sm';
+
+  const extraCount = (gs: SavingsDuplicateGroup[]) => gs.reduce((n, g) => n + g.entries.length - 1, 0);
+
+  const scan = () =>
+    startTransition(async () => {
+      try {
+        setResult(await findSavingsDuplicates({ match, keep }));
+      } catch (err: any) {
+        toast({ title: 'Scan failed', description: err.message, variant: 'destructive' });
+      }
+    });
+
+  const clean = (keys: string[] | undefined, count: number) => {
+    const what = keys ? `${count} duplicate cop${count === 1 ? 'y' : 'ies'} in this group` : `all ${count} duplicate cop${count === 1 ? 'y' : 'ies'}`;
+    if (!confirm(`Delete ${what}? One record per group is kept (${keep === 'oldest' ? 'the original, oldest' : 'the most recently updated'} one). This cannot be undone.`)) return;
+    startTransition(async () => {
+      try {
+        const res = await deleteSavingsDuplicates(keys, { match, keep });
+        toast({ title: 'Duplicates removed', description: `Deleted ${res.deleted} entr${res.deleted === 1 ? 'y' : 'ies'}.` });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+              <Copy className="h-5 w-5" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Duplicate records</CardTitle>
+              <CardDescription>
+                Finds repeated entries (same member, account no., date and period), checks every savings entry, and
+                lets you delete all the extras so only one record remains.
+              </CardDescription>
+            </div>
+          </div>
+          <Button onClick={scan} disabled={isPending} className="gap-1.5 shrink-0">
+            {isPending && !result ? 'Scanning…' : result ? 'Re-scan' : 'Detect duplicates'}
+          </Button>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+          <label className="flex items-center gap-2">
+            Match by
+            <select className={selectCls} value={match} onChange={(e) => { setMatch(e.target.value as any); setResult(null); }}>
+              <option value="name">Same member name</option>
+              <option value="identity">Same email / phone</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2">
+            Keep
+            <select className={selectCls} value={keep} onChange={(e) => { setKeep(e.target.value as any); setResult(null); }}>
+              <option value="oldest">Original (oldest)</option>
+              <option value="newest">Latest update</option>
+            </select>
+          </label>
+        </div>
+      </CardHeader>
+
+      {result && (
+        <CardContent className="space-y-4">
+          {result.groups.length === 0 ? (
+            <p className="rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">
+              No duplicates found across {result.total} entries.
+            </p>
+          ) : (
+            <>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm">
+                  <span className="font-medium">{extraCount(result.groups)}</span> duplicate cop
+                  {extraCount(result.groups) === 1 ? 'y' : 'ies'} in {result.groups.length} group
+                  {result.groups.length === 1 ? '' : 's'} (of {result.total} entries).
+                </p>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={isPending}
+                  onClick={() => clean(undefined, extraCount(result.groups))}
+                  className="gap-1.5"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Delete all duplicates
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {result.groups.map((g) => (
+                  <div key={g.key} className="rounded-xl border border-border/60 p-3">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{g.memberName || g.memberEmail}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {g.memberEmail}
+                          {g.accountNo ? ` · ${g.accountNo}` : ''}
+                          {g.period ? ` · ${g.period}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={g.identical ? 'secondary' : 'destructive'} className="text-xs font-normal">
+                          {g.identical ? 'Identical copies' : 'Figures differ'}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={isPending}
+                          onClick={() => clean([g.key], g.entries.length - 1)}
+                          className="gap-1.5 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Delete {g.entries.length - 1}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead></TableHead>
+                            <TableHead>Opening</TableHead>
+                            <TableHead>Deposit</TableHead>
+                            <TableHead>Payout</TableHead>
+                            <TableHead>Closing</TableHead>
+                            <TableHead>Last updated</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {g.entries.map((e) => (
+                            <TableRow key={e.id} className={e.keep ? '' : 'bg-destructive/5'}>
+                              <TableCell>
+                                <Badge variant={e.keep ? 'default' : 'outline'} className="text-xs font-normal">
+                                  {e.keep ? 'Keep' : 'Delete'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="font-figures text-sm">{e.openingBalance || '—'}</TableCell>
+                              <TableCell className="font-figures text-sm">{e.deposit || '—'}</TableCell>
+                              <TableCell className="font-figures text-sm">{e.payout || '—'}</TableCell>
+                              <TableCell className="font-figures text-sm">{e.closingBalance || '—'}</TableCell>
+                              <TableCell className="text-xs text-muted-foreground">
+                                {new Date(e.updatedAt).toLocaleString()}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
+function SavingsAdminSection({ entries }: { entries: SavingsRow[] }) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [csv, setCsv] = useState('');
+  const [query, setQuery] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<SavingsEntryForm>(EMPTY_SAVINGS_FORM);
+
+  const handleSync = () => {
+    startTransition(async () => {
+      try {
+        const res = await syncSavingsCsv(csv);
+        toast({
+          title: 'Synced',
+          description: `Imported ${res.imported} row${res.imported === 1 ? '' : 's'} (${res.matched} matched to a chama).`,
+        });
+        setCsv('');
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const openAddDialog = () => {
+    setEditingId(null);
+    setForm(EMPTY_SAVINGS_FORM);
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (row: SavingsRow) => {
+    setEditingId(row.id);
+    setForm(rowToForm(row));
+    setDialogOpen(true);
+  };
+
+  const handleSave = () => {
+    if (!form.memberEmail.trim()) {
+      toast({ title: 'Error', description: 'A member email is required.', variant: 'destructive' });
+      return;
+    }
+    startTransition(async () => {
+      try {
+        if (editingId) {
+          await updateSavingsEntry(editingId, form);
+          toast({ title: 'Entry updated' });
+        } else {
+          await createSavingsEntry(form);
+          toast({ title: 'Entry added' });
+        }
+        setDialogOpen(false);
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    if (!confirm('Delete this savings entry?')) return;
+    startTransition(async () => {
+      try {
+        await deleteSavingsEntry(id);
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const toggleOne = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const handleBulkDelete = () => {
+    const ids = [...selected];
+    if (!confirm(`Delete ${ids.length} savings entr${ids.length === 1 ? 'y' : 'ies'}? This cannot be undone.`)) return;
+    startTransition(async () => {
+      try {
+        const res = await deleteSavingsEntries(ids);
+        toast({ title: 'Entries deleted', description: `Deleted ${res.deleted} entr${res.deleted === 1 ? 'y' : 'ies'}.` });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleBulkRematch = () => {
+    const ids = [...selected];
+    startTransition(async () => {
+      try {
+        const res = await rematchSavingsEntries(ids);
+        toast({
+          title: 'Chama matching refreshed',
+          description: `${res.changed} of ${res.checked} entr${res.checked === 1 ? 'y' : 'ies'} updated.`,
+        });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleBulkExport = () => {
+    const cols: (keyof SavingsRow)[] = [
+      'memberEmail', 'memberName', 'accountNo', 'date', 'openingBalance', 'deposit', 'payout', 'closingBalance', 'periodLabel', 'notes',
+    ];
+    const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = [
+      cols.join(','),
+      ...entries.filter((e) => selected.has(e.id)).map((e) => cols.map((c) => esc(e[c])).join(',')),
+    ];
+    const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `savings-entries-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const filtered = entries.filter((r) => {
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return (
+      (r.memberName ?? '').toLowerCase().includes(q) ||
+      r.memberEmail.toLowerCase().includes(q) ||
+      (r.teamName ?? '').toLowerCase().includes(q) ||
+      (r.accountNo ?? '').toLowerCase().includes(q)
+    );
+  });
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
+  const toggleAllFiltered = () =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allFilteredSelected) filtered.forEach((r) => next.delete(r.id));
+      else filtered.forEach((r) => next.add(r.id));
+      return next;
+    });
+
+  return (
+    <div className="space-y-6">
+      <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.04] to-transparent">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <UploadCloud className="h-5 w-5" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Sync from Google Sheets</CardTitle>
+              <CardDescription>
+                Paste a CSV export of the Savings Data tab (header row required:{' '}
+                <code>
+                  memberEmail,memberName,accountNo,date,openingBalance,deposit,payout,closingBalance,periodLabel,notes
+                </code>
+                ). For automatic syncing, point a Google Sheets Apps Script trigger at{' '}
+                <code>/api/savings/sync</code> instead — same column names, sent as JSON under{' '}
+                <code>records</code>.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Textarea
+            rows={6}
+            placeholder="memberEmail,memberName,accountNo,date,openingBalance,deposit,payout,closingBalance,periodLabel,notes"
+            value={csv}
+            onChange={(e) => setCsv(e.target.value)}
+            className="font-figures"
+          />
+          <Button onClick={handleSync} disabled={isPending || !csv.trim()} className="gap-1.5">
+            <UploadCloud className="h-4 w-4" /> {isPending ? 'Syncing…' : 'Sync Rows'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <SavingsDuplicatesCard />
+
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="font-headline text-lg font-semibold">Savings Entries ({entries.length})</h2>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <SearchBox value={query} onChange={setQuery} placeholder="Search member, chama, account…" />
+            <Button size="sm" onClick={openAddDialog} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Add Entry
+            </Button>
+          </div>
+        </div>
+
+        {selected.size > 0 && (
+          <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-medium">
+              {selected.size} selected
+              <button type="button" className="ml-3 text-xs font-normal text-muted-foreground underline" onClick={() => setSelected(new Set())}>
+                Clear
+              </button>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={handleBulkExport} disabled={isPending} className="gap-1.5">
+                <Download className="h-3.5 w-3.5" /> Export CSV
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleBulkRematch} disabled={isPending} className="gap-1.5">
+                <Link2 className="h-3.5 w-3.5" /> Re-match chama
+              </Button>
+              <Button size="sm" variant="destructive" onClick={handleBulkDelete} disabled={isPending} className="gap-1.5">
+                <Trash2 className="h-3.5 w-3.5" /> Delete selected
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {entries.length === 0 ? (
+          <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">No savings entries yet.</CardContent></Card>
+        ) : (
+          <Card className="overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-8">
+                    <input type="checkbox" aria-label="Select all" className="h-4 w-4 accent-primary" checked={allFilteredSelected} onChange={toggleAllFiltered} />
+                  </TableHead>
+                  <TableHead>Member</TableHead>
+                  <TableHead className="hidden sm:table-cell">Chama</TableHead>
+                  <TableHead className="hidden md:table-cell">Period</TableHead>
+                  <TableHead className="hidden lg:table-cell">Opening</TableHead>
+                  <TableHead className="hidden lg:table-cell">Deposit</TableHead>
+                  <TableHead className="hidden xl:table-cell">Payout</TableHead>
+                  <TableHead>Closing Bal.</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((r) => (
+                  <TableRow key={r.id} className={selected.has(r.id) ? 'bg-primary/5' : ''}>
+                    <TableCell className="w-8">
+                      <input type="checkbox" aria-label="Select entry" className="h-4 w-4 accent-primary" checked={selected.has(r.id)} onChange={() => toggleOne(r.id)} />
+                    </TableCell>
+                    <TableCell className="max-w-[180px]">
+                      <p className="truncate font-medium">{r.memberName || r.memberEmail}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {r.memberEmail}
+                        {r.accountNo ? ` · ${r.accountNo}` : ''}
+                      </p>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {r.teamName ? r.teamName : <span className="text-xs text-muted-foreground">Unmatched</span>}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                      {r.periodLabel || r.date || '—'}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell font-figures text-sm">{r.openingBalance || '—'}</TableCell>
+                    <TableCell className="hidden lg:table-cell font-figures text-sm">{r.deposit || '—'}</TableCell>
+                    <TableCell className="hidden xl:table-cell font-figures text-sm">{r.payout || '—'}</TableCell>
+                    <TableCell className="font-figures text-sm">{r.closingBalance || '—'}</TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button size="sm" variant="ghost" onClick={() => openEditDialog(r)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(r.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {filtered.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No rows match your search.</p>}
+          </Card>
+        )}
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingId ? 'Edit Savings Entry' : 'Add Savings Entry'}</DialogTitle>
+            <DialogDescription>
+              {editingId
+                ? 'Correct any field on this entry.'
+                : 'Manually add a savings entry — useful for one-off corrections outside the normal Sheets sync.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {SAVINGS_FORM_FIELDS.map((f) => (
+              <div key={f.key} className={cn('space-y-1.5', f.key === 'notes' && 'sm:col-span-2')}>
+                <Label htmlFor={`savings-${f.key}`}>{f.label}</Label>
+                <Input
+                  id={`savings-${f.key}`}
+                  placeholder={f.placeholder}
+                  value={form[f.key]}
+                  onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button onClick={handleSave} disabled={isPending}>{isPending ? 'Saving…' : 'Save'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────── */
+/*                              PAYMENTS                            */
+/* ────────────────────────────────────────────────────────────── */
+
+type PaymentFilter = 'PENDING' | 'SUCCESS' | 'FAILED' | 'ALL';
+
+const PAYMENT_STATUS_VARIANT: Record<PaymentRow['status'], 'default' | 'secondary' | 'destructive'> = {
+  PENDING: 'secondary',
+  SUCCESS: 'default',
+  FAILED: 'destructive',
+  CANCELLED: 'destructive',
+};
+
+function PaymentsAdminSection({ payments }: { payments: PaymentRow[] }) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [filter, setFilter] = useState<PaymentFilter>('PENDING');
+  const [query, setQuery] = useState('');
+  const [noteById, setNoteById] = useState<Record<string, string>>({});
+
+  const counts = {
+    PENDING: payments.filter((p) => p.status === 'PENDING').length,
+    SUCCESS: payments.filter((p) => p.status === 'SUCCESS').length,
+    FAILED: payments.filter((p) => p.status === 'FAILED' || p.status === 'CANCELLED').length,
+    ALL: payments.length,
+  };
+
+  const filtered = payments.filter((p) => {
+    if (filter === 'PENDING' && p.status !== 'PENDING') return false;
+    if (filter === 'SUCCESS' && p.status !== 'SUCCESS') return false;
+    if (filter === 'FAILED' && !(p.status === 'FAILED' || p.status === 'CANCELLED')) return false;
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return p.memberName.toLowerCase().includes(q) || p.productName.toLowerCase().includes(q) || (p.phone ?? '').includes(q);
+  });
+
+  const handleResolve = (id: string, status: 'SUCCESS' | 'FAILED') => {
+    startTransition(async () => {
+      try {
+        await resolvePayment(id, status, noteById[id]);
+        toast({ title: status === 'SUCCESS' ? 'Payment confirmed & credited' : 'Payment marked failed' });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  if (payments.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-sm text-muted-foreground">
+          No payment requests yet. They'll show up here once a member pays via M-Pesa or Visa card from /accounts.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-gold/30 bg-gold/5 p-4 text-sm text-muted-foreground">
+        No live payment gateway is connected yet — confirm M-Pesa/Visa requests here once you've verified the
+        money landed, and it'll be credited to the member's account balance automatically.
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          <FilterPill active={filter === 'PENDING'} onClick={() => setFilter('PENDING')}>
+            Pending ({counts.PENDING})
+          </FilterPill>
+          <FilterPill active={filter === 'SUCCESS'} onClick={() => setFilter('SUCCESS')}>
+            Confirmed ({counts.SUCCESS})
+          </FilterPill>
+          <FilterPill active={filter === 'FAILED'} onClick={() => setFilter('FAILED')}>
+            Failed ({counts.FAILED})
+          </FilterPill>
+          <FilterPill active={filter === 'ALL'} onClick={() => setFilter('ALL')}>
+            All ({counts.ALL})
+          </FilterPill>
+        </div>
+        <SearchBox value={query} onChange={setQuery} placeholder="Search member, account, phone…" />
+      </div>
+
+      <Card className="overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Member</TableHead>
+              <TableHead className="hidden sm:table-cell">Account</TableHead>
+              <TableHead>Channel</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.map((p) => (
+              <TableRow key={p.id}>
+                <TableCell className="max-w-[160px]">
+                  <p className="truncate font-medium">{p.memberName}</p>
+                  {p.phone && <p className="truncate text-xs text-muted-foreground">{p.phone}</p>}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell text-sm">{p.productName}</TableCell>
+                <TableCell>
+                  <span className="inline-flex items-center gap-1.5 text-sm">
+                    {p.channel === 'MPESA' ? (
+                      <Smartphone className="h-3.5 w-3.5 text-muted-foreground" />
+                    ) : (
+                      <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                    {p.channel === 'MPESA' ? 'M-Pesa' : 'Visa Card'}
+                  </span>
+                </TableCell>
+                <TableCell className="font-figures">{formatKES(p.amount)}</TableCell>
+                <TableCell>
+                  <Badge variant={PAYMENT_STATUS_VARIANT[p.status]}>{p.status}</Badge>
+                  {p.note && <p className="mt-1 text-xs text-muted-foreground">{p.note}</p>}
+                </TableCell>
+                <TableCell className="text-right">
+                  {p.status === 'PENDING' ? (
+                    <div className="flex flex-col items-end gap-1.5">
+                      <Input
+                        placeholder="Note (optional)"
+                        value={noteById[p.id] ?? ''}
+                        onChange={(e) => setNoteById((n) => ({ ...n, [p.id]: e.target.value }))}
+                        className="h-8 w-40 text-xs"
+                      />
+                      <div className="flex gap-1.5">
+                        <Button size="sm" variant="outline" className="h-7 gap-1 px-2 text-xs" onClick={() => handleResolve(p.id, 'FAILED')} disabled={isPending}>
+                          <XCircle className="h-3 w-3" /> Failed
+                        </Button>
+                        <Button size="sm" className="h-7 gap-1 px-2 text-xs" onClick={() => handleResolve(p.id, 'SUCCESS')} disabled={isPending}>
+                          <CheckCircle2 className="h-3 w-3" /> Confirm
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(p.createdAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        {filtered.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No payments match this view.</p>}
+      </Card>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────── */
+/*                       JUNIOR ACCOUNT APPLICATIONS                */
+/* ────────────────────────────────────────────────────────────── */
+
+type JuniorFilter = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'ALL';
+
+function JuniorAdminSection({ applications }: { applications: JuniorApplicationRow[] }) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [filter, setFilter] = useState<JuniorFilter>('PENDING_REVIEW');
+  const [noteById, setNoteById] = useState<Record<string, string>>({});
+  const [preview, setPreview] = useState<{ url: string; label: string } | null>(null);
+
+  const counts = {
+    PENDING_REVIEW: applications.filter((a) => a.status === 'PENDING_REVIEW').length,
+    APPROVED: applications.filter((a) => a.status === 'APPROVED').length,
+    REJECTED: applications.filter((a) => a.status === 'REJECTED').length,
+    ALL: applications.length,
+  };
+
+  const filtered = filter === 'ALL' ? applications : applications.filter((a) => a.status === filter);
+
+  const handleDecide = (id: string, decision: 'APPROVED' | 'REJECTED') => {
+    startTransition(async () => {
+      try {
+        await decideJuniorApplication(id, decision, noteById[id]);
+        toast({ title: decision === 'APPROVED' ? 'Junior Account approved' : 'Application rejected' });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  if (applications.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-sm text-muted-foreground">
+          No Junior Account applications yet.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <FilterPill active={filter === 'PENDING_REVIEW'} onClick={() => setFilter('PENDING_REVIEW')}>
+          Pending review ({counts.PENDING_REVIEW})
+        </FilterPill>
+        <FilterPill active={filter === 'APPROVED'} onClick={() => setFilter('APPROVED')}>
+          Approved ({counts.APPROVED})
+        </FilterPill>
+        <FilterPill active={filter === 'REJECTED'} onClick={() => setFilter('REJECTED')}>
+          Rejected ({counts.REJECTED})
+        </FilterPill>
+        <FilterPill active={filter === 'ALL'} onClick={() => setFilter('ALL')}>
+          All ({counts.ALL})
+        </FilterPill>
+      </div>
+
+      {filtered.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            No applications match this view.
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-4">
+        {filtered.map((a) => {
+          const isImageCert = !a.birthCertUrl.toLowerCase().endsWith('.pdf');
+
+          return (
+            <Card key={a.id} className="overflow-hidden">
+              <CardHeader className="pb-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-chama/10 text-chama">
+                      <Baby className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">{a.childFullName}</CardTitle>
+                      <CardDescription>
+                        Guardian: {a.guardianName} · {a.guardianPhone}
+                        {a.childDateOfBirth && ` · DOB ${new Date(a.childDateOfBirth).toLocaleDateString()}`}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Badge variant={a.status === 'APPROVED' ? 'default' : a.status === 'REJECTED' ? 'destructive' : 'secondary'}>
+                    {a.status === 'PENDING_REVIEW' ? 'Pending review' : a.status === 'APPROVED' ? 'Approved' : 'Rejected'}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <dl className="grid grid-cols-1 gap-x-4 gap-y-3 rounded-xl bg-muted/40 p-4 text-sm sm:grid-cols-3">
+                  <div><dt className="text-xs text-muted-foreground">Guardian ID/Passport</dt><dd className="font-medium">{a.guardianIdNumber}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Guardian Phone</dt><dd className="font-medium">{a.guardianPhone}</dd></div>
+                  <div><dt className="text-xs text-muted-foreground">Guardian KRA PIN</dt><dd className="font-medium">{a.guardianKraPin}</dd></div>
+                </dl>
+
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setPreview({ url: a.birthCertUrl, label: `${a.childFullName} — Birth Certificate` })}
+                    className="flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-sm transition-colors hover:border-primary/40 hover:bg-primary/5"
+                  >
+                    {isImageCert ? <ImageIcon className="h-4 w-4 text-muted-foreground" /> : <FileText className="h-4 w-4 text-muted-foreground" />}
+                    Birth Certificate
+                  </button>
+                  <button
+                    onClick={() => setPreview({ url: a.childPhotoUrl, label: `${a.childFullName} — Passport Photo` })}
+                    className="flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-sm transition-colors hover:border-primary/40 hover:bg-primary/5"
+                  >
+                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    Passport Photo
+                  </button>
+                </div>
+
+                {a.reviewNotes && (
+                  <div className="rounded-lg bg-muted/40 p-3 text-sm">
+                    <p className="text-xs font-medium text-muted-foreground">Review note</p>
+                    <p>{a.reviewNotes}</p>
+                  </div>
+                )}
+
+                {a.status === 'PENDING_REVIEW' && (
+                  <div className="space-y-2 border-t border-border/60 pt-4">
+                    <Textarea
+                      placeholder="Note for the guardian (optional, shown if rejected)"
+                      value={noteById[a.id] ?? ''}
+                      onChange={(e) => setNoteById((n) => ({ ...n, [a.id]: e.target.value }))}
+                      rows={2}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" onClick={() => handleDecide(a.id, 'APPROVED')} disabled={isPending} className="gap-1.5">
+                        <CheckCircle2 className="h-4 w-4" /> Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDecide(a.id, 'REJECTED')}
+                        disabled={isPending}
+                        className="gap-1.5 text-destructive hover:text-destructive"
+                      >
+                        <XCircle className="h-4 w-4" /> Reject
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <Dialog open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{preview?.label}</DialogTitle>
+          </DialogHeader>
+          {preview && (
+            preview.url.toLowerCase().endsWith('.pdf') ? (
+              <a href={preview.url} target="_blank" rel="noreferrer" className="text-sm font-medium text-primary underline">
+                Open PDF in a new tab
+              </a>
+            ) : (
+              <img src={preview.url} alt={preview.label} className="max-h-[70vh] w-full rounded-lg object-contain" />
+            )
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────── */
+/*  Ludeva Membership confirmation — the other half of the           */
+/*  membership record (no longer affects the 2.5% flat withdrawal   */
+/*  fee — see src/lib/withdrawal-fee.ts). A claim submitted         */
+/*  at onboarding or /profile sits PENDING until an admin confirms   */
+/*  or rejects the number given here.                                */
+/* ────────────────────────────────────────────────────────────── */
+
+type LudevaMemberFilter = 'PENDING' | 'VERIFIED' | 'REJECTED' | 'ALL';
+
+function LudevaMembersAdminSection({ members }: { members: LudevaMemberRow[] }) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [filter, setFilter] = useState<LudevaMemberFilter>('PENDING');
+  const [reasonById, setReasonById] = useState<Record<string, string>>({});
+
+  const counts = {
+    PENDING: members.filter((m) => m.ludevaMembershipStatus === 'PENDING').length,
+    VERIFIED: members.filter((m) => m.ludevaMembershipStatus === 'VERIFIED').length,
+    REJECTED: members.filter((m) => m.ludevaMembershipStatus === 'REJECTED').length,
+    ALL: members.length,
+  };
+
+  const filtered = filter === 'ALL' ? members : members.filter((m) => m.ludevaMembershipStatus === filter);
+
+  const handleDecide = (id: string, decision: 'VERIFIED' | 'REJECTED') => {
+    startTransition(async () => {
+      try {
+        await decideLudevaMembership(id, decision, reasonById[id]);
+        toast({ title: decision === 'VERIFIED' ? 'Membership confirmed' : 'Membership not confirmed' });
+        window.location.reload();
+      } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      }
+    });
+  };
+
+  if (members.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-sm text-muted-foreground">
+          No one has claimed Ludeva Plc membership yet.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <FilterPill active={filter === 'PENDING'} onClick={() => setFilter('PENDING')}>
+          Pending ({counts.PENDING})
+        </FilterPill>
+        <FilterPill active={filter === 'VERIFIED'} onClick={() => setFilter('VERIFIED')}>
+          Verified ({counts.VERIFIED})
+        </FilterPill>
+        <FilterPill active={filter === 'REJECTED'} onClick={() => setFilter('REJECTED')}>
+          Rejected ({counts.REJECTED})
+        </FilterPill>
+        <FilterPill active={filter === 'ALL'} onClick={() => setFilter('ALL')}>
+          All ({counts.ALL})
+        </FilterPill>
+      </div>
+
+      {filtered.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            No members match this view.
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-4">
+        {filtered.map((m) => (
+          <Card key={m.id}>
+            <CardHeader className="pb-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">{m.fullName}</CardTitle>
+                    <CardDescription>
+                      {m.email || m.phone || 'No contact on file'}
+                      {m.ludevaMemberNumber && ` · Claimed number: ${m.ludevaMemberNumber}`}
+                    </CardDescription>
+                  </div>
+                </div>
+                <Badge
+                  variant={
+                    m.ludevaMembershipStatus === 'VERIFIED'
+                      ? 'default'
+                      : m.ludevaMembershipStatus === 'REJECTED'
+                        ? 'destructive'
+                        : 'secondary'
+                  }
+                >
+                  {m.ludevaMembershipStatus === 'PENDING'
+                    ? 'Pending confirmation'
+                    : m.ludevaMembershipStatus === 'VERIFIED'
+                      ? 'Verified'
+                      : 'Rejected'}
+                </Badge>
+              </div>
+            </CardHeader>
+            {m.ludevaMembershipStatus === 'PENDING' && (
+              <CardContent className="space-y-3">
+                <div>
+                  <Label htmlFor={`ludeva-reason-${m.id}`} className="text-xs">
+                    Rejection reason (only used if you reject)
+                  </Label>
+                  <Textarea
+                    id={`ludeva-reason-${m.id}`}
+                    rows={2}
+                    value={reasonById[m.id] ?? ''}
+                    onChange={(e) => setReasonById((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                    placeholder="e.g. Number not found in Ludeva's member records"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => handleDecide(m.id, 'VERIFIED')} disabled={isPending} className="gap-1.5">
+                    <CheckCircle2 className="h-4 w-4" /> Confirm number
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDecide(m.id, 'REJECTED')} disabled={isPending} className="gap-1.5">
+                    <XCircle className="h-4 w-4" /> Reject
+                  </Button>
+                </div>
+              </CardContent>
+            )}
+            {m.ludevaMembershipStatus === 'REJECTED' && m.ludevaMembershipRejectionReason && (
+              <CardContent className="pt-0">
+                <p className="text-xs text-muted-foreground">Reason: {m.ludevaMembershipRejectionReason}</p>
+              </CardContent>
+            )}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}

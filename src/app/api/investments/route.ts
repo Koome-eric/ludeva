@@ -9,8 +9,8 @@ declare global {
 
 function mapCategoryToFundType(category: string) {
   switch (category) {
-    case "MONEY_MARKET":
-      return "MMF";
+    case "FIXED_DEPOSIT":
+      return "FIXED_DEPOSIT";
     case "EQUITY":
       return "STOCK";
     case "FIXED_INCOME":
@@ -20,7 +20,7 @@ function mapCategoryToFundType(category: string) {
     case "JUNIOR":
       return "JUNIOR";
     default:
-      return "MMF";
+      return "STOCK";
   }
 }
 

@@ -111,7 +111,7 @@ const user = await requireOnboardingComplete();
 ✓ `/` - Home page
 ✓ `/sign-up` - Sign up page
 ✓ `/sign-in` - Sign in page
-✓ `/about`, `/contact`, `/mmf` - Public pages
+✓ `/about`, `/contact`, `/stocks-bonds` - Public pages
 
 ## Next Steps
 

@@ -13,7 +13,7 @@ export default function GrowthSection() {
             A Smarter Way to Grow Your Money
           </h2>
           <p className="mt-4 max-w-2xl mx-auto text-muted-foreground text-lg">
-            Our Money Market Fund is built on principles of security and steady
+            Our Shares Account is built on principles of security and steady
             growth, making it ideal for both new and seasoned investors.
           </p>
         </div>

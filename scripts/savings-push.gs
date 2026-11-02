@@ -1,9 +1,9 @@
 /**
  * Savings Account — Excel/Sheets → database push script.
  *
- * Companion to the existing MMF/Investments push script, run against a
+ * Companion to the existing Investments push script, run against a
  * separate "Savings Data" tab in the same workbook, using a
- * running-balance formula instead of the per-transaction MMF formula:
+ * running-balance formula instead of the per-transaction investments formula:
  * each entry carries the previous closing balance forward, adds a
  * deposit, subtracts a withdrawal, then applies interest to the
  * running balance.

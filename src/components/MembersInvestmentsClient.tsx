@@ -22,7 +22,7 @@ interface Product {
 // ---------- Category Icons ----------
 const getCategoryIcon = (category: string) => {
   switch (category) {
-    case "MMF":
+    case "EQUITY":
       return <TrendingUp className="h-5 w-5" />;
     case "Real Estate":
       return <Landmark className="h-5 w-5" />;

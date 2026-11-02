@@ -58,8 +58,8 @@ export default function PublicFooter() {
             <h4 className="font-semibold mb-3">Products</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/mmf" className="text-muted-foreground hover:text-primary">
-                  Money Market Fund
+                <Link href="/stocks-bonds" className="text-muted-foreground hover:text-primary">
+                  Shares Account
                 </Link>
               </li>
             </ul>

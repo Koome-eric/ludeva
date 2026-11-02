@@ -1,5 +1,5 @@
 // src/app/api/member-reports/route.ts
-// Receives MMF performance data pushed from Google Sheets App Script
+// Receives investment performance data pushed from Google Sheets App Script
 // Also serves member's own report data
 
 import { NextRequest, NextResponse } from "next/server";

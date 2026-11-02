@@ -78,11 +78,11 @@ export default function AboutSection() {
                 — a structured group savings initiative that promotes financial
                 discipline and passive income generation — and the{" "}
                 <span className="font-semibold text-primary">
-                  Money Market Fund
+                  Shares Account
                 </span>
                 , offering stable annual returns of{" "}
                 <span className="font-semibold text-[#D4AF37]">
-                  9%–13% p.a.
+                  12% p.a.
                 </span>
                 .
               </p>

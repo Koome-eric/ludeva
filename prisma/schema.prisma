@@ -14,7 +14,6 @@ enum Role {
 }
 
 enum FundType {
-  MMF
   STOCK
   BOND
   FIXED_DEPOSIT
@@ -23,7 +22,6 @@ enum FundType {
 }
 
 enum ProductCategory {
-  MONEY_MARKET
   EQUITY
   FIXED_INCOME
   FIXED_DEPOSIT
@@ -491,7 +489,7 @@ model Document {
   updatedAt   DateTime     @updatedAt
 }
 
-// ✅ Per-member MMF performance records pushed from Google Sheets
+// ✅ Per-member investment performance records pushed from Google Sheets
 model MemberReport {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   
@@ -524,7 +522,7 @@ model MemberReport {
 // ─────────────────────────────────────────────
 // Savings Account — a second product alongside Investments, fed from its
 // own "Savings Data" tab in the same workbook used for MemberReport.
-// Investments (MMF) calculate a fresh return on the principal in that
+// Investments calculate a fresh return on the principal in that
 // row; Savings instead carries the previous closing balance forward,
 // adds a deposit, subtracts a withdrawal, then applies interest to the
 // running balance — so it gets its own model rather than reusing

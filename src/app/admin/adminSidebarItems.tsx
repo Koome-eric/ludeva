@@ -44,7 +44,7 @@ export const adminSidebarItems: SidebarItem[] = [
     icon: <Briefcase className="h-4 w-4" />,
     subItems: [
       { name: "All Products", path: "/admin/products" },
-      { name: "MMF", path: "/admin/products/mmf" },
+      { name: "Shares Account", path: "/admin/products/shares" },
     ],
   },
   {

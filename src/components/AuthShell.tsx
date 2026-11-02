@@ -14,7 +14,7 @@ type Props = {
 };
 
 const PROMISES = [
-  'Professionally managed Money Market Fund investments',
+  'Professionally managed Shares Account investments',
   'Strong governance and disciplined risk management',
   'Your investments, deposits and withdrawals in one dashboard',
 ];

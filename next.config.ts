@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: process.cwd(),
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -35,6 +36,10 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  // The Money Market Fund page was retired — send old links to the Shares Account page.
+  async redirects() {
+    return [{ source: '/mmf', destination: '/stocks-bonds', permanent: true }];
   },
   // Allow large file uploads (videos up to ~55 MB)
   experimental: {
