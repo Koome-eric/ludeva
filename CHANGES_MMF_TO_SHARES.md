@@ -22,3 +22,11 @@
 - Package renamed `ludeva-app`; README / QUICK_START / onboarding docs updated.
 - Left alone: CHANGES_README.md (historical log), `public/documents/documents.zip`, `tsconfig.tsbuildinfo` (build cache),
   and `scripts/remove-mmf.ts` (it must name the old values to migrate them).
+
+---
+# Investor (member) dashboard wording
+
+- /member/investments table + Investment Details dialog, /member/reports table + CSV export: "Period" column removed,
+  "Principal" -> "Contribution", "ROI" -> "Return". Member dashboard and reports cards: "Total ROI" -> "Total Return".
+- Not changed: admin screens, the product catalog's ROI-rate labels, and the data fields (principal, roi, periodLabel) the
+  Google Sheets sync uses.

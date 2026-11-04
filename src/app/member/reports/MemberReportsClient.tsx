@@ -121,10 +121,9 @@ export default function MemberReportsClient({ reports, member }: Props) {
 
   // Export to CSV
   const exportCSV = () => {
-    const headers = ["Account No", "Period", "Date", "Principal", "Rate", "ROI", "Withdrawal", "Closing Balance", "Quarter/Notes"];
+    const headers = ["Account No", "Date", "Contribution", "Rate", "Return", "Withdrawal", "Closing Balance", "Quarter/Notes"];
     const csvRows = sortedRows.map((r) => [
       r.accountNo || "",
-      r.periodLabel || "",
       formatReportDate(r.date),
       formatNumeric(r.principal),
       r.rate || "",
@@ -217,7 +216,7 @@ export default function MemberReportsClient({ reports, member }: Props) {
           <Card className="rounded-xl border-l-4 border-l-green-500">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-                <TrendingUp className="h-3.5 w-3.5" /> Total ROI
+                <TrendingUp className="h-3.5 w-3.5" /> Total Return
               </div>
               <p className="text-base sm:text-lg font-bold text-green-600 break-words">
                 {`KES ${totalRoiSum.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
@@ -253,7 +252,7 @@ export default function MemberReportsClient({ reports, member }: Props) {
           <CardContent className="p-4 sm:p-6">
             <h2 className="text-base font-bold mb-1">Performance Trend</h2>
             <p className="text-xs text-muted-foreground mb-4">
-              Investment, ROI, and withdrawals by period — most recent {chartData.length} periods
+              Investment, return, and withdrawals by period — most recent {chartData.length} periods
             </p>
             <div className="h-64 sm:h-72 -ml-2">
               <ResponsiveContainer width="100%" height="100%">
@@ -267,7 +266,7 @@ export default function MemberReportsClient({ reports, member }: Props) {
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Bar dataKey="principal" name="Investment" fill="#10b981" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="withdrawal" name="Withdrawal" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                  <Line type="monotone" dataKey="roi" name="ROI" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="roi" name="Return" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
@@ -301,11 +300,10 @@ export default function MemberReportsClient({ reports, member }: Props) {
               <thead>
                 <tr className="border-b bg-muted/30">
                   <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Account</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Period</th>
                   <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Date</th>
-                  <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Principal (KES)</th>
+                  <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Contribution (KES)</th>
                   <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Rate</th>
-                  <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">ROI</th>
+                  <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Return</th>
                   <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Withdrawal</th>
                   <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Closing Balance (KES)</th>
                   <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Notes</th>
@@ -319,7 +317,6 @@ export default function MemberReportsClient({ reports, member }: Props) {
                     return (
                       <tr key={row.id} className="bg-primary/5 border-b">
                         <td className="px-4 py-2 text-xs text-muted-foreground">{row.accountNo || "—"}</td>
-                        <td className="px-4 py-2 text-xs text-muted-foreground">{row.periodLabel || "—"}</td>
                         <td colSpan={7} className="px-4 py-2 text-xs font-semibold text-primary italic">
                           {row.quarter || row.notes}
                         </td>
@@ -330,7 +327,6 @@ export default function MemberReportsClient({ reports, member }: Props) {
                   return (
                     <tr key={row.id} className={`border-b last:border-none ${idx % 2 === 0 ? "" : "bg-muted/10"}`}>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground">{row.accountNo || "—"}</td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground">{row.periodLabel || "—"}</td>
                       <td className="px-4 py-2.5 font-medium">{formatReportDate(row.date)}</td>
                       <td className="px-4 py-2.5 text-right">{formatNumeric(row.principal)}</td>
                       <td className="px-4 py-2.5 text-right">{row.rate || "—"}</td>

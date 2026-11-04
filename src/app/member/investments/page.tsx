@@ -154,9 +154,8 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Account</TableHead>
-                  <TableHead>Period</TableHead>
-                  <TableHead className="text-right">Principal (KES)</TableHead>
-                  <TableHead>ROI</TableHead>
+                  <TableHead className="text-right">Contribution (KES)</TableHead>
+                  <TableHead>Return</TableHead>
                   <TableHead className="text-right">Withdrawal (KES)</TableHead>
                   <TableHead className="text-right">Closing Balance (KES)</TableHead>
                   <TableHead>Notes</TableHead>
@@ -170,7 +169,6 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
                     <TableRow key={inv.id}>
                       <TableCell>{format(inv.date, "MM/dd/yyyy")}</TableCell>
                       <TableCell>{inv.accountNo}</TableCell>
-                      <TableCell>{inv.periodLabel}</TableCell>
                       <TableCell className="text-right font-mono">
                         {inv.principal !== null
                           ? inv.principal.toLocaleString("en-US", { minimumFractionDigits: 2 })
@@ -195,7 +193,7 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
                       {hasAnyReports
                         ? "No investments match your filters."
                         : "You haven't invested yet. Your investment amount is KES 0."}

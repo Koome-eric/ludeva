@@ -57,11 +57,7 @@ export function InvestmentActions({ investment }: { investment: InvestmentRowVie
           </DialogHeader>
           <div className="space-y-3 text-sm mt-2">
             <div className="flex justify-between border-b pb-2">
-              <span className="font-medium text-muted-foreground">Period</span>
-              <span>{investment.periodLabel}</span>
-            </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="font-medium text-muted-foreground">Principal</span>
+              <span className="font-medium text-muted-foreground">Contribution</span>
               <span>
                 {investment.principal !== null
                   ? `KES ${investment.principal.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
@@ -69,7 +65,7 @@ export function InvestmentActions({ investment }: { investment: InvestmentRowVie
               </span>
             </div>
             <div className="flex justify-between border-b pb-2">
-              <span className="font-medium text-muted-foreground">ROI</span>
+              <span className="font-medium text-muted-foreground">Return</span>
               <span>{formatROI(investment.roi)}</span>
             </div>
             <div className="flex justify-between border-b pb-2">

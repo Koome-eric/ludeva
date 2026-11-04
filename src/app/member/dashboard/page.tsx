@@ -68,7 +68,7 @@ export default async function MemberDashboardPage() {
                 KES {currentBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
               </p>
               <p className="text-xs text-muted-foreground mt-2">
-                Total Investment (KES {totalInvested.toLocaleString("en-US", { maximumFractionDigits: 0 })}) + Total ROI (KES {totalRoi.toLocaleString("en-US", { maximumFractionDigits: 0 })})
+                Total Investment (KES {totalInvested.toLocaleString("en-US", { maximumFractionDigits: 0 })}) + Total Return (KES {totalRoi.toLocaleString("en-US", { maximumFractionDigits: 0 })})
                 {totalWithdrawals > 0 && ` − Total Withdrawals (KES ${totalWithdrawals.toLocaleString("en-US", { maximumFractionDigits: 0 })})`}
               </p>
             </div>
@@ -101,7 +101,7 @@ export default async function MemberDashboardPage() {
         />
 
         <StatCard
-          title="Total ROI"
+          title="Total Return"
           value={`KES ${totalRoi.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
           icon={<TrendingUp />}
           subtitle="Cumulative returns earned"
