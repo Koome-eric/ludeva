@@ -30,3 +30,9 @@
   "Principal" -> "Contribution", "ROI" -> "Return". Member dashboard and reports cards: "Total ROI" -> "Total Return".
 - Not changed: admin screens, the product catalog's ROI-rate labels, and the data fields (principal, roi, periodLabel) the
   Google Sheets sync uses.
+
+# Admin investor tables (same wording)
+
+Admin > Member reports, Admin > Investments (summary + per-member records tables, edit dialogs) and the admin dashboard
+"top investors" table: Period column removed, Principal -> Contribution, ROI -> Return ("Total ROI" -> "Total Return" in the
+summary tables). The "Period Label" input stays on the add/edit forms so period data can still be entered.

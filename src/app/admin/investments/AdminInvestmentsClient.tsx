@@ -105,9 +105,8 @@ export default function AdminInvestmentsClient({
               <tr>
                 <th className="text-left p-4">Member</th>
                 <th className="text-left p-4">Account(s)</th>
-                <th className="text-left p-4">Period</th>
                 <th className="text-right p-4">Latest Closing Bal</th>
-                <th className="text-right p-4">Total ROI</th>
+                <th className="text-right p-4">Total Return</th>
                 <th className="text-right p-4">Rows</th>
                 <th className="text-right p-4">Last Updated</th>
               </tr>
@@ -136,9 +135,6 @@ export default function AdminInvestmentsClient({
                         <span className="text-muted-foreground">—</span>
                       )}
                     </div>
-                  </td>
-                  <td className="p-4 text-muted-foreground">
-                    {inv.periodLabel || "—"}
                   </td>
                   <td className="p-4 text-right font-semibold">
                     {fmt(inv.latestClosingBalance)}

@@ -352,7 +352,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="principal">Principal (KES)</Label>
+                    <Label htmlFor="principal">Contribution (KES)</Label>
                     <Input
                       id="principal"
                       type="number"
@@ -384,7 +384,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
                     />
                   </div>
                   <div>
-                    <Label htmlFor="roi">ROI</Label>
+                    <Label htmlFor="roi">Return</Label>
                     <Input
                       id="roi"
                       placeholder="e.g. 2,500"
@@ -522,7 +522,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="bg-muted/30">
-                          {["Account", "Period", "Date", "Principal", "Rate", "ROI", "Withdrawal", "Closing Bal", "Quarter/Notes", "Pushed At", "Actions"].map(h => (
+                          {["Account", "Date", "Contribution", "Rate", "Return", "Withdrawal", "Closing Bal", "Quarter/Notes", "Pushed At", "Actions"].map(h => (
                             <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">{h}</th>
                           ))}
                         </tr>
@@ -531,7 +531,6 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
                         {memberRows.map((row, i) => (
                           <tr key={row.id} className={`border-t ${i % 2 === 0 ? "" : "bg-muted/10"}`}>
                             <td className="px-3 py-2">{row.accountNo || "—"}</td>
-                            <td className="px-3 py-2 max-w-[120px] truncate">{row.periodLabel || "—"}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{row.date || "—"}</td>
                             <td className="px-3 py-2 text-right">{row.principal || "—"}</td>
                             <td className="px-3 py-2 text-right">{row.rate || "—"}</td>
@@ -628,7 +627,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="edit-principal">Principal (KES)</Label>
+                <Label htmlFor="edit-principal">Contribution (KES)</Label>
                 <Input
                   id="edit-principal"
                   type="number"
@@ -657,7 +656,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
                 />
               </div>
               <div>
-                <Label htmlFor="edit-roi">ROI</Label>
+                <Label htmlFor="edit-roi">Return</Label>
                 <Input
                   id="edit-roi"
                   value={editForm.roi}

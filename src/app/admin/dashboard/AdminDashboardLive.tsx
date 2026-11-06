@@ -607,8 +607,8 @@ export default function AdminDashboardLive({ initial }: { initial: DashboardSnap
               <TableHeader>
                 <TableRow>
                   <TableHead>Investor</TableHead>
-                  <TableHead className="text-right">Principal</TableHead>
-                  <TableHead className="hidden text-right md:table-cell">ROI</TableHead>
+                  <TableHead className="text-right">Contribution</TableHead>
+                  <TableHead className="hidden text-right md:table-cell">Return</TableHead>
                   <TableHead className="hidden text-right md:table-cell">Withdrawn</TableHead>
                   <TableHead className="w-[130px]">Share of AUM</TableHead>
                 </TableRow>

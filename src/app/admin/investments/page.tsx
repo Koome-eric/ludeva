@@ -300,9 +300,8 @@ export default function InvestmentsPage() {
                   <tr>
                     <th className="text-left p-4">Member</th>
                     <th className="text-left p-4">Account(s)</th>
-                    <th className="text-left p-4">Period</th>
                     <th className="text-right p-4">Account Balance</th>
-                    <th className="text-right p-4">Total ROI</th>
+                    <th className="text-right p-4">Total Return</th>
                     <th className="text-right p-4">Rows</th>
                     <th className="text-right p-4">Last Updated</th>
                     <th className="text-right p-4">Actions</th>
@@ -331,7 +330,6 @@ export default function InvestmentsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="p-4 text-muted-foreground">{inv.periodLabel || "—"}</td>
                       <td className="p-4 text-right font-semibold">{fmt(inv.netBalance)}</td>
                       <td className="p-4 text-right text-green-600 font-medium">
                         {inv.totalRoi > 0 ? fmt(inv.totalRoi) : "—"}
@@ -413,7 +411,7 @@ export default function InvestmentsPage() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-muted/30">
-                  {["Account", "Period", "Date", "Principal", "Rate", "ROI", "Withdrawal", "Closing Bal", "Notes", "Pushed At", "Actions"].map((h) => (
+                  {["Account", "Date", "Contribution", "Rate", "Return", "Withdrawal", "Closing Bal", "Notes", "Pushed At", "Actions"].map((h) => (
                     <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -422,7 +420,6 @@ export default function InvestmentsPage() {
                 {manageRows.map((row, i) => (
                   <tr key={row.id} className={`border-t ${i % 2 === 0 ? "" : "bg-muted/10"}`}>
                     <td className="px-3 py-2">{row.accountNo || "—"}</td>
-                    <td className="px-3 py-2 max-w-[100px] truncate">{row.periodLabel || "—"}</td>
                     <td className="px-3 py-2 whitespace-nowrap">{row.date || "—"}</td>
                     <td className="px-3 py-2 text-right">{row.principal || "—"}</td>
                     <td className="px-3 py-2 text-right">{row.rate || "—"}</td>
@@ -451,7 +448,7 @@ export default function InvestmentsPage() {
                 ))}
                 {manageRows.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="px-3 py-6 text-center text-muted-foreground">
+                    <td colSpan={10} className="px-3 py-6 text-center text-muted-foreground">
                       No records for this member.
                     </td>
                   </tr>
@@ -509,7 +506,7 @@ export default function InvestmentsPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="inv-edit-principal">Principal (KES)</Label>
+                <Label htmlFor="inv-edit-principal">Contribution (KES)</Label>
                 <Input id="inv-edit-principal" type="number" value={editForm.principal} onChange={(e) => updateEditField("principal", e.target.value)} />
               </div>
               <div>
@@ -524,7 +521,7 @@ export default function InvestmentsPage() {
                 <Input id="inv-edit-rate" value={editForm.rate} onChange={(e) => updateEditField("rate", e.target.value)} />
               </div>
               <div>
-                <Label htmlFor="inv-edit-roi">ROI</Label>
+                <Label htmlFor="inv-edit-roi">Return</Label>
                 <Input id="inv-edit-roi" value={editForm.roi} onChange={(e) => updateEditField("roi", e.target.value)} />
               </div>
             </div>
