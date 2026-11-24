@@ -20,6 +20,7 @@ import { AdminSidebar } from "./AdminSidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { Button } from "@/components/ui/button";
+import { AdminAccessProvider } from "@/components/admin/AdminAccessProvider";
 
 export default function AdminLayout({
   children,
@@ -36,6 +37,7 @@ export default function AdminLayout({
   }
 
   return (
+    <AdminAccessProvider>
     <SidebarProvider>
       <Sidebar>
         {/* ✅ LOGO (Same as Public Header/Footer) */}
@@ -94,6 +96,7 @@ export default function AdminLayout({
         </main>
       </SidebarInset>
     </SidebarProvider>
+    </AdminAccessProvider>
   );
 }
 

@@ -97,8 +97,12 @@ export const adminSidebarItems: SidebarItem[] = [
     subItems: [
       { name: "All Admins", path: "/admin/users" },
       { name: "Activity", path: "/admin/users/activity" },
-      { name: "Notifications", path: "/admin/notifications" },
     ],
+  },
+  {
+    name: "Notifications",
+    path: "/admin/notifications",
+    icon: <Bell className="h-4 w-4" />,
   },
   {
     name: "Settings",

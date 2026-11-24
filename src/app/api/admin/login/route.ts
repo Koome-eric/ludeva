@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verifyAdminPassword } from "@/lib/admin-auth";
 import {
   ADMIN_SESSION_COOKIE_NAME,
   signAdminSessionToken,
-  verifyAdminPassword,
-} from "@/lib/admin-auth";
+} from "@/lib/admin-session";
 
 // POST /api/admin/login — email + password login for admins created via
 // the "Admin Users" panel. Public route (see src/middleware.ts).

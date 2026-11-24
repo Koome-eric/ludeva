@@ -1,8 +1,14 @@
 // src/app/api/admins/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireSuperAdminApi } from "@/lib/auth-guard";
 
+// Legacy endpoint (nothing in the app calls it). Was previously open to any
+// signed-in user; now super admin only.
 export async function GET() {
+  const { error } = await requireSuperAdminApi();
+  if (error) return error;
+
   try {
     const admins = await prisma.user.findMany({
       where: { role: "ADMIN" }, // Only fetch admins

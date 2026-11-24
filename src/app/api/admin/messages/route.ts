@@ -1,4 +1,4 @@
-import { requireUserApi } from '@/lib/auth-guard';
+import { requireUserApi, requireModuleApi } from '@/lib/auth-guard';
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
@@ -8,6 +8,8 @@ export async function GET(req: Request) {
     if (!user || user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const { error: accessError } = await requireModuleApi('chat', 'view');
+    if (accessError) return accessError;
 
     const { searchParams } = new URL(req.url);
     const roomId = searchParams.get('roomId');

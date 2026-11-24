@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
 import { adminSidebarItems } from "./adminSidebarItems";
+import { useAdminAccess } from "@/components/admin/AdminAccessProvider";
+import { moduleForPath } from "@/lib/permissions";
 
 import {
   SidebarMenu,
@@ -21,10 +23,30 @@ import {
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const { loaded, isSuperAdmin, canView } = useAdminAccess();
+
+  // Show only what this admin may open. Admin management (/admin/users...)
+  // is super-admin only; the notifications feed and dashboard are open to all.
+  const allowed = (path: string) => {
+    if (path.startsWith("/admin/users")) return isSuperAdmin;
+    const mod = moduleForPath(path);
+    return mod ? canView(mod) : true;
+  };
+
+  const visibleItems = !loaded
+    ? []
+    : adminSidebarItems
+        .map((item) => ({
+          ...item,
+          subItems: item.subItems?.filter((sub) => allowed(sub.path)),
+        }))
+        .filter((item) =>
+          item.subItems ? item.subItems.length > 0 : allowed(item.path)
+        );
 
   return (
     <SidebarMenu>
-      {adminSidebarItems.map((item) => {
+      {visibleItems.map((item) => {
         const isSubActive = item.subItems?.some((sub) =>
           pathname.startsWith(sub.path)
         );

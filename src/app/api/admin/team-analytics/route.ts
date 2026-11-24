@@ -1,4 +1,4 @@
-import { requireAdmin } from '@/lib/auth-guard';
+import { requireModuleApi } from '@/lib/auth-guard';
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import Papa from 'papaparse';
@@ -25,7 +25,9 @@ async function broadcastAdminNotification(
 // Body: multipart/form-data  { file: File, label: string }
 export async function POST(req: Request) {
   try {
-    const admin = await requireAdmin();
+    const { access, error: accessError } = await requireModuleApi('content', 'edit');
+    if (accessError) return accessError;
+    const admin = access!.user;
 
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
@@ -104,7 +106,8 @@ export async function POST(req: Request) {
 // GET /api/admin/team-analytics  — list all uploads (admin)
 export async function GET() {
   try {
-    await requireAdmin();
+    const { error: accessError } = await requireModuleApi('content', 'view');
+    if (accessError) return accessError;
     const records = await prisma.teamAnalytics.findMany({
       orderBy: { createdAt: 'desc' },
       select: {

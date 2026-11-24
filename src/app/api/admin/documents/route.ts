@@ -3,7 +3,8 @@ import prisma from "@/lib/prisma";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { uploadBufferToR2, buildObjectKey, isR2Configured, deleteFromR2, keyFromR2Url } from "@/lib/r2";
 import { notifyAllMembers } from "@/lib/notifications";
-import { getAdminAccountSessionUser } from "@/lib/auth-guard";
+import { getAdminAccountSessionUser, getAdminAccess } from "@/lib/auth-guard";
+import { canAccess } from "@/lib/permissions";
 
 declare global {
   var io: any;
@@ -63,6 +64,17 @@ async function getAdminUser() {
   return dbUser;
 }
 
+
+// View-only admins may list documents but not publish/edit/delete them.
+async function hasDocumentsAccess(level: "view" | "edit") {
+  const access = await getAdminAccess();
+  return Boolean(access && (access.isSuperAdmin || canAccess(access.permissions, "documents", level)));
+}
+const FORBIDDEN_VIEW_ONLY = () =>
+  NextResponse.json({ error: "You have view-only access to Documents." }, { status: 403 });
+const FORBIDDEN_NO_ACCESS = () =>
+  NextResponse.json({ error: "You do not have access to Documents." }, { status: 403 });
+
 //
 // ======================= GET =======================
 //
@@ -71,6 +83,7 @@ export async function GET(req: Request) {
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (!(await hasDocumentsAccess("view"))) return FORBIDDEN_NO_ACCESS();
 
   const { searchParams } = new URL(req.url);
 
@@ -116,6 +129,7 @@ export async function POST(req: Request) {
     if (!admin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+  if (!(await hasDocumentsAccess("edit"))) return FORBIDDEN_VIEW_ONLY();
 
     const formData = await req.formData();
 
@@ -219,6 +233,7 @@ export async function PUT(req: Request) {
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (!(await hasDocumentsAccess("edit"))) return FORBIDDEN_VIEW_ONLY();
 
   const { id, title, description, content, isPublished } = await req.json();
 
@@ -274,6 +289,7 @@ export async function DELETE(req: Request) {
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (!(await hasDocumentsAccess("edit"))) return FORBIDDEN_VIEW_ONLY();
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");

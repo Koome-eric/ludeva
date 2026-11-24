@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth-guard";
+import { requireModuleApi } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { memberKey } from "@/lib/member-identity";
 
 export async function GET() {
-  await requireAdmin();
+  const { error } = await requireModuleApi("savings", "view");
+  if (error) return error;
 
   const entries = await (prisma as any).savingsEntry.findMany({
     orderBy: { uploadedAt: "desc" },

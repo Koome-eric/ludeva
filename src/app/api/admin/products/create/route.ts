@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireModuleApi } from "@/lib/auth-guard";
 import { notifyAllMembers } from "@/lib/notifications";
 
 export async function POST(req: NextRequest) {
+  const { error: accessError } = await requireModuleApi("products", "edit");
+  if (accessError) return accessError;
   try {
     const body = await req.json();
 

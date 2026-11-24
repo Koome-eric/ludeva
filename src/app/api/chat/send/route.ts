@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { requireUserApi } from '@/lib/auth-guard';
+import { requireUserApi, requireModuleApi } from '@/lib/auth-guard';
 import { NextResponse } from 'next/server';
 import { notifyUser, notifyAllAdmins } from '@/lib/notifications';
 
@@ -7,6 +7,12 @@ export async function POST(req: Request) {
   try {
     const user = await requireUserApi();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // Admins replying need edit access to Messages (view-only admins can read, not send).
+    if (user.role === 'ADMIN') {
+      const { error } = await requireModuleApi('chat', 'edit');
+      if (error) return error;
+    }
 
     const body = await req.json();
     const { roomId, content } = body;

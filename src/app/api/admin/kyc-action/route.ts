@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { assertModuleAccess } from '@/lib/auth-guard';
 import { revalidatePath } from 'next/cache';
 import { notifyUser } from '@/lib/notifications';
 
@@ -8,6 +9,7 @@ import { notifyUser } from '@/lib/notifications';
  * Approve a user's KYC and set the submission date if not already set
  */
 export async function approveKyc(userId: string) {
+  await assertModuleAccess('investors', 'edit');
   const user = await prisma.user.update({
     where: { id: userId },
     data: {
@@ -31,6 +33,7 @@ export async function approveKyc(userId: string) {
  * Reject a user's KYC and set the submission date if not already set
  */
 export async function rejectKyc(userId: string) {
+  await assertModuleAccess('investors', 'edit');
   const user = await prisma.user.update({
     where: { id: userId },
     data: {
@@ -54,6 +57,7 @@ export async function rejectKyc(userId: string) {
  * Permanently delete a member (MEMBER role user) from the database
  */
 export async function deleteMember(userId: string) {
+  await assertModuleAccess('investors', 'edit');
   const chatRooms = await prisma.chatRoom.findMany({
     where: {
       OR: [

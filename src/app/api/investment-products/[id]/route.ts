@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireModuleApi } from "@/lib/auth-guard";
 import { notifyAllMembers } from "@/lib/notifications";
 
 declare global {
@@ -26,6 +27,8 @@ export async function GET(req: NextRequest, { params }: Params) {
 
 /* ------------------ UPDATE PRODUCT ------------------ */
 export async function PUT(req: NextRequest, { params }: Params) {
+  const { error: accessError } = await requireModuleApi("products", "edit");
+  if (accessError) return accessError;
   try {
     const { id } = params;
     if (!id) return NextResponse.json({ error: "Product ID missing" }, { status: 400 });
@@ -66,6 +69,8 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
 /* ------------------ DELETE PRODUCT ------------------ */
 export async function DELETE(req: NextRequest, { params }: Params) {
+  const { error: accessError } = await requireModuleApi("products", "edit");
+  if (accessError) return accessError;
   try {
     const { id } = params;
     if (!id) return NextResponse.json({ error: "Product ID missing" }, { status: 400 });

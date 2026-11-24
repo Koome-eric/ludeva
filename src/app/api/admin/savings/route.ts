@@ -5,7 +5,7 @@
 // Mirrors src/app/api/admin/member-reports/route.ts.
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth-guard";
+import { requireModuleApi } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { phoneLookupVariants } from "@/lib/phone";
 
@@ -46,7 +46,8 @@ function normalizeRow(row: SavingsRowInput) {
 
 // POST — create a new savings entry for a member.
 export async function POST(req: NextRequest) {
-  await requireAdmin();
+  const { error } = await requireModuleApi("savings", "edit");
+  if (error) return error;
 
   let body: SavingsRowInput;
   try {
@@ -74,7 +75,8 @@ export async function POST(req: NextRequest) {
 
 // PATCH — update an existing savings entry by id.
 export async function PATCH(req: NextRequest) {
-  await requireAdmin();
+  const { error } = await requireModuleApi("savings", "edit");
+  if (error) return error;
 
   let body: SavingsRowInput & { id?: string };
   try {
@@ -102,7 +104,8 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE — remove a single savings entry by id (?id=...).
 export async function DELETE(req: NextRequest) {
-  await requireAdmin();
+  const { error } = await requireModuleApi("savings", "edit");
+  if (error) return error;
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");

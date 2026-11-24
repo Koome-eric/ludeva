@@ -228,6 +228,14 @@ model AdminAccount {
   fullName     String
   isActive     Boolean   @default(true)
 
+  // Per-module access set by a super admin, e.g.
+  //   { "investors": "view", "savings": "edit", "documents": "none" }
+  // Levels are "none" | "view" | "edit". Modules missing from the object
+  // fall back to DEFAULT_ADMIN_LEVEL in src/lib/permissions.ts, and a null
+  // value (every account created before this field existed) means "same
+  // access as before" — edit on every module — so nothing breaks on deploy.
+  permissions  Json?
+
   // Clerk ID of the super admin who created this account
   createdByClerkId String
 

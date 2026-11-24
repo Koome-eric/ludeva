@@ -2,7 +2,16 @@ import { auth } from '@clerk/nextjs/server';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
 import { redirect } from 'next/navigation';
-import { ADMIN_SESSION_COOKIE_NAME, verifyAdminSessionToken } from './admin-auth';
+import type { NextResponse } from 'next/server';
+import {
+  canAccess,
+  fullPermissions,
+  normalizePermissions,
+  type AdminPermissionMap,
+  type PermissionLevel,
+  type PermissionModule,
+} from './permissions';
+import { ADMIN_SESSION_COOKIE_NAME, verifyAdminSessionToken } from './admin-session';
 
 // ─────────────────────────────────────────────
 // Super admin Clerk IDs — single source of truth
@@ -275,4 +284,137 @@ export async function requireAdminApi(): Promise<
   }
 
   return { user, error: null };
+}
+
+
+// ─────────────────────────────────────────────
+// Per-module admin permissions (see src/lib/permissions.ts)
+//
+// getAdminAccess() resolves "who is this admin and what may they do":
+//   • the hardcoded super admins        → edit everywhere, isSuperAdmin
+//   • a super-admin-created AdminAccount → whatever the super admin set
+//     (deactivated accounts get nothing)
+//   • a legacy Clerk admin (role ADMIN, no AdminAccount row) → edit
+//     everywhere, exactly as before this feature existed
+// ─────────────────────────────────────────────
+export interface AdminAccess {
+  user: NonNullable<Awaited<ReturnType<typeof prisma.user.findUnique>>>;
+  isSuperAdmin: boolean;
+  permissions: AdminPermissionMap;
+}
+
+export async function getAdminAccess(): Promise<AdminAccess | null> {
+  const { userId: clerkId } = await auth();
+
+  let user: AdminAccess['user'] | null = null;
+  if (clerkId) {
+    user = await prisma.user.findUnique({ where: { clerkId } });
+    if (!user) return null;
+    if (SUPER_ADMIN_CLERK_IDS.includes(clerkId)) {
+      return { user, isSuperAdmin: true, permissions: fullPermissions() };
+    }
+  } else {
+    user = await getAdminAccountSessionUser();
+  }
+
+  if (!user || user.role !== 'ADMIN') return null;
+
+  const account = await prisma.adminAccount.findUnique({ where: { linkedUserId: user.id } });
+  if (account) {
+    if (!account.isActive) return null;
+    return { user, isSuperAdmin: false, permissions: normalizePermissions(account.permissions) };
+  }
+
+  // Legacy Clerk admin with no AdminAccount row — unchanged behaviour.
+  return { user, isSuperAdmin: false, permissions: fullPermissions() };
+}
+
+/**
+ * API-route guard. `requireModuleApi('savings', 'edit')` on every
+ * POST/PATCH/DELETE; `'view'` (the default) on reads.
+ */
+export async function requireModuleApi(
+  module: PermissionModule,
+  level: PermissionLevel = 'view'
+): Promise<
+  { access: AdminAccess; error: null } |
+  { access: null; error: NextResponse }
+> {
+  const { NextResponse } = await import('next/server');
+  const access = await getAdminAccess();
+  if (!access) {
+    return { access: null, error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
+  }
+  if (!access.isSuperAdmin && !canAccess(access.permissions, module, level)) {
+    return {
+      access: null,
+      error: NextResponse.json(
+        {
+          error:
+            level === 'edit'
+              ? 'You have view-only access to this section.'
+              : 'You do not have access to this section.',
+        },
+        { status: 403 }
+      ),
+    };
+  }
+  return { access, error: null };
+}
+
+/** Server-action guard — throws instead of returning a response. */
+export async function assertModuleAccess(
+  module: PermissionModule,
+  level: PermissionLevel = 'edit'
+): Promise<AdminAccess> {
+  const access = await getAdminAccess();
+  if (!access) throw new Error('Unauthorized');
+  if (!access.isSuperAdmin && !canAccess(access.permissions, module, level)) {
+    throw new Error(
+      level === 'edit'
+        ? 'You have view-only access to this section.'
+        : 'You do not have access to this section.'
+    );
+  }
+  return access;
+}
+
+/** Page/layout guard — sends admins without access back to the dashboard. */
+export async function requireModulePage(
+  module: PermissionModule,
+  level: PermissionLevel = 'view'
+): Promise<AdminAccess> {
+  const access = await getAdminAccess();
+  if (!access) redirect('/admin/login');
+  if (!access.isSuperAdmin && !canAccess(access.permissions, module, level)) {
+    redirect('/admin/dashboard?denied=1');
+  }
+  return access;
+}
+
+/** Page guard for super-admin-only screens (admin management). */
+export async function requireSuperAdminPage(): Promise<AdminAccess> {
+  const access = await getAdminAccess();
+  if (!access) redirect('/admin/login');
+  if (!access.isSuperAdmin) redirect('/admin/dashboard?denied=1');
+  return access;
+}
+
+/** Like requireModuleApi, but passes if the admin has the level on ANY of the listed modules (for endpoints shared by several pages). */
+export async function requireAnyModuleApi(
+  modules: PermissionModule[],
+  level: PermissionLevel = 'view'
+): Promise<
+  { access: AdminAccess; error: null } |
+  { access: null; error: NextResponse }
+> {
+  const { NextResponse } = await import('next/server');
+  const access = await getAdminAccess();
+  if (!access) {
+    return { access: null, error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
+  }
+  if (!access.isSuperAdmin && !modules.some((m) => canAccess(access.permissions, m, level))) {
+    return { access: null, error: NextResponse.json({ error: 'You do not have access to this section.' }, { status: 403 }) };
+  }
+  return { access, error: null };
 }

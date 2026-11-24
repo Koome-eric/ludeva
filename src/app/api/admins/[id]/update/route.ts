@@ -1,9 +1,16 @@
 // src/app/api/admins/[id]/update/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireSuperAdminApi } from "@/lib/auth-guard";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
+// Legacy endpoint (nothing in the app calls it). It used to have NO auth check,
+// so any signed-in user could change any user's role — including making
+// themselves ADMIN. Now super admin only.
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { error } = await requireSuperAdminApi();
+  if (error) return error;
+
+  const { id } = await params;
 
   try {
     const body = await req.json();

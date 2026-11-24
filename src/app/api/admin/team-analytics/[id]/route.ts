@@ -1,4 +1,4 @@
-import { requireAdmin } from '@/lib/auth-guard';
+import { requireModuleApi } from '@/lib/auth-guard';
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { notifyAllAdmins } from '@/lib/notifications';
@@ -21,7 +21,9 @@ async function broadcastAdminNotification(
 // DELETE /api/admin/team-analytics/[id]
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   try {
-    const admin = await requireAdmin();
+    const { access, error: accessError } = await requireModuleApi('content', 'edit');
+    if (accessError) return accessError;
+    const admin = access!.user;
 
     const deletedRecord = await prisma.teamAnalytics.findUnique({
       where: { id: params.id },

@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { assertModuleAccess } from '@/lib/auth-guard';
 import { revalidatePath } from 'next/cache';
 import { notifyUser } from '@/lib/notifications';
 
@@ -10,6 +11,7 @@ import { notifyUser } from '@/lib/notifications';
  * the child's behalf (see the JUNIOR gate in /api/investments).
  */
 export async function approveJuniorApplication(applicationId: string, note?: string) {
+  await assertModuleAccess('investors', 'edit');
   const application = await prisma.juniorAccountApplication.findUnique({ where: { id: applicationId } });
   if (!application) throw new Error('Application not found');
   if (application.status !== 'PENDING_REVIEW') throw new Error('This application has already been decided');
@@ -39,6 +41,7 @@ export async function approveJuniorApplication(applicationId: string, note?: str
  * documents/details and re-apply.
  */
 export async function rejectJuniorApplication(applicationId: string, note?: string) {
+  await assertModuleAccess('investors', 'edit');
   const application = await prisma.juniorAccountApplication.findUnique({ where: { id: applicationId } });
   if (!application) throw new Error('Application not found');
   if (application.status !== 'PENDING_REVIEW') throw new Error('This application has already been decided');

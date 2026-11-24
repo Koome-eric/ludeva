@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireModuleApi } from "@/lib/auth-guard";
 
 export async function GET(req: NextRequest) {
+  const { error: accessError } = await requireModuleApi("transactions", "view");
+  if (accessError) return accessError;
   try {
     // Hard-coded super admin ID
     const SUPER_ADMIN_CLERK_ID = "user_3HXA2IEixF5gsA8QUNz0bzvk7B2";

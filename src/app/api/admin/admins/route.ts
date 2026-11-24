@@ -1,25 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdminApi, SUPER_ADMIN_CLERK_IDS } from "@/lib/auth-guard";
+import { requireSuperAdminApi, SUPER_ADMIN_CLERK_IDS } from "@/lib/auth-guard";
+import { fullPermissions, normalizePermissions, parsePermissionsInput } from "@/lib/permissions";
 import { hashAdminPassword } from "@/lib/admin-auth";
 
 // ─────────────────────────────────────────────
 // GET  /api/admin/admins      — list all admins: the hardcoded Clerk super
 //                                admins plus every admin-created
-//                                AdminAccount
-// POST /api/admin/admins      — create a new admin account (email + password)
+//                                AdminAccount, with each one's permissions
+// POST /api/admin/admins      — create a new admin account (email +
+//                                password + per-module permissions)
 //
-// Any authenticated admin — the two hardcoded super admins, or a regular
-// admin created via this same panel — can view and manage the admin list.
-// Every admin gets the same admin panel; there's no super-admin-only
-// section here anymore. The two hardcoded Clerk super admins still aren't
-// AdminAccount rows — they're surfaced by reading their linked `User` rows
-// and flagged with isSuperAdmin so the UI can show them as not editable
-// (edit/delete routes below only know how to mutate AdminAccount rows).
+// SUPER ADMIN ONLY. Regular admins — whatever access they've been given to
+// the other sections — can never see, create, edit or delete admin accounts
+// or change anyone's permissions.
 // ─────────────────────────────────────────────
 
 export async function GET() {
-  const { error } = await requireAdminApi();
+  const { error } = await requireSuperAdminApi();
   if (error) return error;
 
   const [superAdminUsers, admins] = await Promise.all([
@@ -41,6 +39,7 @@ export async function GET() {
     lastLoginAt: null,
     createdAt: u.createdAt,
     isSuperAdmin: true as const,
+    permissions: fullPermissions(),
   }));
 
   const createdAdmins = admins.map((a) => ({
@@ -51,13 +50,14 @@ export async function GET() {
     lastLoginAt: a.lastLoginAt,
     createdAt: a.createdAt,
     isSuperAdmin: false as const,
+    permissions: normalizePermissions(a.permissions),
   }));
 
   return NextResponse.json([...superAdmins, ...createdAdmins]);
 }
 
 export async function POST(req: NextRequest) {
-  const { user, error } = await requireAdminApi();
+  const { clerkId, error } = await requireSuperAdminApi();
   if (error) return error;
 
   const body = await req.json().catch(() => null);
@@ -73,6 +73,17 @@ export async function POST(req: NextRequest) {
   }
   if (!password || password.length < 8) {
     return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+  }
+
+  // Omitted → full access (same as before permissions existed); provided →
+  // must be a valid { module: "none" | "view" | "edit" } map.
+  let permissions = fullPermissions();
+  if (body?.permissions !== undefined) {
+    const parsed = parsePermissionsInput(body.permissions);
+    if (!parsed) {
+      return NextResponse.json({ error: "Invalid permissions" }, { status: 400 });
+    }
+    permissions = normalizePermissions(parsed);
   }
 
   const existingAdminAccount = await prisma.adminAccount.findUnique({ where: { email } });
@@ -118,12 +129,9 @@ export async function POST(req: NextRequest) {
         email,
         passwordHash,
         fullName,
-        // Whoever created this admin — a real Clerk ID for one of the two
-        // hardcoded super admins, or the creating admin's own synthetic
-        // `admin_account_<id>` clerkId if a regular admin invited them.
-        // `user` here is the full linked User row from requireAdminApi(),
-        // so `.clerkId` holds the right value either way.
-        createdByClerkId: user!.clerkId,
+        permissions,
+        // Always one of the hardcoded super admins' Clerk IDs.
+        createdByClerkId: clerkId!,
         linkedUserId: linkedUser.id,
       },
     });
@@ -144,6 +152,8 @@ export async function POST(req: NextRequest) {
       isActive: adminAccount.isActive,
       createdAt: adminAccount.createdAt,
       userId: finalUser.id,
+      isSuperAdmin: false,
+      permissions: normalizePermissions(adminAccount.permissions),
     },
     { status: 201 }
   );

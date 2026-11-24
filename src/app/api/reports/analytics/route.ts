@@ -13,11 +13,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parseReportAmount, getPlatformAumSummary } from "@/lib/member-reports";
-import { requireAdminApi } from "@/lib/auth-guard";
+import { requireModuleApi } from "@/lib/auth-guard";
 
 export async function GET() {
   try {
-    const { error } = await requireAdminApi();
+    const { error } = await requireModuleApi("reports", "view");
     if (error) return error;
 
     const reports = await (prisma as any).memberReport.findMany({

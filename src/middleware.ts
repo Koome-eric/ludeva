@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import {
   ADMIN_SESSION_COOKIE_NAME,
   verifyAdminSessionToken,
-} from "./lib/admin-auth";
+} from "./lib/admin-session";
 
 const isPublicRoute = createRouteMatcher([
   "/",

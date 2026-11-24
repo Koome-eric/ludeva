@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdminApi } from "@/lib/auth-guard";
+import { requireSuperAdminApi } from "@/lib/auth-guard";
+import { normalizePermissions, parsePermissionsInput, type AdminPermissionMap } from "@/lib/permissions";
 import { hashAdminPassword } from "@/lib/admin-auth";
 
 // ─────────────────────────────────────────────
-// PATCH  /api/admin/admins/[id] — edit an admin's info, or reset their
-//                                  password, or activate/deactivate them
+// PATCH  /api/admin/admins/[id] — edit an admin's info, reset their
+//                                  password, activate/deactivate them, or
+//                                  change their per-module permissions
 // DELETE /api/admin/admins/[id] — permanently remove an admin account
 //
-// Open to any authenticated admin — same admin panel for everyone, no
-// super-admin-only section. (The two hardcoded super admins aren't
-// AdminAccount rows at all, so there's nothing here for anyone, including
-// the super admins themselves, to edit or delete about them.)
+// SUPER ADMIN ONLY. The hardcoded super admins aren't AdminAccount rows, so
+// they can't be edited or demoted through here.
 // ─────────────────────────────────────────────
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error } = await requireAdminApi();
+  const { error } = await requireSuperAdminApi();
   if (error) return error;
 
   const { id } = await params;
@@ -33,6 +33,7 @@ export async function PATCH(
     fullName?: string;
     isActive?: boolean;
     passwordHash?: string;
+    permissions?: AdminPermissionMap;
   } = {};
   const userData: { email?: string; fullName?: string } = {};
 
@@ -57,6 +58,15 @@ export async function PATCH(
     }
     data.email = email;
     userData.email = email;
+  }
+
+  if (body?.permissions !== undefined) {
+    const parsed = parsePermissionsInput(body.permissions);
+    if (!parsed) {
+      return NextResponse.json({ error: "Invalid permissions" }, { status: 400 });
+    }
+    // Merge onto what's stored so a partial update never resets other modules.
+    data.permissions = normalizePermissions({ ...normalizePermissions(account.permissions), ...parsed });
   }
 
   if (typeof body?.isActive === "boolean") {
@@ -85,6 +95,8 @@ export async function PATCH(
     isActive: updated.isActive,
     lastLoginAt: updated.lastLoginAt,
     createdAt: updated.createdAt,
+    isSuperAdmin: false,
+    permissions: normalizePermissions(updated.permissions),
   });
 }
 
@@ -92,7 +104,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error } = await requireAdminApi();
+  const { error } = await requireSuperAdminApi();
   if (error) return error;
 
   const { id } = await params;

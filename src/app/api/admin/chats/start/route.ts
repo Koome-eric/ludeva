@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminApi } from '@/lib/auth-guard';
+import { requireModuleApi } from '@/lib/auth-guard';
 import { getOrCreateChatRoom } from '@/lib/chat';
 
 // Opens (or creates) a chat room between the requesting admin and a member,
 // used when an admin finds a member via search who doesn't have a
 // conversation yet.
 export async function POST(req: NextRequest) {
-  const { user: admin, error } = await requireAdminApi();
+  const { access, error } = await requireModuleApi('chat', 'edit');
   if (error) return error;
+  const admin = access!.user;
 
   let body: { memberId?: string };
   try {
