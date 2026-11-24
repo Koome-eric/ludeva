@@ -2,87 +2,131 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────
+   Ludeva design tokens
+   Brand colours come straight from the logo:
+     navy  #000065  →  hsl(240 100% 20%)
+     gold  #CB9833  →  hsl(40 60% 50%)
+   Navy carries structure (sidebar, hero cards, primary actions);
+   gold is the highlight (active states, key figures, focus rings).
+   ───────────────────────────────────────────────────────────── */
 @layer base {
   :root {
-    --background: 220 20% 96%;
-    --foreground: 224 71% 4%;
+    --background: 228 30% 96.5%;
+    --foreground: 236 45% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
+    --card-foreground: 236 45% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
-    --primary: 220 85% 55%;
+    --popover-foreground: 236 45% 12%;
+
+    --primary: 240 85% 24%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 10% 90%;
-    --secondary-foreground: 224 71% 4%;
-    --muted: 220 10% 90%;
-    --muted-foreground: 220 10% 40%;
-    --accent: 250 85% 60%;
-    --accent-foreground: 0 0% 100%;
-    --accent-soft: 250 85% 96%;
-    --accent-soft-foreground: 250 85% 30%;
-    --destructive: 0 84.2% 60.2%;
+    --secondary: 228 30% 93%;
+    --secondary-foreground: 236 45% 12%;
+    --muted: 228 30% 94%;
+    --muted-foreground: 232 14% 42%;
+
+    /* accent = neutral hover/selected tint (menus, ghost buttons) */
+    --accent: 228 40% 93%;
+    --accent-foreground: 240 85% 24%;
+    /* accent-soft = soft gold wash for highlights/badges */
+    --accent-soft: 40 85% 93%;
+    --accent-soft-foreground: 36 85% 26%;
+
+    --gold: 40 60% 50%;
+    --gold-foreground: 240 100% 12%;
+    --success: 158 64% 36%;
+    --success-soft: 158 60% 94%;
+    --success-soft-foreground: 158 70% 22%;
+
+    --destructive: 0 78% 56%;
     --destructive-foreground: 0 0% 98%;
-    --destructive-soft: 0 84% 97%;
-    --destructive-soft-foreground: 0 70% 50%;
+    --destructive-soft: 0 84% 96%;
+    --destructive-soft-foreground: 0 70% 42%;
     --warning: 38 92% 50%;
     --warning-foreground: 38 100% 95%;
-    --warning-soft: 38 95% 95%;
-    --warning-soft-foreground: 38 85% 35%;
-    --border: 220 13% 89%;
-    --input: 220 13% 89%;
-    --ring: 220 85% 55%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 224 71% 4%;
-    --sidebar-primary: 220 85% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 10% 90%;
-    --sidebar-accent-foreground: 224 71% 4%;
-    --sidebar-border: 220 13% 89%;
-    --sidebar-ring: 220 85% 55%;
+    --warning-soft: 38 95% 94%;
+    --warning-soft-foreground: 38 85% 30%;
+
+    --border: 228 25% 89%;
+    --input: 228 25% 88%;
+    --ring: 40 60% 50%;
+
+    --chart-1: 240 70% 38%;
+    --chart-2: 40 60% 50%;
+    --chart-3: 158 64% 36%;
+    --chart-4: 346 77% 55%;
+    --chart-5: 262 70% 58%;
+
+    --shadow: 236 60% 20%;
+    --radius: 0.875rem;
+
+    /* sidebar is deep navy in both themes */
+    --sidebar-background: 240 100% 13%;
+    --sidebar-foreground: 228 40% 96%;
+    --sidebar-primary: 40 60% 50%;
+    --sidebar-primary-foreground: 240 100% 12%;
+    --sidebar-accent: 240 70% 22%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 240 60% 22%;
+    --sidebar-ring: 40 60% 50%;
   }
 
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 210 40% 98%;
-    --card: 220 13% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 224 71% 4%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 220 13% 18%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 220 13% 18%;
-    --muted-foreground: 220 10% 60%;
-    --accent: 250 85% 60%;
-    --accent-foreground: 0 0% 100%;
-    --accent-soft: 250 85% 16%;
-    --accent-soft-foreground: 250 85% 80%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --destructive-soft: 0 70% 15%;
-    --destructive-soft-foreground: 0 84% 70%;
+    --background: 236 55% 6%;
+    --foreground: 228 30% 96%;
+    --card: 236 40% 10%;
+    --card-foreground: 228 30% 96%;
+    --popover: 236 42% 9%;
+    --popover-foreground: 228 30% 96%;
+
+    --primary: 232 80% 64%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 236 30% 15%;
+    --secondary-foreground: 228 30% 96%;
+    --muted: 236 30% 14%;
+    --muted-foreground: 230 15% 64%;
+
+    --accent: 236 30% 17%;
+    --accent-foreground: 228 30% 96%;
+    --accent-soft: 40 50% 14%;
+    --accent-soft-foreground: 40 80% 72%;
+
+    --gold: 40 65% 56%;
+    --gold-foreground: 240 100% 10%;
+    --success: 158 60% 46%;
+    --success-soft: 158 45% 13%;
+    --success-soft-foreground: 158 60% 70%;
+
+    --destructive: 0 72% 52%;
+    --destructive-foreground: 0 0% 98%;
+    --destructive-soft: 0 55% 14%;
+    --destructive-soft-foreground: 0 84% 72%;
     --warning: 38 92% 50%;
     --warning-foreground: 38 100% 95%;
-    --warning-soft: 38 85% 15%;
-    --warning-soft-foreground: 38 95% 75%;
-    --border: 220 13% 18%;
-    --input: 220 13% 18%;
-    --ring: 217.2 91.2% 59.8%;
-    --sidebar-background: 224 71% 4%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217.2 91.2% 59.8%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 220 13% 18%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 220 13% 18%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --warning-soft: 38 60% 13%;
+    --warning-soft-foreground: 38 95% 72%;
+
+    --border: 236 28% 17%;
+    --input: 236 28% 18%;
+    --ring: 40 65% 56%;
+
+    --chart-1: 232 80% 68%;
+    --chart-2: 40 65% 56%;
+    --chart-3: 158 60% 46%;
+    --chart-4: 346 80% 62%;
+    --chart-5: 262 75% 68%;
+
+    --shadow: 240 80% 2%;
+
+    --sidebar-background: 236 60% 8%;
+    --sidebar-foreground: 228 40% 96%;
+    --sidebar-primary: 40 65% 56%;
+    --sidebar-primary-foreground: 240 100% 10%;
+    --sidebar-accent: 238 45% 17%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 238 40% 16%;
+    --sidebar-ring: 40 65% 56%;
   }
 }
 
@@ -90,29 +134,120 @@
   * {
     @apply border-border;
   }
-  html, body {
-  @apply h-full w-full bg-background text-foreground overflow-x-hidden;
-}
-html {
-  overflow-y: scroll;
-}
-
-body {
-  scrollbar-gutter: stable;
-}
+  html,
+  body {
+    @apply h-full w-full bg-background text-foreground overflow-x-hidden;
+  }
+  html {
+    overflow-y: scroll;
+  }
+  body {
+    scrollbar-gutter: stable;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-headline tracking-tight;
+  }
+  ::selection {
+    background: hsl(var(--gold) / 0.35);
+  }
+  /* slim, quiet scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
 }
 
 @layer utilities {
-  /* Deep navy brand panel with a soft blue/violet glow — used for the left
-     side of the sign-in / sign-up screens. Fixed in both themes so
-     white-on-navy contrast never depends on the theme toggle. Uses the
-     existing --primary and --accent (violet) tokens, so nothing new to
-     maintain. */
+  /* Navy brand panel (sign-in / sign-up left side). Fixed in both themes. */
   .bg-brand-dark {
-    background-color: hsl(224 71% 4%);
+    background-color: hsl(240 100% 10%);
     background-image:
-      radial-gradient(circle at 85% 0%, hsl(var(--primary) / 0.35), transparent 50%),
-      radial-gradient(circle at 0% 100%, hsl(var(--accent) / 0.22), transparent 45%);
-    color: hsl(210 40% 98%);
+      radial-gradient(circle at 90% 0%, hsl(var(--gold) / 0.28), transparent 45%),
+      radial-gradient(circle at 0% 100%, hsl(240 90% 45% / 0.35), transparent 50%);
+    color: hsl(228 40% 96%);
   }
+
+  /* Hero / balance cards */
+  .bg-brand-gradient {
+    background-image: linear-gradient(135deg, hsl(240 100% 14%) 0%, hsl(240 85% 26%) 55%, hsl(238 70% 38%) 100%);
+    color: #fff;
+  }
+  .bg-gold-gradient {
+    background-image: linear-gradient(135deg, hsl(43 72% 60%) 0%, hsl(38 64% 46%) 100%);
+    color: hsl(240 100% 12%);
+  }
+
+  /* Sidebar surface */
+  .bg-sidebar-brand {
+    background-image:
+      radial-gradient(circle at 0% 0%, hsl(var(--gold) / 0.10), transparent 40%),
+      linear-gradient(180deg, hsl(var(--sidebar-background)) 0%, hsl(240 90% 9%) 100%);
+    color: hsl(var(--sidebar-foreground));
+  }
+  .dark .bg-sidebar-brand {
+    background-image:
+      radial-gradient(circle at 0% 0%, hsl(var(--gold) / 0.07), transparent 40%),
+      linear-gradient(180deg, hsl(236 60% 8%) 0%, hsl(236 65% 5%) 100%);
+  }
+
+  /* Stat-card tones (gradient tiles like a fintech overview) */
+  .stat-navy {
+    background-image: linear-gradient(135deg, hsl(240 100% 16%), hsl(240 78% 34%));
+    color: #fff;
+  }
+  .stat-gold {
+    background-image: linear-gradient(135deg, hsl(43 72% 58%), hsl(34 66% 42%));
+    color: hsl(240 100% 10%);
+  }
+  .stat-emerald {
+    background-image: linear-gradient(135deg, hsl(162 70% 30%), hsl(150 60% 40%));
+    color: #fff;
+  }
+  .stat-rose {
+    background-image: linear-gradient(135deg, hsl(346 77% 48%), hsl(14 85% 58%));
+    color: #fff;
+  }
+  .stat-indigo {
+    background-image: linear-gradient(135deg, hsl(256 65% 40%), hsl(232 80% 58%));
+    color: #fff;
+  }
+
+  /* Page canvas behind cards */
+  .page-canvas {
+    background-image:
+      radial-gradient(60rem 30rem at 100% -10%, hsl(var(--gold) / 0.07), transparent 60%),
+      radial-gradient(50rem 30rem at -10% 0%, hsl(240 85% 40% / 0.06), transparent 60%);
+  }
+
+  .text-gold-gradient {
+    background-image: linear-gradient(135deg, hsl(43 72% 62%), hsl(36 64% 46%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .glass {
+    @apply bg-background/70 backdrop-blur-xl;
+  }
+
+  /* subtle stagger-in for dashboard sections */
+  .fade-up {
+    animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .fade-up-1 { animation-delay: 0.05s; }
+  .fade-up-2 { animation-delay: 0.12s; }
+  .fade-up-3 { animation-delay: 0.19s; }
+  .fade-up-4 { animation-delay: 0.26s; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up { animation: none; }
 }

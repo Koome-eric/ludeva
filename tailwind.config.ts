@@ -14,7 +14,7 @@ export default {
     extend: {
       fontFamily: {
         body: ["var(--font-inter)", "sans-serif"],
-        headline: ["var(--font-roboto-slab)", "serif"],
+        headline: ["var(--font-headline)", "var(--font-inter)", "sans-serif"],
         code: ["monospace"],
       },
 
@@ -68,6 +68,16 @@ export default {
           "soft-foreground": "hsl(var(--warning-soft-foreground))",
         },
 
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          foreground: "hsl(var(--gold-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          soft: "hsl(var(--success-soft))",
+          "soft-foreground": "hsl(var(--success-soft-foreground))",
+        },
+
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -90,6 +100,12 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+
+      boxShadow: {
+        soft: "0 1px 2px hsl(var(--shadow) / 0.04), 0 10px 28px -12px hsl(var(--shadow) / 0.14)",
+        lift: "0 2px 4px hsl(var(--shadow) / 0.05), 0 18px 40px -14px hsl(var(--shadow) / 0.22)",
+        glow: "0 8px 30px -8px hsl(var(--gold) / 0.55)",
       },
 
       borderRadius: {

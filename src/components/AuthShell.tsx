@@ -55,7 +55,7 @@ export function AuthShell({ headline, subline, footer, children }: Props) {
           <ul className="mt-8 space-y-3">
             {PROMISES.map((p) => (
               <li key={p} className="flex items-start gap-3 text-sm text-white/85">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
                 {p}
               </li>
             ))}

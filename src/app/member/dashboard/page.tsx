@@ -1,8 +1,10 @@
 export const runtime = "nodejs"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowUpRight, TrendingUp, Wallet, PiggyBank } from "lucide-react"
+import { ArrowUpRight, ArrowDownLeft, TrendingUp, Wallet, PiggyBank, FileText, MessageCircle, ShieldCheck } from "lucide-react"
+import { StatCard } from "@/components/brand/StatCard"
+import { AreaChart, Sparkline } from "@/components/brand/charts"
 import Link from "next/link"
 import { format } from "date-fns"
 import { requireOnboardingComplete } from "@/lib/auth-guard"
@@ -46,127 +48,140 @@ export default async function MemberDashboardPage() {
       ? (user.teamName?.trim() ? `Team ${user.teamName.trim()}` : "Team")
       : firstName
 
+  // Balance history for the charts: one point per report row that carries a
+  // closing balance, oldest → newest. Purely presentational — every headline
+  // figure above still comes from the summary.
+  const history = reportRows
+    .map((r) => {
+      const value = parseReportAmount(r.closingBal)
+      const d = r.date ? new Date(r.date) : new Date(r.uploadedAt)
+      return value !== null && !Number.isNaN(d.getTime()) ? { value, d } : null
+    })
+    .filter((x): x is { value: number; d: Date } => x !== null)
+    .sort((a, b) => a.d.getTime() - b.d.getTime())
+  const series = history.map((h) => h.value)
+  const labels = history.map((h) => format(h.d, "MMM yy"))
+
+  const kes = (n: number, max = 2) =>
+    `KES ${n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: max })}`
+
+  const returnPct = totalInvested > 0 ? (totalRoi / totalInvested) * 100 : null
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
+      {/* Hero balance card */}
+      <section className="fade-up relative overflow-hidden rounded-3xl bg-brand-gradient p-6 shadow-lift sm:p-8">
+        <span className="pointer-events-none absolute -right-16 -top-20 h-72 w-72 rounded-full bg-gold/20 blur-3xl" />
+        <span className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
 
-      {/* Hero Section */}
-      <section className="rounded-2xl bg-gradient-to-br from-primary/10 via-background to-background p-6 md:p-8 border shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-
-          <div>
-            <h1 className="text-2xl md:text-3xl font-semibold">
-              Welcome back, {displayName}
-            </h1>
-
-            <p className="text-muted-foreground mt-1">
-              Here's your investment portfolio summary.
+        <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-white/70">Welcome back, {displayName}</p>
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-gold">Account balance</p>
+            <p className="mt-1 break-words font-headline text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+              {kes(currentBalance)}
             </p>
 
-            <div className="mt-6">
-              <p className="text-sm text-muted-foreground">Account Balance</p>
-              <p className="text-4xl font-bold tracking-tight">
-                KES {currentBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                Total Investment (KES {totalInvested.toLocaleString("en-US", { maximumFractionDigits: 0 })}) + Total Return (KES {totalRoi.toLocaleString("en-US", { maximumFractionDigits: 0 })})
-                {totalWithdrawals > 0 && ` − Total Withdrawals (KES ${totalWithdrawals.toLocaleString("en-US", { maximumFractionDigits: 0 })})`}
-              </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {returnPct !== null && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+                  <TrendingUp className="h-3.5 w-3.5 text-gold" />
+                  {returnPct.toFixed(1)}% total return
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur">
+                <ShieldCheck className="h-3.5 w-3.5" /> Verified account
+              </span>
             </div>
-          </div>
 
-          <Button asChild size="lg" className="gap-2">
-            <Link href="/member/deposit">
-              Add Investment
-              <ArrowUpRight className="w-4 h-4" />
-            </Link>
-          </Button>
-        </div>
-      </section>
-
-      {/* Stats Grid */}
-      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-
-        <StatCard
-          title="Total Invested"
-          value={`KES ${totalInvested.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
-          icon={<Wallet />}
-          subtitle="Per latest performance report"
-        />
-
-        <StatCard
-          title="Total Withdrawals"
-          value={`KES ${totalWithdrawals.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
-          icon={<ArrowUpRight className="rotate-180" />}
-          subtitle="All-time withdrawals"
-        />
-
-        <StatCard
-          title="Total Return"
-          value={`KES ${totalRoi.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
-          icon={<TrendingUp />}
-          subtitle="Cumulative returns earned"
-        />
-
-        <StatCard
-          title="Last Investment"
-          value={
-            mostRecentInvestment
-              ? format(mostRecentInvestment, "MM/dd/yyyy")
-              : "No investments yet"
-          }
-          icon={<PiggyBank />}
-          subtitle="Most recent deposit"
-        />
-      </section>
-
-      {/* CTA Section */}
-      <Card className="rounded-2xl border shadow-sm">
-        <CardContent className="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
-          <div>
-            <h3 className="text-lg font-semibold">
-              Continue Growing Your Wealth
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Add funds into your investment securely.
+            <p className="mt-4 max-w-xl text-xs leading-relaxed text-white/60">
+              Total investment ({kes(totalInvested, 0)}) + total return ({kes(totalRoi, 0)})
+              {totalWithdrawals > 0 && ` − total withdrawals (${kes(totalWithdrawals, 0)})`}
             </p>
           </div>
 
-          <Button asChild>
-            <Link href="/member/deposit">Make Deposit</Link>
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-/* ----------------------- Reusable Stat Card ----------------------- */
-
-function StatCard({
-  title,
-  value,
-  subtitle,
-  icon,
-}: {
-  title: string
-  value: string
-  subtitle: string
-  icon: React.ReactNode
-}) {
-  return (
-    <Card className="rounded-2xl border shadow-sm hover:shadow-md transition">
-      <CardContent className="p-5">
-
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <div className="text-muted-foreground">{icon}</div>
+          <div className="flex w-full flex-col gap-4 lg:w-72 lg:items-end">
+            <Sparkline values={series} id="hero" color="hsl(40 65% 62%)" className="hidden h-16 w-full lg:block" />
+            <Button asChild variant="gold" size="lg" className="w-full gap-2 lg:w-auto">
+              <Link href="/member/deposit">
+                Add Investment
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
+      </section>
 
-        <p className="text-2xl font-semibold">{value}</p>
-        <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+      {/* Stats */}
+      <section className="grid gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-4">
+        <div className="fade-up fade-up-1">
+          <StatCard id="invested" tone="navy" title="Total Invested" value={kes(totalInvested)} caption="Per latest performance report" icon={<Wallet />} series={series} />
+        </div>
+        <div className="fade-up fade-up-2">
+          <StatCard id="return" tone="emerald" title="Total Return" value={kes(totalRoi)} caption="Cumulative returns earned" icon={<TrendingUp />} series={series} />
+        </div>
+        <div className="fade-up fade-up-3">
+          <StatCard id="withdrawals" tone="rose" title="Total Withdrawals" value={kes(totalWithdrawals)} caption="All-time withdrawals" icon={<ArrowDownLeft />} />
+        </div>
+        <div className="fade-up fade-up-4">
+          <StatCard
+            id="last"
+            tone="gold"
+            title="Last Investment"
+            value={mostRecentInvestment ? format(mostRecentInvestment, "dd MMM yyyy") : "No investments yet"}
+            caption="Most recent deposit"
+            icon={<PiggyBank />}
+          />
+        </div>
+      </section>
 
-      </CardContent>
-    </Card>
+      {/* Chart + quick actions */}
+      <section className="grid gap-5 lg:grid-cols-3">
+        <Card className="fade-up lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Portfolio growth</CardTitle>
+            <CardDescription>Closing balance across your performance reports</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {series.length > 1 ? (
+              <AreaChart values={series} labels={labels} id="growth" format={(n) => `KES ${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} />
+            ) : (
+              <div className="flex h-56 flex-col items-center justify-center rounded-xl border border-dashed text-center">
+                <TrendingUp className="mb-2 h-6 w-6 text-muted-foreground" />
+                <p className="text-sm font-medium">Your growth chart appears here</p>
+                <p className="text-xs text-muted-foreground">Once two or more reports are available.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="fade-up">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Quick actions</CardTitle>
+            <CardDescription>Jump straight to what you need</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-2">
+            {[
+              { href: "/member/deposit", label: "Make a deposit", icon: Wallet },
+              { href: "/member/reports", label: "View my reports", icon: FileText },
+              { href: "/member/savings", label: "Savings account", icon: PiggyBank },
+              { href: "/member/chat", label: "Message support", icon: MessageCircle },
+            ].map((a) => (
+              <Link
+                key={a.href}
+                href={a.href}
+                className="group flex items-center gap-3 rounded-xl border border-border/60 p-3 transition-all hover:border-gold/60 hover:bg-accent-soft"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-gold group-hover:text-gold-foreground">
+                  <a.icon className="h-4 w-4" />
+                </span>
+                <span className="text-sm font-semibold">{a.label}</span>
+                <ArrowUpRight className="ml-auto h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
+      </section>
+    </div>
   )
 }

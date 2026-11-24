@@ -45,6 +45,10 @@ export function AdminSidebar() {
         );
 
   return (
+    <>
+    <p className="px-3.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/40">
+      Menu
+    </p>
     <SidebarMenu>
       {visibleItems.map((item) => {
         const isSubActive = item.subItems?.some((sub) =>
@@ -78,7 +82,7 @@ export function AdminSidebar() {
                 </CollapsibleTrigger>
 
                 <CollapsibleContent>
-                  <ul className="mt-1 space-y-1 border-l border-border/50 ml-5 pl-2">
+                  <ul className="mt-1 space-y-1 border-l border-white/15 ml-6 pl-2">
                     {item.subItems.map((sub) => {
                       const isActive = pathname === sub.path;
 
@@ -87,7 +91,7 @@ export function AdminSidebar() {
                           <SidebarMenuButton
                             asChild
                             isActive={isActive}
-                            className="h-8 text-sm font-normal"
+                            className="py-1.5 text-[13px] font-medium"
                           >
                             <Link href={sub.path}>
                               <span>{sub.name}</span>
@@ -120,5 +124,6 @@ export function AdminSidebar() {
         );
       })}
     </SidebarMenu>
+    </>
   );
 }

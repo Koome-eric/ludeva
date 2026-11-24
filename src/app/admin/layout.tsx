@@ -40,31 +40,20 @@ export default function AdminLayout({
     <AdminAccessProvider>
     <SidebarProvider>
       <Sidebar>
-        {/* ✅ LOGO (Same as Public Header/Footer) */}
-        <SidebarHeader className="border-b px-3 py-3">
-          <Link
-            href="/admin/dashboard"
-            className="flex items-center justify-center"
-          >
-            {/* Light mode logo */}
-            <Image
-              src="/images/logo_light.png"
-              alt="Ludeva Logo"
-              width={140}
-              height={40}
-              className="block dark:hidden object-contain"
-              priority
-            />
-
-            {/* Dark mode logo */}
+        {/* Brand — the navy sidebar always uses the white logo */}
+        <SidebarHeader>
+          <Link href="/admin/dashboard" className="flex items-center gap-2 px-1 py-1">
             <Image
               src="/images/logo_dark.png"
               alt="Ludeva Logo"
-              width={140}
-              height={40}
-              className="hidden dark:block object-contain"
+              width={132}
+              height={48}
+              className="object-contain"
               priority
             />
+            <span className="rounded-md bg-gold/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-gold">
+              Admin
+            </span>
           </Link>
         </SidebarHeader>
 
@@ -74,25 +63,23 @@ export default function AdminLayout({
       </Sidebar>
 
       <SidebarInset>
-        {/* ✅ Top Header */}
-        <header
-          className="sticky top-0 z-40 flex h-14 items-center gap-4
-          border-b bg-background/80 backdrop-blur px-4 sm:px-6"
-        >
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border/60 bg-background/75 px-4 backdrop-blur-xl sm:px-6 md:rounded-t-3xl">
           <SidebarTrigger className="md:hidden" />
 
-          <div className="ml-auto flex items-center gap-4">
+          <div className="hidden min-w-0 sm:block">
+            <p className="truncate font-headline text-base font-bold leading-tight">Admin Console</p>
+            <p className="text-xs text-muted-foreground">Ludeva Investments</p>
+          </div>
+
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <AdminNotificationsBell />
             <ThemeToggle />
             <AdminAccountControl />
           </div>
         </header>
 
-        {/* ✅ Main Content */}
-        <main className="flex-1 bg-muted/40">
-          <div className="mx-auto max-w-7xl p-4 sm:p-6 space-y-6">
-            {children}
-          </div>
+        <main className="flex-1">
+          <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
       </SidebarInset>
     </SidebarProvider>
@@ -151,7 +138,7 @@ function AdminAccountControl() {
       afterSignOutUrl="/"
       appearance={{
         elements: {
-          avatarBox: "h-9 w-9 rounded-lg",
+          avatarBox: "h-10 w-10 rounded-xl ring-2 ring-gold/60",
         },
       }}
     />

@@ -198,7 +198,7 @@ function LiveBadge({
 
   return (
     <div className="flex items-center gap-3 self-start sm:self-auto" role="status">
-      <div className="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs">
+      <div className="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs shadow-soft">
         <span className="relative flex h-2 w-2">
           {status !== "paused" && status !== "error" && (
             <span className={cn("absolute inline-flex h-full w-full animate-ping rounded-full opacity-60", dot)} />
@@ -212,7 +212,7 @@ function LiveBadge({
         type="button"
         onClick={onRefresh}
         disabled={status === "refreshing"}
-        className="inline-flex h-8 w-8 items-center justify-center rounded-md border bg-card text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border bg-card shadow-soft text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
         aria-label="Refresh now"
         title={errorMsg ?? "Refresh now"}
       >
@@ -235,38 +235,57 @@ function Delta({ value, goodWhenUp = true, suffix = "vs last month" }: { value: 
   );
 }
 
+type KpiTone = "navy" | "gold" | "emerald" | "rose" | "indigo";
+const KPI_TONE: Record<KpiTone, string> = {
+  navy: "stat-navy",
+  gold: "stat-gold",
+  emerald: "stat-emerald",
+  rose: "stat-rose",
+  indigo: "stat-indigo",
+};
+
 function KpiCard({
   title,
   icon: Icon,
-  iconClass,
+  tone = "navy",
   value,
   sub,
 }: {
   title: string;
   icon: LucideIcon;
+  tone?: KpiTone;
   iconClass?: string;
   value: string;
   sub: React.ReactNode;
 }) {
   const flash = useFlash(value);
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className={cn("h-5 w-5 text-muted-foreground", iconClass)} />
-      </CardHeader>
-      <CardContent>
-        <div
-          className={cn(
-            "-mx-1 w-fit rounded px-1 text-2xl font-bold tabular-nums transition-colors duration-700 xl:text-3xl",
-            flash && "bg-emerald-500/20",
-          )}
-        >
-          {value}
-        </div>
-        <p className="pt-1 text-xs text-muted-foreground">{sub}</p>
-      </CardContent>
-    </Card>
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-2xl p-5 shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift",
+        KPI_TONE[tone],
+      )}
+    >
+      <span className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
+      <span className="pointer-events-none absolute -bottom-12 right-6 h-24 w-24 rounded-full bg-white/5" />
+      <div className="relative flex items-start justify-between gap-3">
+        <p className="text-sm font-medium opacity-80">{title}</p>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
+          <Icon className="h-[18px] w-[18px]" />
+        </span>
+      </div>
+      <div
+        className={cn(
+          "relative -mx-1 mt-3 w-fit rounded-lg px-1 font-headline text-2xl font-bold tabular-nums tracking-tight transition-colors duration-700 xl:text-[1.65rem]",
+          flash && "bg-white/25",
+        )}
+      >
+        {value}
+      </div>
+      <p className="relative pt-1 text-xs opacity-80 [&_.text-emerald-600]:text-emerald-100 [&_.text-red-600]:text-rose-100 [&_.text-muted-foreground]:text-current [&_.text-muted-foreground]:opacity-70">
+        {sub}
+      </p>
+    </div>
   );
 }
 
@@ -300,11 +319,11 @@ const ACTIVITY_STYLE: Record<ActivityKind, { icon: LucideIcon; tone: string }> =
 const cashflowConfig = {
   deposits: { label: "Deposits", color: "#10b981" },
   withdrawals: { label: "Withdrawals", color: "#f43f5e" },
-  roi: { label: "ROI", color: "#0ea5e9" },
+  roi: { label: "ROI", color: "#CB9833" },
 } satisfies ChartConfig;
 
 const aumConfig = {
-  cumulativeAum: { label: "Cumulative AUM", color: "#10b981" },
+  cumulativeAum: { label: "Cumulative AUM", color: "#CB9833" },
 } satisfies ChartConfig;
 
 function moneyTooltip(config: ChartConfig) {
@@ -342,8 +361,9 @@ export default function AdminDashboardLive({ initial }: { initial: DashboardSnap
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-headline">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Platform overview and investor management.</p>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-gold">Overview</p>
+          <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl">Admin Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Platform overview and investor management.</p>
         </div>
         <LiveBadge status={status} lastOkAt={lastOkAt} errorMsg={errorMsg} onRefresh={refreshNow} />
       </div>
@@ -367,20 +387,22 @@ export default function AdminDashboardLive({ initial }: { initial: DashboardSnap
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           title="Total AUM"
+          tone="navy"
           icon={CircleDollarSign}
           value={kes(kpis.totalAUM)}
           sub="Cumulative principal deposited by all members"
         />
         <KpiCard
           title="Total Investors"
+          tone="indigo"
           icon={Users}
           value={nf.format(kpis.totalInvestors)}
           sub={`${nf.format(members.registered)} registered · +${nf.format(members.newThisMonth)} sign-ups this month`}
         />
         <KpiCard
           title="Deposits This Month"
+          tone="emerald"
           icon={ArrowUp}
-          iconClass="text-green-500"
           value={kes(kpis.depositsThisMonth)}
           sub={
             kpis.depositsMomPct !== null ? (
@@ -392,32 +414,35 @@ export default function AdminDashboardLive({ initial }: { initial: DashboardSnap
         />
         <KpiCard
           title="Withdrawals This Month"
+          tone="rose"
           icon={ArrowDown}
-          iconClass="text-red-500"
           value={kes(kpis.withdrawalsThisMonth)}
           sub={`All time: ${kes(kpis.totalWithdrawals)} (${pct(kpis.outflowPct)} of AUM)`}
         />
         <KpiCard
           title="Net AUM"
+          tone="gold"
           icon={Scale}
           value={kes(kpis.netAUM)}
           sub="AUM + ROI − withdrawals"
         />
         <KpiCard
           title="Total ROI"
+          tone="navy"
           icon={TrendingUp}
-          iconClass="text-sky-500"
           value={kes(kpis.totalRoi)}
           sub={`${pct(kpis.roiYieldPct)} yield on AUM`}
         />
         <KpiCard
           title="Avg. per Investor"
+          tone="indigo"
           icon={BadgeCheck}
           value={kes(kpis.avgPerInvestor)}
           sub={`Top 5 investors hold ${pct(kpis.top5SharePct, 0)} of AUM`}
         />
         <KpiCard
           title="Savings Balance"
+          tone="emerald"
           icon={PiggyBank}
           value={kes(savings.totalBalance)}
           sub={`${nf.format(savings.savers)} savers · ${kes(savings.totalInterest)} interest earned`}

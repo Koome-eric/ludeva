@@ -21,7 +21,7 @@ export default function PublicHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-gray-800 shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl shadow-sm">
       <div className="container mx-auto flex items-center justify-between px-4 lg:px-6 py-2.5">
 
         {/* Logo */}
@@ -67,7 +67,7 @@ export default function PublicHeader() {
                   </Button>
 
                   {openMenuId === item.id && (
-                    <div className="absolute left-0 mt-2 min-w-[180px] rounded-md bg-white dark:bg-gray-800 shadow-lg py-2 z-50">
+                    <div className="absolute left-0 mt-2 min-w-[200px] rounded-2xl border border-border/60 bg-card shadow-lift py-2 px-1 z-50">
                       {item.submenu.map((subItem, index) => (
                         <div key={subItem.id}>
                           <Link
@@ -113,7 +113,7 @@ export default function PublicHeader() {
             <Link href="/sign-in">Log In</Link>
           </Button>
 
-          <Button asChild className="hidden md:flex bg-primary text-white">
+          <Button asChild variant="gold" className="hidden md:flex">
             <Link href="/sign-up">Get Started</Link>
           </Button>
 
@@ -189,7 +189,7 @@ export default function PublicHeader() {
                 <Link
                   href="/sign-up"
                   onClick={() => setOpenSheet(false)}
-                  className="px-4 py-2 text-center rounded-md bg-primary text-white"
+                  className="px-4 py-2.5 text-center rounded-xl bg-gold-gradient font-semibold shadow-glow"
                 >
                   Get Started
                 </Link>

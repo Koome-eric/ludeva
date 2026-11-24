@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Inter, Roboto_Slab } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
@@ -22,9 +22,11 @@ const inter = Inter({
   display: "swap",
 });
 
-const robotoSlab = Roboto_Slab({
+// Headings: a geometric, modern sans that pairs with Inter for a clean
+// fintech look (replaces the old serif Roboto Slab).
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-roboto-slab",
+  variable: "--font-headline",
   display: "swap",
 });
 
@@ -38,7 +40,7 @@ export default function RootLayout({
       <body
         className={`
           ${inter.variable}
-          ${robotoSlab.variable}
+          ${jakarta.variable}
           font-body
           antialiased
           min-h-screen
@@ -54,7 +56,7 @@ export default function RootLayout({
           signUpFallbackRedirectUrl="/onboarding/investment"
           appearance={{
             variables: {
-              colorPrimary: "hsl(220, 85%, 55%)",
+              colorPrimary: "hsl(240, 85%, 24%)",
               borderRadius: "0.75rem",
             },
             elements: {
