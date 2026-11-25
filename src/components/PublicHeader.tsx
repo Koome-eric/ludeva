@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, ChevronDown, ChevronUp } from 'lucide-react';
+import { Menu, ChevronDown, ChevronUp, ArrowUpRight } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -16,13 +16,26 @@ export default function PublicHeader() {
   const [openSheet, setOpenSheet] = React.useState(false);
   const [openMenuId, setOpenMenuId] = React.useState<number | null>(null);
 
+  // `top` = scrolled to the very top. Together with a page hero this makes
+  // the bar transparent (see .site-header rules in globals.css).
+  const [top, setTop] = React.useState(true);
+  React.useEffect(() => {
+    const onScroll = () => setTop(window.scrollY < 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const toggleMenu = (id: number) => {
     setOpenMenuId(openMenuId === id ? null : id);
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl shadow-sm">
-      <div className="container mx-auto flex items-center justify-between px-4 lg:px-6 py-2.5">
+    <header
+      data-top={top}
+      className="site-header sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 shadow-sm backdrop-blur-xl"
+    >
+      <div className="container mx-auto flex h-[4.5rem] items-center justify-between gap-4 px-4 lg:px-6">
 
         {/* Logo */}
         <Link href="/" className="flex items-center">
@@ -32,7 +45,7 @@ export default function PublicHeader() {
             alt="Ludeva Logo"
             width={140}
             height={40}
-            className="block dark:hidden object-contain"
+            className="logo-light block dark:hidden object-contain"
             priority
           />
 
@@ -42,20 +55,20 @@ export default function PublicHeader() {
             alt="Ludeva Logo"
             width={140}
             height={40}
-            className="hidden dark:block object-contain"
+            className="logo-dark hidden dark:block object-contain"
             priority
           />
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-6 relative">
+        <nav className="relative hidden flex-1 items-center justify-center gap-1 lg:flex">
           {menuData.map((item) => (
             <div key={item.id} className="relative">
               {item.submenu ? (
                 <>
                   <Button
                     variant="ghost"
-                    className="flex items-center gap-1 px-3 py-2 text-gray-700 dark:text-white"
+                    className="nav-link flex items-center gap-1 rounded-full px-3.5 py-2 text-[13.5px] font-medium text-foreground/80 hover:bg-accent"
                     onClick={() => toggleMenu(item.id)}
                   >
                     {item.title}
@@ -92,10 +105,11 @@ export default function PublicHeader() {
               ) : (
                 <Link
                   href={item.path || '#'}
-                  className={`px-3 py-2 text-sm font-medium ${
+                  data-active={pathname === item.path}
+                  className={`nav-link rounded-full px-3.5 py-2 text-[13.5px] font-medium transition-colors hover:bg-accent ${
                     pathname === item.path
-                      ? 'text-primary font-semibold'
-                      : 'text-gray-700 dark:text-white'
+                      ? 'font-semibold text-primary'
+                      : 'text-foreground/80'
                   }`}
                 >
                   {item.title}
@@ -106,21 +120,26 @@ export default function PublicHeader() {
         </nav>
 
         {/* Right actions */}
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
+        <div className="flex items-center gap-1.5">
+          <span className="hdr-on-hero"><ThemeToggle /></span>
 
-          <Button variant="ghost" size="sm" asChild className="hidden md:flex">
-            <Link href="/sign-in">Log In</Link>
-          </Button>
+          <Link
+            href="/sign-in"
+            className="nav-link hidden rounded-full px-4 py-2 text-[13.5px] font-medium text-foreground/80 transition-colors hover:bg-accent md:block"
+          >
+            Log In
+          </Link>
 
-          <Button asChild variant="gold" className="hidden md:flex">
-            <Link href="/sign-up">Get Started</Link>
+          <Button asChild variant="gold" className="hidden h-11 rounded-full px-6 md:inline-flex">
+            <Link href="/sign-up">
+              Get Started <ArrowUpRight className="h-4 w-4" />
+            </Link>
           </Button>
 
           {/* Mobile menu */}
           <Sheet open={openSheet} onOpenChange={setOpenSheet}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="md:hidden">
+              <Button variant="outline" size="icon" className="hdr-on-hero rounded-full bg-transparent md:hidden">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle menu</span>
               </Button>

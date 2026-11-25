@@ -13,7 +13,9 @@ export default function Home() {
 
       <div className="flex-1 w-full">
         <HeroSection />
-        <AccountsOverviewSection />
+        <div id="explore" className="scroll-mt-0">
+          <AccountsOverviewSection />
+        </div>
         <GrowthSection />
         <WhyChooseLudevaSection />
         <QuestionsSection />

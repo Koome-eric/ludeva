@@ -77,7 +77,7 @@ export function AdminSidebar() {
         const label = showLabel ? (
           <p
             key={`label-${section}`}
-            className={`px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/35 group-data-[collapsible=icon]/sidebar:hidden ${index === 0 ? "pt-0" : "pt-5"}`}
+            className={`pb-1.5 pl-[3.375rem] pr-2.5 text-[10px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/35 group-data-[collapsible=icon]/sidebar:hidden ${index === 0 ? "pt-0" : "pt-5"}`}
           >
             {section}
           </p>

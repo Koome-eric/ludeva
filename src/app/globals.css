@@ -269,6 +269,55 @@
   .fade-up-4 { animation-delay: 0.26s; }
 }
 
+/* ───────── Public site header ─────────
+   Solid frosted bar by default. On pages that render a hero (any element
+   with [data-hero]) and while scrolled to the very top, it turns
+   transparent with white text so the hero photo runs edge to edge behind
+   it. Pure CSS (:has) so the server-rendered markup is already right —
+   no flash while the page hydrates. */
+.site-header {
+  transition: background-color .3s ease, border-color .3s ease, box-shadow .3s ease, backdrop-filter .3s ease;
+}
+body:has([data-hero]) .site-header[data-top="true"] {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+body:has([data-hero]) .site-header[data-top="true"] .nav-link,
+body:has([data-hero]) .site-header[data-top="true"] .hdr-on-hero button,
+body:has([data-hero]) .site-header[data-top="true"] button.hdr-on-hero {
+  color: rgba(255, 255, 255, 0.86) !important;
+}
+body:has([data-hero]) .site-header[data-top="true"] button.hdr-on-hero {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+body:has([data-hero]) .site-header[data-top="true"] .nav-link:hover,
+body:has([data-hero]) .site-header[data-top="true"] .hdr-on-hero button:hover,
+body:has([data-hero]) .site-header[data-top="true"] button.hdr-on-hero:hover {
+  color: #fff !important;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+body:has([data-hero]) .site-header[data-top="true"] .nav-link[data-active="true"] {
+  color: hsl(var(--gold)) !important;
+}
+body:has([data-hero]) .site-header[data-top="true"] .logo-light { display: none !important; }
+body:has([data-hero]) .site-header[data-top="true"] .logo-dark { display: block !important; }
+
+/* Hero helpers */
+.hero-heading {
+  font-family: var(--font-headline), var(--font-inter), sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+.hero-card {
+  background: hsl(40 45% 97% / 0.97);
+  color: hsl(236 45% 12%);
+  box-shadow: 0 18px 50px -18px rgb(0 0 20 / 0.55);
+}
+
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }

@@ -80,7 +80,7 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
         <SidebarContent>
           {menuSections.map((section, i) => (
             <div key={section.label} className={i === 0 ? "" : "pt-5"}>
-              <p className="px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/35 group-data-[collapsible=icon]/sidebar:hidden">
+              <p className="pb-1.5 pl-[3.375rem] pr-2.5 text-[10px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/35 group-data-[collapsible=icon]/sidebar:hidden">
                 {section.label}
               </p>
               <SidebarMenu>

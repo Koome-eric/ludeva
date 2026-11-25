@@ -1,10 +1,11 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import PublicHeader from "@/components/PublicHeader";
+import PageHero from "@/components/PageHero";
 import PublicFooter from "@/components/PublicFooter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { PiggyBank, Zap, Wallet, CheckCircle } from "lucide-react";
+import { ArrowUpRight, PiggyBank, Zap, Wallet, CheckCircle } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Savings Account | Ludeva PLC",
@@ -41,26 +42,22 @@ export default function SavingsAccountPage() {
       <PublicHeader />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary/10 to-primary/5 py-20 px-4">
-        <div className="container mx-auto max-w-4xl text-center">
-          <span className="inline-block bg-primary/10 text-primary text-sm font-semibold px-4 py-1 rounded-full mb-4">
-            Everyday Savings
-          </span>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Savings Account</h1>
-          <p className="text-xl text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Earn up to <strong className="text-primary">7% p.a.</strong> on your everyday savings, with
-            no lock-in and no complicated terms.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-primary text-white">
-              <Link href="/sign-up">Open a Savings Account</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href="/contact">Speak to an Advisor</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Everyday Savings"
+        title="Savings Account"
+        description={
+          <>
+            Earn up to <strong className="font-semibold text-gold">7% p.a.</strong> on your everyday savings, with no lock-in and no complicated terms.
+          </>
+        }
+      >
+          <Button asChild size="lg" variant="gold" className="h-12 rounded-full px-7">
+            <Link href="/sign-up">Open a Savings Account <ArrowUpRight className="h-4 w-4" /></Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="h-12 rounded-full border-white/30 bg-white/10 px-7 text-white backdrop-blur hover:border-white hover:bg-white hover:text-[hsl(240_100%_16%)]">
+            <Link href="/contact">Speak to an Advisor</Link>
+          </Button>
+      </PageHero>
 
       {/* Key Stats */}
       <section className="py-12 px-4 bg-white dark:bg-gray-900 border-b">

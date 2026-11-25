@@ -1,10 +1,11 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import PublicHeader from "@/components/PublicHeader";
+import PageHero from "@/components/PageHero";
 import PublicFooter from "@/components/PublicFooter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Shield, TrendingUp, Clock, CheckCircle } from "lucide-react";
+import { ArrowUpRight, Shield, TrendingUp, Clock, CheckCircle } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Fixed Deposit Account | Ludeva PLC",
@@ -40,28 +41,22 @@ export default function FixedDepositPage() {
       <PublicHeader />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary/10 to-primary/5 py-20 px-4">
-        <div className="container mx-auto max-w-4xl text-center">
-          <span className="inline-block bg-primary/10 text-primary text-sm font-semibold px-4 py-1 rounded-full mb-4">
-            Conservative Investment
-          </span>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Fixed Deposit Account
-          </h1>
-          <p className="text-xl text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Earn a guaranteed <strong className="text-primary">12.5% Net p.a.</strong> on your savings.
-            Designed for conservative investors who value certainty and security.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-primary text-white">
-              <Link href="/sign-up">Open an Account</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href="/contact">Speak to an Advisor</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Conservative Investment"
+        title="Fixed Deposit Account"
+        description={
+          <>
+            Earn a guaranteed <strong className="font-semibold text-gold">12.5% Net p.a.</strong> on your savings. Designed for conservative investors who value certainty and security.
+          </>
+        }
+      >
+          <Button asChild size="lg" variant="gold" className="h-12 rounded-full px-7">
+            <Link href="/sign-up">Open an Account <ArrowUpRight className="h-4 w-4" /></Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="h-12 rounded-full border-white/30 bg-white/10 px-7 text-white backdrop-blur hover:border-white hover:bg-white hover:text-[hsl(240_100%_16%)]">
+            <Link href="/contact">Speak to an Advisor</Link>
+          </Button>
+      </PageHero>
 
       {/* Key Stats */}
       <section className="py-12 px-4 bg-white dark:bg-gray-900 border-b">
