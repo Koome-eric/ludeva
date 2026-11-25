@@ -77,8 +77,8 @@ export default async function MemberDashboardPage() {
         <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-medium text-white/70">Welcome back, {displayName}</p>
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-gold">Account balance</p>
-            <p className="mt-1 break-words font-headline text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+            <p className="eyebrow mt-5">Account balance</p>
+            <p className="num mt-2 break-words text-4xl leading-none text-white sm:text-[3.4rem]">
               {kes(currentBalance)}
             </p>
 

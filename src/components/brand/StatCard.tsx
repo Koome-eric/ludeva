@@ -55,7 +55,7 @@ export function StatCard({
         </>
       )}
       <div className="relative flex items-start justify-between gap-3">
-        <p className={cn("text-sm font-medium", plain ? "text-muted-foreground" : "opacity-80")}>{title}</p>
+        <p className={cn("text-[13px] font-semibold tracking-wide", plain ? "text-muted-foreground" : "opacity-80")}>{title}</p>
         {icon && (
           <span
             className={cn(
@@ -69,8 +69,8 @@ export function StatCard({
       </div>
       <div className="relative mt-3 flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-headline text-2xl font-bold tracking-tight sm:text-[1.65rem]">{value}</p>
-          {caption && <p className={cn("mt-1 text-xs", plain ? "text-muted-foreground" : "opacity-75")}>{caption}</p>}
+          <p className="num truncate text-[1.6rem] leading-none sm:text-[1.8rem]">{value}</p>
+          {caption && <p className={cn("mt-2 text-xs font-medium", plain ? "text-muted-foreground" : "opacity-75")}>{caption}</p>}
         </div>
         {series && series.length > 1 && (
           <Sparkline values={series} id={id} color={plain ? "hsl(var(--gold))" : "rgba(255,255,255,0.9)"} className="h-10 w-20 shrink-0 opacity-90" />

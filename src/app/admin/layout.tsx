@@ -20,7 +20,8 @@ import { AdminSidebar } from "./AdminSidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { Button } from "@/components/ui/button";
-import { AdminAccessProvider } from "@/components/admin/AdminAccessProvider";
+import { AdminAccessProvider, useAdminAccess } from "@/components/admin/AdminAccessProvider";
+import { SidebarUserCard } from "@/components/brand/SidebarUserCard";
 
 export default function AdminLayout({
   children,
@@ -60,6 +61,8 @@ export default function AdminLayout({
         <SidebarContent>
           <AdminSidebar />
         </SidebarContent>
+
+        <AdminSidebarFooter />
       </Sidebar>
 
       <SidebarInset>
@@ -67,7 +70,7 @@ export default function AdminLayout({
           <SidebarTrigger className="md:hidden" />
 
           <div className="hidden min-w-0 sm:block">
-            <p className="truncate font-headline text-base font-bold leading-tight">Admin Console</p>
+            <p className="truncate font-headline text-[17px] font-bold leading-tight tracking-tight">Admin Console</p>
             <p className="text-xs text-muted-foreground">Ludeva Investments</p>
           </div>
 
@@ -84,6 +87,18 @@ export default function AdminLayout({
       </SidebarInset>
     </SidebarProvider>
     </AdminAccessProvider>
+  );
+}
+
+// Signed-in admin card pinned to the bottom of the navy sidebar.
+function AdminSidebarFooter() {
+  const { loaded, fullName, email, isSuperAdmin } = useAdminAccess();
+  if (!loaded) return null;
+  return (
+    <SidebarUserCard
+      name={fullName || email || "Administrator"}
+      subtitle={isSuperAdmin ? "Super admin" : "Administrator"}
+    />
   );
 }
 

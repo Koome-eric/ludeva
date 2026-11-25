@@ -33,6 +33,26 @@ export function AdminSidebar() {
     return mod ? canView(mod) : true;
   };
 
+  // Group the menu into labelled sections (like a banking console).
+  const SECTION_OF: Record<string, string> = {
+    Dashboard: "Overview",
+    "Reports & Analytics": "Overview",
+    Investors: "People & Money",
+    "Investment Products": "People & Money",
+    Investments: "People & Money",
+    Transactions: "People & Money",
+    "Savings Accounts": "People & Money",
+    "Member Reports": "People & Money",
+    Messages: "Engagement",
+    Notifications: "Engagement",
+    "Documents Management": "Engagement",
+    "Content Management": "Engagement",
+    "Admin Users": "System",
+    Settings: "System",
+  };
+  const SECTION_ORDER = ["Overview", "People & Money", "Engagement", "System"];
+  const sectionOf = (name: string) => SECTION_OF[name] ?? "System";
+
   const visibleItems = !loaded
     ? []
     : adminSidebarItems
@@ -42,15 +62,27 @@ export function AdminSidebar() {
         }))
         .filter((item) =>
           item.subItems ? item.subItems.length > 0 : allowed(item.path)
+        )
+        .sort(
+          (a, b) =>
+            SECTION_ORDER.indexOf(sectionOf(a.name)) - SECTION_ORDER.indexOf(sectionOf(b.name))
         );
 
   return (
     <>
-    <p className="px-3.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/40">
-      Menu
-    </p>
     <SidebarMenu>
-      {visibleItems.map((item) => {
+      {visibleItems.map((item, index) => {
+        const section = sectionOf(item.name);
+        const showLabel = index === 0 || sectionOf(visibleItems[index - 1].name) !== section;
+        const label = showLabel ? (
+          <p
+            key={`label-${section}`}
+            className={`px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/35 ${index === 0 ? "pt-0" : "pt-5"}`}
+          >
+            {section}
+          </p>
+        ) : null;
+
         const isSubActive = item.subItems?.some((sub) =>
           pathname.startsWith(sub.path)
         );
@@ -61,8 +93,9 @@ export function AdminSidebar() {
         // ---------------- COLLAPSIBLE MENU ----------------
         if (item.subItems && item.subItems.length > 0) {
           return (
+            <React.Fragment key={item.path}>
+            {label}
             <Collapsible
-              key={item.path}
               defaultOpen={isOpen}
               className="group/collapsible"
             >
@@ -82,7 +115,7 @@ export function AdminSidebar() {
                 </CollapsibleTrigger>
 
                 <CollapsibleContent>
-                  <ul className="mt-1 space-y-1 border-l border-white/15 ml-6 pl-2">
+                  <ul className="mt-1 space-y-1 border-l border-white/15 ml-6 pl-2.5">
                     {item.subItems.map((sub) => {
                       const isActive = pathname === sub.path;
 
@@ -91,7 +124,7 @@ export function AdminSidebar() {
                           <SidebarMenuButton
                             asChild
                             isActive={isActive}
-                            className="py-1.5 text-[13px] font-medium"
+                            className={isActive ? "py-1.5 text-[13px] bg-white/10 text-gold shadow-none before:hidden" : "py-1.5 text-[13px] before:hidden"}
                           >
                             <Link href={sub.path}>
                               <span>{sub.name}</span>
@@ -104,23 +137,27 @@ export function AdminSidebar() {
                 </CollapsibleContent>
               </SidebarMenuItem>
             </Collapsible>
+            </React.Fragment>
           );
         }
 
         // ---------------- NORMAL MENU ITEM ----------------
         return (
-          <SidebarMenuItem key={item.path}>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === item.path}
-              tooltip={item.name}
-            >
-              <Link href={item.path}>
-                {item.icon}
-                <span>{item.name}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <React.Fragment key={item.path}>
+            {label}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.path}
+                tooltip={item.name}
+              >
+                <Link href={item.path}>
+                  {item.icon}
+                  <span>{item.name}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </React.Fragment>
         );
       })}
     </SidebarMenu>

@@ -15,6 +15,8 @@ interface AdminAccessValue {
   loaded: boolean;
   isSuperAdmin: boolean;
   permissions: AdminPermissionMap | null;
+  fullName: string | null;
+  email: string | null;
   canView: (m: PermissionModule) => boolean;
   canEdit: (m: PermissionModule) => boolean;
 }
@@ -23,6 +25,8 @@ const AdminAccessContext = createContext<AdminAccessValue>({
   loaded: false,
   isSuperAdmin: false,
   permissions: null,
+  fullName: null,
+  email: null,
   canView: () => false,
   canEdit: () => false,
 });
@@ -32,7 +36,9 @@ export function AdminAccessProvider({ children }: { children: React.ReactNode })
     loaded: boolean;
     isSuperAdmin: boolean;
     permissions: AdminPermissionMap | null;
-  }>({ loaded: false, isSuperAdmin: false, permissions: null });
+    fullName: string | null;
+    email: string | null;
+  }>({ loaded: false, isSuperAdmin: false, permissions: null, fullName: null, email: null });
 
   useEffect(() => {
     let cancelled = false;
@@ -44,9 +50,11 @@ export function AdminAccessProvider({ children }: { children: React.ReactNode })
           loaded: true,
           isSuperAdmin: Boolean(data?.isSuperAdmin),
           permissions: data?.isSuperAdmin ? fullPermissions() : data?.permissions ?? null,
+          fullName: data?.fullName ?? null,
+          email: data?.email ?? null,
         });
       })
-      .catch(() => !cancelled && setState({ loaded: true, isSuperAdmin: false, permissions: null }));
+      .catch(() => !cancelled && setState({ loaded: true, isSuperAdmin: false, permissions: null, fullName: null, email: null }));
     return () => {
       cancelled = true;
     };

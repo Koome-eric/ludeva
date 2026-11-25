@@ -269,14 +269,14 @@ function KpiCard({
       <span className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
       <span className="pointer-events-none absolute -bottom-12 right-6 h-24 w-24 rounded-full bg-white/5" />
       <div className="relative flex items-start justify-between gap-3">
-        <p className="text-sm font-medium opacity-80">{title}</p>
+        <p className="text-[13px] font-semibold tracking-wide opacity-80">{title}</p>
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
           <Icon className="h-[18px] w-[18px]" />
         </span>
       </div>
       <div
         className={cn(
-          "relative -mx-1 mt-3 w-fit rounded-lg px-1 font-headline text-2xl font-bold tabular-nums tracking-tight transition-colors duration-700 xl:text-[1.65rem]",
+          "num relative -mx-1 mt-3 w-fit rounded-lg px-1 text-[1.6rem] leading-none transition-colors duration-700 xl:text-[1.75rem]",
           flash && "bg-white/25",
         )}
       >
@@ -361,7 +361,7 @@ export default function AdminDashboardLive({ initial }: { initial: DashboardSnap
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-gold">Overview</p>
+          <p className="eyebrow mb-1.5">Overview</p>
           <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl">Admin Dashboard</h1>
           <p className="text-sm text-muted-foreground">Platform overview and investor management.</p>
         </div>

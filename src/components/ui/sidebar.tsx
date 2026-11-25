@@ -270,12 +270,12 @@ const SidebarInset = ({ className, ...props }: React.ComponentProps<"div">) => (
 /* -------------------------------------------------------------------------- */
 
 const sidebarMenuButtonVariants = cva(
-  "relative flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm transition-all outline-none",
+  "relative flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] leading-tight tracking-[-0.005em] transition-all duration-200 outline-none [&>svg:first-child]:box-border [&>svg:first-child]:h-8 [&>svg:first-child]:w-8 [&>svg:first-child]:shrink-0 [&>svg:first-child]:rounded-lg [&>svg:first-child]:p-[7px] [&>svg:first-child]:transition-colors",
   {
     variants: {
       active: {
-        true: "bg-white text-[hsl(240_100%_16%)] font-semibold shadow-lg before:absolute before:-left-3 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-r-full before:bg-gold",
-        false: "text-sidebar-foreground/70 hover:bg-white/10 hover:text-white",
+        true: "bg-white text-[hsl(240_100%_16%)] font-semibold shadow-[0_8px_24px_-10px_rgba(0,0,0,0.55)] [&>svg:first-child]:bg-[hsl(240_100%_16%)] [&>svg:first-child]:text-gold before:absolute before:-left-3 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-r-full before:bg-gold",
+        false: "font-medium text-sidebar-foreground/70 hover:bg-white/[0.07] hover:text-white [&>svg:first-child]:bg-white/[0.06] [&>svg:first-child]:text-sidebar-foreground/80 hover:[&>svg:first-child]:bg-gold/20 hover:[&>svg:first-child]:text-gold",
       },
     },
     defaultVariants: {
