@@ -65,8 +65,8 @@ export default function MembersInvestmentsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold">Available Investments</h1>
-      <p className="text-muted-foreground">
+      <h1 className="page-title">Available Investments</h1>
+      <p className="page-subtitle">
         Explore our investment opportunities and grow your portfolio.
       </p>
 
@@ -151,7 +151,7 @@ export default function MembersInvestmentsPage() {
               <X className="h-6 w-6" />
             </button>
 
-            <h2 className="text-2xl font-bold mb-2">{selectedProduct.name}</h2>
+            <h2 className="section-title mb-2 text-xl">{selectedProduct.name}</h2>
             <p className="text-muted-foreground mb-4">{selectedProduct.category}</p>
 
             <div className="space-y-2 text-sm">

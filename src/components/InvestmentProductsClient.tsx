@@ -175,8 +175,8 @@ export default function InvestmentProductsClient({ initialProducts }: { initialP
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Investment Products</h1>
-          <p className="text-muted-foreground">Manage your investment offerings</p>
+          <h1 className="page-title">Investment Products</h1>
+          <p className="page-subtitle">Manage your investment offerings</p>
         </div>
         <Button onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-2" /> Add Product

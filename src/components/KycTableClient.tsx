@@ -225,7 +225,7 @@ export function KycTable({ initialUsers }: KycTableProps) {
             
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-xl font-bold">{selectedUser.fullName}</h2>
+                <h2 className="section-title text-xl">{selectedUser.fullName}</h2>
                 <p className="text-sm text-muted-foreground">KYC Review — {selectedUser.accountType}{selectedUser.teamName ? ` / ${selectedUser.teamName}` : ''}</p>
               </div>
               <Badge variant={getKycBadgeVariant(selectedUser.kycStatus) as any} className="text-sm px-3 py-1">

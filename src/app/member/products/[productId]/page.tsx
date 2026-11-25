@@ -81,9 +81,9 @@ export default function InvestPage() {
   if (!product) return <p className="p-6 text-center text-red-500">Product not found</p>;
 
   return (
-    <div className="p-6 max-w-md mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Invest in {product.name}</h1>
-      <p className="text-muted-foreground">
+    <div className="max-w-md mx-auto space-y-6">
+      <h1 className="page-title">Invest in {product.name}</h1>
+      <p className="page-subtitle">
         Minimum investment: KES {product.minAmount.toLocaleString()}
       </p>
 

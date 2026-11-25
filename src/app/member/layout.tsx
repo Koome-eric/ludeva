@@ -124,7 +124,7 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
       </Sidebar>
 
       <SidebarInset>
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border/60 bg-background/75 px-4 backdrop-blur-xl sm:px-6 md:rounded-t-3xl">
+        <header className="sticky top-0 z-40 flex h-[4.25rem] items-center gap-4 border-b border-border/50 bg-background/80 px-4 shadow-[0_1px_0_0_hsl(var(--gold)/0.18)] backdrop-blur-xl sm:px-6 md:rounded-t-3xl">
           <SidebarTrigger className="md:hidden" />
 
           <div className="hidden min-w-0 sm:block">
@@ -132,14 +132,15 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
             <p className="text-xs text-muted-foreground">{today}</p>
           </div>
 
-          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <div className="ml-auto flex items-center gap-0.5 rounded-2xl border border-border/60 bg-card p-1 shadow-soft sm:gap-1 sm:p-1.5">
             <NotificationsBell onUnreadChange={setUnreadCount} />
             <ThemeToggle />
+            <span className="mx-1 h-6 w-px bg-border" />
             <UserButton
               afterSignOutUrl="/"
               appearance={{
                 elements: {
-                  avatarBox: "h-10 w-10 rounded-xl ring-2 ring-gold/60",
+                  avatarBox: "h-9 w-9 rounded-xl ring-2 ring-gold/60",
                 },
               }}
             />

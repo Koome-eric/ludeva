@@ -362,8 +362,8 @@ export default function AdminDashboardLive({ initial }: { initial: DashboardSnap
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="eyebrow mb-1.5">Overview</p>
-          <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl">Admin Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Platform overview and investor management.</p>
+          <h1 className="page-title">Admin Dashboard</h1>
+          <p className="page-subtitle">Platform overview and investor management.</p>
         </div>
         <LiveBadge status={status} lastOkAt={lastOkAt} errorMsg={errorMsg} onRefresh={refreshNow} />
       </div>
@@ -715,7 +715,7 @@ function PaymentRate({ rate }: { rate: number | null }) {
   return (
     <div
       className={cn(
-        "-mx-1 w-fit rounded px-1 text-3xl font-bold tabular-nums transition-colors duration-700",
+        "num -mx-1 w-fit rounded px-1 text-3xl transition-colors duration-700",
         tone,
         flash && "bg-emerald-500/20",
       )}

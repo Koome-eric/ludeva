@@ -76,10 +76,10 @@ export default async function TeamPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div>
-        <h1 className="font-headline text-2xl font-semibold">
+        <h1 className="page-title">
           L <span className="text-primary">Chama</span>
         </h1>
-        <p className="text-muted-foreground">
+        <p className="page-subtitle">
           Invest together with your chama — invite members, assign roles, and share one dashboard.
         </p>
       </div>

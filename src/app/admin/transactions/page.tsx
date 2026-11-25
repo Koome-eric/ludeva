@@ -51,8 +51,8 @@ export default function AdminTransactionsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">All Transactions</h1>
-          <p className="text-muted-foreground">Complete financial activity for all members.</p>
+          <h1 className="page-title">All Transactions</h1>
+          <p className="page-subtitle">Complete financial activity for all members.</p>
         </div>
 
         <ExportButton data={formattedTransactions} />

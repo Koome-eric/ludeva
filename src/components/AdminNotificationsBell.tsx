@@ -6,6 +6,7 @@ import { Bell as BellIcon, TrendingUp, Wallet, ShieldCheck, Info, CheckCheck, Me
 import { formatDistanceToNowStrict } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { NotificationBellView } from "@/components/brand/NotificationBellView";
 
 type AdminNotification = {
   id: string;
@@ -147,85 +148,20 @@ export function AdminNotificationsBell({
   }, []);
 
   return (
-    <div className="relative" ref={wrapperRef}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="relative p-2 -m-2 rounded-full hover:bg-muted transition-colors"
-        aria-label="Notifications"
-      >
-        <BellIcon className="h-5 w-5" />
-
-        {unreadCount > 0 && (
-          <span className="absolute top-0.5 right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white animate-pulse">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </button>
-
-      {open && (
-        <div
-          className="fixed sm:absolute inset-x-3 top-16 sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-3
-                     w-auto sm:w-96 max-w-full sm:max-w-[calc(100vw-1.5rem)]
-                     rounded-2xl border bg-background shadow-xl z-50 overflow-hidden"
-        >
-          <div className="flex items-center justify-between px-4 py-3 border-b">
-            <span className="font-semibold text-sm">Admin Activity</span>
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllAsRead}
-                className="flex items-center gap-1 text-xs text-primary hover:underline"
-              >
-                <CheckCheck className="h-3.5 w-3.5" /> Mark all read
-              </button>
-            )}
-          </div>
-          <div className="max-h-[70vh] sm:max-h-96 overflow-y-auto">
-            {notifications.length ? (
-              notifications.slice(0, 10).map(n => {
-                const Icon = typeIcon[n.type] || Info;
-                return (
-                  <div
-                    key={n.id}
-                    className={cn(
-                      "flex items-start gap-3 px-4 py-3 hover:bg-muted transition-colors cursor-pointer border-b last:border-b-0",
-                      !n.isRead && "bg-primary/5"
-                    )}
-                    onClick={() => markAsRead(n.id)}
-                  >
-                    <div className={cn("flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center", typeColor[n.type] || typeColor.SYSTEM)}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className={cn("text-sm truncate", !n.isRead ? "font-semibold" : "font-medium")}>{n.title}</p>
-                        {!n.isRead && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
-                      </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{n.message}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {formatDistanceToNowStrict(new Date(n.createdAt), { addSuffix: true })}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="p-8 text-sm text-muted-foreground text-center flex flex-col items-center gap-2">
-                <BellIcon className="h-6 w-6 opacity-30" />
-                No admin activity yet
-              </div>
-            )}
-          </div>
-          <div className="p-2 border-t">
-            <Link
-              href="/admin/notifications"
-              className="block text-center text-xs font-medium text-primary hover:underline py-1"
-              onClick={() => setOpen(false)}
-            >
-              View all
-            </Link>
-          </div>
-        </div>
-      )}
-    </div>
+    <NotificationBellView
+      notifications={notifications}
+      unreadCount={unreadCount}
+      open={open}
+      onToggle={() => setOpen(o => !o)}
+      onClose={() => setOpen(false)}
+      wrapperRef={wrapperRef}
+      onItemClick={n => markAsRead(n.id)}
+      onMarkAllRead={markAllAsRead}
+      title="Admin Activity"
+      emptyText="No admin activity yet"
+      viewAllHref="/admin/notifications"
+      viewAllLabel="View all activity"
+      limit={10}
+    />
   );
 }

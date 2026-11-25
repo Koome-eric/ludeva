@@ -24,11 +24,11 @@ const typeIcon: Record<string, any> = {
 };
 
 const typeColor: Record<string, string> = {
-  INVESTMENT: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300",
-  PAYMENT: "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300",
-  KYC: "bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300",
-  SYSTEM: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
-  MESSAGE: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300",
+  INVESTMENT: "bg-success-soft text-success-soft-foreground",
+  PAYMENT: "bg-primary/10 text-primary",
+  KYC: "bg-warning-soft text-warning-soft-foreground",
+  SYSTEM: "bg-muted text-muted-foreground",
+  MESSAGE: "bg-accent-soft text-accent-soft-foreground",
 };
 
 export default function NotificationsPageClient({
@@ -91,15 +91,16 @@ export default function NotificationsPageClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Notifications</h1>
-          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          <p className="eyebrow mb-1.5">Inbox</p>
+          <h1 className="page-title">Notifications</h1>
+          <p className="page-subtitle mt-1">{subtitle}</p>
         </div>
         {unreadCount > 0 && (
           <button
             onClick={markAllAsRead}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline self-start sm:self-auto"
+            className="inline-flex items-center gap-1.5 self-start rounded-xl border border-border/60 bg-card px-3.5 py-2 text-sm font-semibold text-primary shadow-sm transition-colors hover:bg-accent sm:self-auto"
           >
             <CheckCheck className="h-4 w-4" /> Mark all as read
           </button>
@@ -107,14 +108,14 @@ export default function NotificationsPageClient({
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2">
+      <div className="inline-flex gap-1 rounded-xl bg-muted p-1">
         {(["ALL", "UNREAD"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
             className={cn(
-              "px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors",
-              filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70"
+              "rounded-lg px-4 py-1.5 text-[13px] font-semibold transition-all",
+              filter === f ? "bg-card text-primary shadow-soft" : "text-muted-foreground hover:text-foreground"
             )}
           >
             {f === "ALL" ? `All (${notifications.length})` : `Unread (${unreadCount})`}
@@ -129,7 +130,7 @@ export default function NotificationsPageClient({
               <Loader2 className="h-4 w-4 animate-spin" /> Loading notifications…
             </div>
           ) : visible.length ? (
-            <div className="divide-y">
+            <div className="divide-y divide-border/50">
               {visible.map((n) => {
                 const Icon = typeIcon[n.type] || Info;
                 return (
@@ -137,11 +138,12 @@ export default function NotificationsPageClient({
                     key={n.id}
                     onClick={() => markAsRead(n.id)}
                     className={cn(
-                      "w-full text-left flex items-start gap-3 sm:gap-4 px-4 sm:px-6 py-4 hover:bg-muted/40 transition-colors",
-                      !n.isRead && "bg-primary/5"
+                      "relative w-full text-left flex items-start gap-3 sm:gap-4 px-4 sm:px-6 py-4 hover:bg-accent/60 transition-colors",
+                      !n.isRead && "bg-accent-soft/40"
                     )}
                   >
-                    <div className={cn("flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center", typeColor[n.type] || typeColor.SYSTEM)}>
+                    {!n.isRead && <span className="absolute left-0 top-1/2 h-10 w-1 -translate-y-1/2 rounded-r-full bg-gold" />}
+                    <div className={cn("flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center", typeColor[n.type] || typeColor.SYSTEM)}>
                       <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -149,7 +151,7 @@ export default function NotificationsPageClient({
                         <p className={cn("text-sm sm:text-[15px] break-words", !n.isRead ? "font-semibold" : "font-medium")}>
                           {n.title}
                         </p>
-                        {!n.isRead && <span className="mt-1.5 w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
+                        {!n.isRead && <span className="mt-1.5 w-2 h-2 rounded-full bg-gold flex-shrink-0" />}
                       </div>
                       <p className="text-sm text-muted-foreground mt-1 break-words">{n.message}</p>
                       <p className="text-xs text-muted-foreground mt-2">
@@ -162,8 +164,10 @@ export default function NotificationsPageClient({
               })}
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2 py-16 text-muted-foreground">
-              <Bell className="h-8 w-8 opacity-30" />
+            <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft text-gold">
+                <Bell className="h-6 w-6" />
+              </span>
               <p className="text-sm">{filter === "UNREAD" ? "You're all caught up." : "No notifications yet."}</p>
             </div>
           )}

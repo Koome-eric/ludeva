@@ -100,8 +100,8 @@ export default async function InvestmentsPage({ searchParams }: PageProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">My Investments</h1>
-          <p className="text-muted-foreground">
+          <h1 className="page-title">My Investments</h1>
+          <p className="page-subtitle">
             Investment entries recorded against your account, per your performance reports.
           </p>
         </div>

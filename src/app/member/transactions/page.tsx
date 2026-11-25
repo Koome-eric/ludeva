@@ -115,8 +115,8 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Transactions</h1>
-          <p className="text-muted-foreground">
+          <h1 className="page-title">Transactions</h1>
+          <p className="page-subtitle">
             Complete financial activity on your account.
           </p>
         </div>

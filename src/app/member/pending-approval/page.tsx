@@ -36,7 +36,7 @@ export default async function PendingApprovalPage() {
             {isRejected ? <ShieldAlert className="h-8 w-8" /> : <Clock className="h-8 w-8" />}
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-bold mb-2">
+          <h1 className="page-title mb-2">
             {isRejected ? "Verification Not Approved" : "Your Account Is Under Review"}
           </h1>
 

@@ -228,6 +228,17 @@
       radial-gradient(50rem 30rem at -10% 0%, hsl(240 85% 40% / 0.06), transparent 60%);
   }
 
+  /* Page + section titles — one scale for every admin and member page */
+  .page-title {
+    @apply font-headline text-[1.65rem] font-bold leading-tight tracking-[-0.025em] text-foreground sm:text-[1.875rem];
+  }
+  .page-subtitle {
+    @apply mt-1 text-sm text-muted-foreground;
+  }
+  .section-title {
+    @apply font-headline text-lg font-bold leading-tight tracking-tight text-foreground;
+  }
+
   /* Small gold caption above titles */
   .eyebrow {
     @apply text-[11px] font-bold uppercase tracking-[0.18em] text-gold;

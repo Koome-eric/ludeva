@@ -29,8 +29,8 @@ export default async function FlaggedAccountsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight font-headline">Flagged Accounts</h1>
-        <p className="text-muted-foreground">Manage suspended and high-risk investor accounts.</p>
+        <h1 className="page-title">Flagged Accounts</h1>
+        <p className="page-subtitle">Manage suspended and high-risk investor accounts.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -39,7 +39,7 @@ export default async function FlaggedAccountsPage() {
                 <CardTitle className="text-sm font-medium text-red-800">Total Flagged</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-red-900">{flaggedUsers.length}</div>
+                <div className="num text-[1.5rem] text-red-900">{flaggedUsers.length}</div>
             </CardContent>
         </Card>
       </div>

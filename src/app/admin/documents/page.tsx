@@ -181,13 +181,13 @@ export default function AdminDocumentsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6">
+    <div className="space-y-6">
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Documents & Content</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="page-title">Documents & Content</h1>
+          <p className="page-subtitle mt-1">
             Upload files or write content. Published items appear in the Members Documents Hub.
           </p>
         </div>
@@ -297,7 +297,7 @@ export default function AdminDocumentsPage() {
           { label: "Drafts", value: docs.filter(d => !d.isPublished).length, color: "text-orange-500" },
         ].map(stat => (
           <div key={stat.label} className="border rounded-lg p-3 text-center">
-            <div className={`text-2xl font-bold ${stat.color || ""}`}>{stat.value}</div>
+            <div className={`num text-[1.5rem] ${stat.color || ""}`}>{stat.value}</div>
             <div className="text-xs text-muted-foreground">{stat.label}</div>
           </div>
         ))}

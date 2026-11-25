@@ -261,16 +261,16 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
   }, [reports]);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="space-y-6">
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="page-title flex items-center gap-2">
             <FileSpreadsheet className="h-6 w-6 text-primary" />
             Member Performance Reports
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="page-subtitle mt-1">
             All report rows pushed from Google Sheets. Each member only sees their own data.
           </p>
         </div>
@@ -443,7 +443,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
         ].map(k => (
           <div key={k.label} className="border rounded-xl p-4 bg-card">
             <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">{k.icon}{k.label}</div>
-            <div className="font-bold text-xl">{k.value}</div>
+            <div className="num text-[1.35rem]">{k.value}</div>
           </div>
         ))}
       </div>
@@ -458,7 +458,7 @@ export default function AdminMemberReportsClient({ reports: initialReports, memb
         ].map(k => (
           <div key={k.label} className="border rounded-xl p-3">
             <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">{k.icon}{k.label}</div>
-            <div className={`font-bold ${k.small ? "text-xs text-primary font-mono" : "text-xl"}`}>{k.value}</div>
+            <div className={k.small ? "text-xs font-bold text-primary font-mono" : "num text-[1.35rem]"}>{k.value}</div>
           </div>
         ))}
       </div>

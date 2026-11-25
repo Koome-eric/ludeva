@@ -96,11 +96,11 @@ export default function SavingsClient({ entries: initialEntries, member }: Props
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="page-title flex items-center gap-2">
             <PiggyBank className="h-6 w-6 text-primary" />
             My Savings Account
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="page-subtitle mt-1">
             A running balance separate from your Investments — each entry carries the previous
             closing balance forward, adds any deposit, subtracts any withdrawal, then applies interest.
             {accountNos.length > 0 && ` · Account${accountNos.length > 1 ? "s" : ""}: ${accountNos.join(", ")}`}

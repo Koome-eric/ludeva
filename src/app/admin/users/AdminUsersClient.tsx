@@ -92,8 +92,8 @@ export function AdminUsersClient() {
         <div className="flex items-center gap-2">
           <UserCog className="h-6 w-6 text-muted-foreground" />
           <div>
-            <h1 className="text-2xl font-bold">Admin Users</h1>
-            <p className="text-muted-foreground">
+            <h1 className="page-title">Admin Users</h1>
+            <p className="page-subtitle">
               Create and manage admin accounts. Created admins log in with
               their email and password at{" "}
               <span className="font-mono text-xs">/admin/login</span>.

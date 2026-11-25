@@ -124,8 +124,8 @@ export default function SettingsPage() {
   // ---------------- Render ----------------
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold">Settings</h1>
-      <p className="text-muted-foreground max-w-md">
+      <h1 className="page-title">Settings</h1>
+      <p className="page-subtitle max-w-md">
         Manage your profile, payment details, and notification preferences.
       </p>
 
@@ -146,7 +146,7 @@ export default function SettingsPage() {
         <TabsContent value="Profile">
           <Card className="rounded-2xl shadow-md border border-gray-100">
             <CardHeader>
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+              <h2 className="section-title flex items-center gap-2">
                 <User className="h-5 w-5 text-muted-foreground" /> Profile Information
               </h2>
             </CardHeader>
@@ -188,7 +188,7 @@ export default function SettingsPage() {
         <TabsContent value="Payments">
           <Card className="rounded-2xl shadow-md border border-gray-100">
             <CardHeader>
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+              <h2 className="section-title flex items-center gap-2">
                 <Wallet className="h-5 w-5 text-muted-foreground" /> Payment Details
               </h2>
             </CardHeader>
@@ -230,7 +230,7 @@ export default function SettingsPage() {
         <TabsContent value="Notifications">
           <Card className="rounded-2xl shadow-md border border-gray-100">
             <CardHeader>
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+              <h2 className="section-title flex items-center gap-2">
                 <Bell className="h-5 w-5 text-muted-foreground" /> Notification Preferences
               </h2>
             </CardHeader>

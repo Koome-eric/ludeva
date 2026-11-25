@@ -99,8 +99,8 @@ export default function ReportsPage() {
         <div className="flex items-center gap-2">
           <FileText className="h-6 w-6 text-muted-foreground" />
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Reports & Analytics</h1>
-            <p className="text-muted-foreground text-sm">
+            <h1 className="page-title">Reports & Analytics</h1>
+            <p className="page-subtitle">
               Real figures sourced directly from member performance reports
             </p>
           </div>
@@ -135,7 +135,7 @@ export default function ReportsPage() {
               <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1.5">
                 <c.icon className="h-3.5 w-3.5" /> {c.label}
               </div>
-              <p className={`text-base sm:text-xl font-bold ${c.color} break-words`}>{c.value}</p>
+              <p className={`num text-lg sm:text-[1.35rem] ${c.color} break-words`}>{c.value}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">{c.sub}</p>
             </CardContent>
           </Card>

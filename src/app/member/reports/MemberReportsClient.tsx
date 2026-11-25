@@ -177,11 +177,11 @@ export default function MemberReportsClient({ reports, member }: Props) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="page-title flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-primary" />
             My Performance Reports
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="page-subtitle mt-1">
             Account statement and investment performance data for {member.fullName || member.email}
             {accountNos.length > 0 && ` · Account${accountNos.length > 1 ? "s" : ""}: ${accountNos.join(", ")}`}
           </p>

@@ -247,8 +247,8 @@ export default function InvestmentsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Member Investments</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="page-title">Member Investments</h1>
+          <p className="page-subtitle">
             Closing balances from member performance reports (Google Sheets sync)
           </p>
         </div>
@@ -279,7 +279,7 @@ export default function InvestmentsPage() {
           <Card key={k.label} className="rounded-2xl shadow-sm">
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground">{k.label}</p>
-              <p className="text-xl font-bold mt-1">{k.value}</p>
+              <p className="num mt-1 text-[1.35rem]">{k.value}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{k.sub}</p>
             </CardContent>
           </Card>

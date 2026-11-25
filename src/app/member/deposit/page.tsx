@@ -13,8 +13,8 @@ export default async function DepositPage() {
     <div className="max-w-3xl mx-auto space-y-6">
 
       <div>
-        <h1 className="text-2xl font-semibold">Add Investment</h1>
-        <p className="text-muted-foreground">
+        <h1 className="page-title">Add Investment</h1>
+        <p className="page-subtitle">
           Securely fund your investment account using M-Pesa.
         </p>
       </div>

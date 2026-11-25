@@ -106,12 +106,12 @@ export default function AdminTeamAnalyticsPage() {
     });
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10 space-y-10">
+    <div className="max-w-4xl mx-auto space-y-8">
 
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">L Chama Analytics</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <h1 className="page-title">L Chama Analytics</h1>
+        <p className="page-subtitle mt-1">
           Upload a CSV or Excel file. The most recent upload will automatically appear as a table
           in the <strong>L Chama</strong> page under "L Chama Analytics".
         </p>

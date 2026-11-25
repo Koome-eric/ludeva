@@ -66,8 +66,8 @@ export default function AdminActivityPage() {
         <div className="flex items-center gap-2">
           <Activity className="h-6 w-6 text-muted-foreground" />
           <div>
-            <h1 className="text-2xl font-bold">Admin Activity</h1>
-            <p className="text-muted-foreground">
+            <h1 className="page-title">Admin Activity</h1>
+            <p className="page-subtitle">
               Track all administrator and member actions
             </p>
           </div>

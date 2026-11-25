@@ -70,10 +70,10 @@ export default async function ProfilePage() {
     <div className="space-y-8 max-w-4xl mx-auto">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="page-title">
           Profile & Settings
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="page-subtitle mt-1">
           Manage your personal details and investor verification information.
         </p>
       </div>
@@ -118,7 +118,7 @@ export default async function ProfilePage() {
           {user.initialInvestment != null && (
             <div className="space-y-1">
               <Label>Initial Investment Intent</Label>
-              <p className="text-2xl font-bold">
+              <p className="num text-[1.5rem]">
                 KES{" "}
                 {user.initialInvestment.toLocaleString("en-US", {
                   minimumFractionDigits: 2,

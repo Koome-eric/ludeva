@@ -100,10 +100,10 @@ export function JuniorAccountsTable({ initialApplications }: { initialApplicatio
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
+          <h1 className="page-title flex items-center gap-2">
             <Baby className="h-7 w-7 text-primary" /> Ludeva Junior Accounts
           </h1>
-          <p className="text-muted-foreground">Review guardian applications and KYC documents for children's accounts.</p>
+          <p className="page-subtitle">Review guardian applications and KYC documents for children's accounts.</p>
         </div>
       </div>
 
