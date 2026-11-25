@@ -77,7 +77,7 @@ export function AdminSidebar() {
         const label = showLabel ? (
           <p
             key={`label-${section}`}
-            className={`px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/35 ${index === 0 ? "pt-0" : "pt-5"}`}
+            className={`px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/35 group-data-[collapsible=icon]/sidebar:hidden ${index === 0 ? "pt-0" : "pt-5"}`}
           >
             {section}
           </p>
@@ -114,8 +114,8 @@ export function AdminSidebar() {
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
 
-                <CollapsibleContent>
-                  <ul className="mt-1 space-y-1 border-l border-white/15 ml-6 pl-2.5">
+                <CollapsibleContent className="group-data-[collapsible=icon]/sidebar:hidden">
+                  <ul className="mt-1 space-y-0.5 border-l border-white/15 ml-5 pl-3">
                     {item.subItems.map((sub) => {
                       const isActive = pathname === sub.path;
 
@@ -124,10 +124,10 @@ export function AdminSidebar() {
                           <SidebarMenuButton
                             asChild
                             isActive={isActive}
-                            className={isActive ? "py-1.5 text-[13px] bg-white/10 text-gold shadow-none before:hidden" : "py-1.5 text-[13px] before:hidden"}
+                            className={isActive ? "min-h-8 py-1.5 text-[13px] bg-white/10 text-gold shadow-none before:hidden [&>svg:first-child]:hidden" : "min-h-8 py-1.5 text-[13px] text-sidebar-foreground/65 shadow-none before:hidden hover:bg-white/[0.07] hover:text-white [&>svg:first-child]:hidden"}
                           >
-                            <Link href={sub.path}>
-                              <span>{sub.name}</span>
+                            <Link href={sub.path} className="flex w-full items-center">
+                              <span className="truncate">{sub.name}</span>
                             </Link>
                           </SidebarMenuButton>
                         </li>

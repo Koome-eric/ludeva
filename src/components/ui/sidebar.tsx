@@ -189,8 +189,9 @@ const Sidebar = React.forwardRef<
       <aside
         ref={ref}
         data-state={state}
+        data-collapsible={state === "collapsed" ? collapsible : ""}
         className={cn(
-          "relative hidden md:flex h-full transition-all duration-200",
+          "group/sidebar relative hidden md:flex h-full transition-all duration-200",
           "w-[--sidebar-width]",
           "data-[state=collapsed]:w-[--sidebar-width-icon]",
           className
@@ -238,7 +239,7 @@ SidebarTrigger.displayName = "SidebarTrigger"
 const SidebarHeader = ({ className, ...props }: React.ComponentProps<"div">) => (
   <div
     className={cn(
-      "flex items-center gap-2 px-4 py-4 border-b border-white/10 font-semibold",
+      "flex items-center gap-2 px-4 py-4 border-b border-white/10 font-semibold group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:px-2",
       className
     )}
     {...props}
@@ -248,7 +249,7 @@ const SidebarHeader = ({ className, ...props }: React.ComponentProps<"div">) => 
 const SidebarContent = ({ className, ...props }: React.ComponentProps<"div">) => (
   <div
     className={cn(
-      "flex-1 overflow-y-auto px-3 py-4 space-y-1",
+      "flex-1 overflow-y-auto px-3 py-4 group-data-[collapsible=icon]/sidebar:px-2",
       className
     )}
     {...props}
@@ -270,7 +271,7 @@ const SidebarInset = ({ className, ...props }: React.ComponentProps<"div">) => (
 /* -------------------------------------------------------------------------- */
 
 const sidebarMenuButtonVariants = cva(
-  "relative flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] leading-tight tracking-[-0.005em] transition-all duration-200 outline-none [&>svg:first-child]:box-border [&>svg:first-child]:h-8 [&>svg:first-child]:w-8 [&>svg:first-child]:shrink-0 [&>svg:first-child]:rounded-lg [&>svg:first-child]:p-[7px] [&>svg:first-child]:transition-colors",
+  "relative flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] leading-tight tracking-[-0.005em] transition-all duration-200 outline-none [&>svg:first-child]:box-border [&>svg:first-child]:h-8 [&>svg:first-child]:w-8 [&>svg:first-child]:shrink-0 [&>svg:first-child]:rounded-lg [&>svg:first-child]:p-[7px] [&>svg:first-child]:transition-colors group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:px-2 group-data-[collapsible=icon]/sidebar:[&>span]:hidden group-data-[collapsible=icon]/sidebar:[&>svg:not(:first-child)]:hidden group-data-[collapsible=icon]/sidebar:before:hidden",
   {
     variants: {
       active: {

@@ -43,16 +43,16 @@ export default function AdminLayout({
       <Sidebar>
         {/* Brand — the navy sidebar always uses the white logo */}
         <SidebarHeader>
-          <Link href="/admin/dashboard" className="flex items-center gap-2 px-1 py-1">
+          <Link href="/admin/dashboard" className="flex items-center gap-2 px-1 py-1 group-data-[collapsible=icon]/sidebar:justify-center">
             <Image
               src="/images/logo_dark.png"
               alt="Ludeva Logo"
               width={132}
               height={48}
-              className="object-contain"
+              className="object-contain group-data-[collapsible=icon]/sidebar:w-8"
               priority
             />
-            <span className="rounded-md bg-gold/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-gold">
+            <span className="rounded-md bg-gold/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-gold group-data-[collapsible=icon]/sidebar:hidden">
               Admin
             </span>
           </Link>
@@ -96,10 +96,12 @@ function AdminSidebarFooter() {
   const { loaded, fullName, email, isSuperAdmin } = useAdminAccess();
   if (!loaded) return null;
   return (
-    <SidebarUserCard
-      name={fullName || email || "Administrator"}
-      subtitle={isSuperAdmin ? "Super admin" : "Administrator"}
-    />
+    <div className="group-data-[collapsible=icon]/sidebar:hidden">
+      <SidebarUserCard
+        name={fullName || email || "Administrator"}
+        subtitle={isSuperAdmin ? "Super admin" : "Administrator"}
+      />
+    </div>
   );
 }
 

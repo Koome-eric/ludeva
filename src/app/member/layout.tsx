@@ -65,13 +65,13 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
       <Sidebar variant="inset" collapsible="icon">
         {/* Brand — the navy sidebar always uses the white logo */}
         <SidebarHeader>
-          <Link href="/member/dashboard" className="flex items-center gap-2 px-1 py-1">
+          <Link href="/member/dashboard" className="flex items-center gap-2 px-1 py-1 group-data-[collapsible=icon]/sidebar:justify-center">
             <Image
               src="/images/logo_dark.png"
               alt="Ludeva Logo"
               width={132}
               height={48}
-              className="object-contain group-data-[collapsible=icon]:w-8"
+              className="object-contain group-data-[collapsible=icon]/sidebar:w-8"
               priority
             />
           </Link>
@@ -80,7 +80,7 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
         <SidebarContent>
           {menuSections.map((section, i) => (
             <div key={section.label} className={i === 0 ? "" : "pt-5"}>
-              <p className="px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/35">
+              <p className="px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-sidebar-foreground/35 group-data-[collapsible=icon]/sidebar:hidden">
                 {section.label}
               </p>
               <SidebarMenu>
@@ -90,12 +90,12 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
                   return (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
-                        <Link href={item.href}>
-                          <item.icon />
+                        <Link href={item.href} className="flex w-full items-center">
+                          <item.icon className="h-4 w-4" />
                           <span className="truncate">{item.label}</span>
 
                           {item.href === "/member/notifications" && unreadCount > 0 && (
-                            <span className="ml-auto rounded-full bg-gold px-2 py-0.5 text-[10px] font-bold text-gold-foreground">
+                            <span className="ml-auto shrink-0 rounded-full bg-gold px-2 py-0.5 text-[10px] font-bold text-gold-foreground group-data-[collapsible=icon]/sidebar:hidden">
                               {unreadCount}
                             </span>
                           )}
@@ -109,18 +109,20 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
           ))}
         </SidebarContent>
 
-        <SidebarUserCard
-          name={user?.fullName || "Member"}
-          subtitle={user?.primaryEmailAddress?.emailAddress}
-          imageUrl={user?.imageUrl}
-        >
-          <Link
-            href="/member/chat"
-            className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-gold-gradient px-3 py-2 text-xs font-bold shadow-glow transition hover:brightness-105"
+        <div className="group-data-[collapsible=icon]/sidebar:hidden">
+          <SidebarUserCard
+            name={user?.fullName || "Member"}
+            subtitle={user?.primaryEmailAddress?.emailAddress}
+            imageUrl={user?.imageUrl}
           >
-            <MessageCircle className="h-3.5 w-3.5" /> Contact support
-          </Link>
-        </SidebarUserCard>
+            <Link
+              href="/member/chat"
+              className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-gold-gradient px-3 py-2 text-xs font-bold shadow-glow transition hover:brightness-105"
+            >
+              <MessageCircle className="h-3.5 w-3.5" /> Contact support
+            </Link>
+          </SidebarUserCard>
+        </div>
       </Sidebar>
 
       <SidebarInset>
